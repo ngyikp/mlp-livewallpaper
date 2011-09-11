@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <PreferenceCategory android:key="background_settings" android:title="Background Settings">
+    <CheckBoxPreference android:key="background_global" android:title="Use custom Background"></CheckBoxPreference>
+    <Preference android:key="background_image" android:title="Select Background Image" android:dependency="background_global"></Preference>
+    
+    
+</PreferenceCategory><PreferenceCategory android:key="interaction_settings" android:title="Interaction">
+    <CheckBoxPreference android:summary="Interact when user touches pony" android:key="interact_user" android:title="User Interaction"></CheckBoxPreference>
+    <CheckBoxPreference android:summary="Ponies interact with each other" android:key="interact_pony" android:title="Pony Interaction"></CheckBoxPreference>
+    
+</PreferenceCategory><PreferenceCategory android:key="pony_settings" android:title="Ponies">
+    <Preference android:title="Select Ponies" android:key="pony_select" android:summary="Choose which ponies should be displayed\n(More ponies equals more CPU)"></Preference>
+    
+</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="More">
+    <Preference android:key="more_about" android:title="@string/app_name" android:summary="© 2011 ov3rk1ll"></Preference>
+    <Preference android:title="Version" android:key="more_version" android:summary="1.0"></Preference>
+    <Preference android:title="Visit" android:key="more_link" android:summary="http://android.ov3rk1ll.com"></Preference>
+    <Preference android:key="more_donate" android:title="Donate (PayPal)" android:summary="Support this App"></Preference>
+</PreferenceCategory>
+    
+</PreferenceScreen>
