@@ -1,7 +1,6 @@
 package com.overkill.live.pony;
 
-import java.io.File;
-import java.io.FileFilter;
+import java.io.IOException;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -32,19 +31,17 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
         addPreferencesFromResource(R.xml.preferences);
         
-        File base = getFilesDir();
-        File[] ponyFolders = base.listFiles(new FileFilter() {			
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.isDirectory();
-			}
-		});
+        try {
+			poniesName  = getAssets().list("ponies");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
         
-        poniesName = new String[ponyFolders.length];
-        poniesState = new boolean[ponyFolders.length];
+        //poniesName = new String[ponyFolders.length];
+        poniesState = new boolean[poniesName.length];
         
         for(int i = 0; i < poniesName.length; i++){
-        	poniesName[i] = ponyFolders[i].getName();
+        	//poniesName[i] = ponyFolders[i].getName();
         	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean(poniesName[i], false);
         }
         

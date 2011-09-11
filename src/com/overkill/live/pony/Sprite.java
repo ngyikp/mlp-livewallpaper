@@ -42,7 +42,7 @@ public class Sprite {
 				gif = new GifDecoder();
 				gif.init();
 			}
-			gif.read(new FileInputStream(fileName));
+			gif.read(MyLittleWallpaperService.assets.open(fileName));
 			this.frameCount = gif.getFrameCount();
 			if(this.frameCount > 1)
 				this.fps = 1000 / gif.getDelay(0);

@@ -73,7 +73,7 @@ public class Pony implements Cloneable{
 	public Pony(String name){
 		this.name = name;
 		this.behaviors = new ArrayList<Behavior>();
-		//this.position = new PointF(MyLittleWallpaperService.rand.nextInt(MyLittleWallpaperService.wallpaperWidth), MyLittleWallpaperService.rand.nextInt(MyLittleWallpaperService.wallpaperHeight));
+		// TODO Random Spawnpoint
 		this.position = new PointF(100, 100);
 	}
 
@@ -158,7 +158,6 @@ public class Pony implements Cloneable{
 	
 	public void touch() {
 		current_behavior = behaviors.get(0);
-
 		for (Behavior behavior : behaviors) {
 			if (behavior.Allowed_Movement == AllowedMoves.MouseOver) {
 				current_behavior = behavior;
@@ -358,8 +357,12 @@ public class Pony implements Cloneable{
 	public void selectBehavior(Behavior Specified_Behavior, long globalTime) {
 		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
 		long startTime = SystemClock.elapsedRealtime();
+		
+		// Tell the GC to pick up the old behavior
+		// TODO could be improved by checking if we picked the same behavior before destroying it
 		if(current_behavior != null)
 			current_behavior.current_image.recycle();
+		
 		Log.i("Pony[" + name + "]", "Picking from " + behaviors.size() + " Behaviors");
 		double dice;
 		

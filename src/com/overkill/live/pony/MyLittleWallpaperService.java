@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -12,6 +13,7 @@ import com.overkill.live.pony.Pony.AllowedMoves;
 
 import android.app.WallpaperManager;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -57,33 +59,53 @@ public class MyLittleWallpaperService extends WallpaperService {
     
     public double realFPS = 0;
     
+    public static AssetManager assets;
+    
+    void displayFiles (AssetManager mgr, String path) {
+        try {
+            String list[] = mgr.list(path);
+            if (list != null)
+                for (int i=0; i<list.length; ++i)
+                    {
+                        Log.v("Assets:", path +"/"+ list[i]);
+                        displayFiles(mgr, path + "/" + list[i]);
+                    }
+        } catch (Exception e) {
+            Log.v("List error:", "can't list" + path);
+        }
+
+    }
+    
     @Override
     public void onCreate() {
         super.onCreate();        
         rand = new Random();
-        Thread t = new Thread(new Runnable() {			
-			@Override
-			public void run() {
-				File base = getFilesDir();
+        assets = getAssets();
+//        Thread t = new Thread(new Runnable() {			
+//			@Override
+//			public void run() {
+				/*File base = getFilesDir();
 		        File[] ponyFolders = base.listFiles(new FileFilter() {			
 					@Override
 					public boolean accept(File pathname) {
 						return pathname.isDirectory();
 					}
-				});
-		        try {
-		        	for(File pony : ponyFolders){
-		        		Log.i("Pony", "loading folder " + pony.getName());
-		        		selectablePonies.add(createPonyFromFolder(pony.getPath()));
+				});*/
+				try {
+					String[] ponyFolders  = assets.list("ponies");
+		        
+		        	for(String pony : ponyFolders){
+		        		Log.i("Pony", "loading folder " + pony);
+		        		selectablePonies.add(createPonyFromFolder("ponies/" + pony));
 		        	}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				loading = false;
-			}
-		});
-        loading = true;
-        t.start();
+//			}
+//		});
+//        loading = true;
+//        t.start();
         
         
     }
@@ -93,10 +115,10 @@ public class MyLittleWallpaperService extends WallpaperService {
     	try{
 		    String line = "";
 		    File folder = new File(path);
-		    if(folder.exists() == false || folder.isDirectory() == false) throw new FileNotFoundException("Path not found or is not a Folder");
-		    File ini = new File(folder, "Pony.ini");
-		    if(ini.exists() == false) throw new FileNotFoundException("Poni.ini not found in given folder");
-		    BufferedReader content = new BufferedReader(new FileReader(ini));
+		    //if(folder.exists() == false || folder.isDirectory() == false) throw new FileNotFoundException("Path not found or is not a Folder");
+		    //File ini = new File(getAssets().);
+		    //if(ini.exists() == false) throw new FileNotFoundException("Poni.ini not found in given folder");
+		    BufferedReader content = new BufferedReader(new InputStreamReader(assets.open(path + "/Pony.ini")));
 		    while ((line = content.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
 			           if(line.startsWith("Name")){ p = new Pony(line.substring(5)); continue;}
