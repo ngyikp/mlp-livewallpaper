@@ -36,6 +36,8 @@ public class Pony implements Cloneable{
 
 	private long lastTimeMoved = 0;
 	
+	private boolean hasSpawned = false;
+	
 	//private float largestSizeX;
 
 	//private int largestSizeY;
@@ -74,7 +76,7 @@ public class Pony implements Cloneable{
 		this.name = name;
 		this.behaviors = new ArrayList<Behavior>();
 		// TODO Random Spawnpoint
-		this.position = new PointF(100, 100);
+		this.position = new PointF(0, 0);
 	}
 
 	public void update(long globalTime) {
@@ -89,9 +91,27 @@ public class Pony implements Cloneable{
 			}
 		}   	        
 	    // Move the Pony
+		if(hasSpawned == false){
+			this.teleport();
+			hasSpawned = true;
+		}
 	    move(globalTime);
 	    current_behavior.update(globalTime);
 	}
+	
+	public void teleport() {
+		PointF teleport_location = new PointF();		
+		for (int i = 0; i < 300; i++) {
+			// Then select a random location to appear at
+			RectF screenBounds = new RectF(0, 0, MyLittleWallpaperService.wallpaperWidth, MyLittleWallpaperService.wallpaperHeight);		
+		    teleport_location = new PointF(MyLittleWallpaperService.rand.nextInt((int)screenBounds.width()) + (int)screenBounds.left, MyLittleWallpaperService.rand.nextInt((int)screenBounds.height()) + (int)screenBounds.top);
+		
+		    if(isPonyOnWallpaper(teleport_location) == true) break;
+		}	
+	    // Finally, go there
+	    this.position = teleport_location;
+	}
+
 	
 	public void move(long globalTime) {		
 		if(globalTime - lastTimeMoved < MOVEMENT_DELAY_MS) // we want to move again to quickly
@@ -483,6 +503,11 @@ public class Pony implements Cloneable{
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
 		Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+	}
+	
+	public void setDestination(float x, float y){
+		this.destination = new PointF(x, y);
+		getAppropriateBehavior(AllowedMoves.All, true, null);
 	}
 	
 }

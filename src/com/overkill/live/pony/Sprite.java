@@ -1,8 +1,6 @@
 package com.overkill.live.pony;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;

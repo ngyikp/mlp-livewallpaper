@@ -2,9 +2,6 @@ package com.overkill.live.pony;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
@@ -40,8 +37,6 @@ public class MyLittleWallpaperService extends WallpaperService {
     public ArrayList<Pony> selectablePonies = new ArrayList<Pony>();
     
     public static Random rand;
-	// List of active Pony objects
-	//public static List<Pony> Active_Ponies  = new LinkedList<Pony>();
 
 	public static int wallpaperWidth;
 	public static int wallpaperHeight;
@@ -61,6 +56,8 @@ public class MyLittleWallpaperService extends WallpaperService {
     
     public static AssetManager assets;
     
+    public Paint backgroundTextPaint = new Paint();
+    
     void displayFiles (AssetManager mgr, String path) {
         try {
             String list[] = mgr.list(path);
@@ -79,33 +76,25 @@ public class MyLittleWallpaperService extends WallpaperService {
     @Override
     public void onCreate() {
         super.onCreate();        
+        
         rand = new Random();
         assets = getAssets();
-//        Thread t = new Thread(new Runnable() {			
-//			@Override
-//			public void run() {
-				/*File base = getFilesDir();
-		        File[] ponyFolders = base.listFiles(new FileFilter() {			
-					@Override
-					public boolean accept(File pathname) {
-						return pathname.isDirectory();
-					}
-				});*/
-				try {
-					String[] ponyFolders  = assets.list("ponies");
+
+        WallpaperManager wm = WallpaperManager.getInstance(this);
+        wallpaperWidth = wm.getDesiredMinimumWidth();
+        wallpaperHeight = wm.getDesiredMinimumHeight();
+        
+		try {
+			String[] ponyFolders  = assets.list("ponies");
 		        
-		        	for(String pony : ponyFolders){
-		        		Log.i("Pony", "loading folder " + pony);
-		        		selectablePonies.add(createPonyFromFolder("ponies/" + pony));
-		        	}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				loading = false;
-//			}
-//		});
-//        loading = true;
-//        t.start();
+		    for(String pony : ponyFolders){
+		    	Log.i("Pony", "loading folder " + pony);
+		        selectablePonies.add(createPonyFromFolder("ponies/" + pony));
+		    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		loading = false;
         
         
     }
@@ -115,9 +104,6 @@ public class MyLittleWallpaperService extends WallpaperService {
     	try{
 		    String line = "";
 		    File folder = new File(path);
-		    //if(folder.exists() == false || folder.isDirectory() == false) throw new FileNotFoundException("Path not found or is not a Folder");
-		    //File ini = new File(getAssets().);
-		    //if(ini.exists() == false) throw new FileNotFoundException("Poni.ini not found in given folder");
 		    BufferedReader content = new BufferedReader(new InputStreamReader(assets.open(path + "/Pony.ini")));
 		    while ((line = content.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
@@ -196,17 +182,16 @@ public class MyLittleWallpaperService extends WallpaperService {
         private SharedPreferences preferences;
 
         SpriteEngine() {
-            lastTimeDrawn = SystemClock.elapsedRealtime() - (1000 / FPS);
-            
-            WallpaperManager wm = WallpaperManager.getInstance(MyLittleWallpaperService.this);
-            wallpaperWidth = wm.getDesiredMinimumWidth();
-            wallpaperHeight = wm.getDesiredMinimumHeight();
-            
+            lastTimeDrawn = SystemClock.elapsedRealtime() - (1000 / FPS);         
+           
             this.centerX = wallpaperWidth/2.0f;
             this.centerY = wallpaperHeight/2.0f;
             
             viewPort = new RectF(0, 0, 0, 0);            
-
+            
+        	backgroundTextPaint.setColor(Color.WHITE);
+        	backgroundTextPaint.setTextAlign(Align.CENTER);
+        	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
             onSharedPreferenceChanged(preferences, null);
@@ -217,11 +202,16 @@ public class MyLittleWallpaperService extends WallpaperService {
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 			// get Background image if we want one
 			String filePath = sharedPreferences.getString("background_image", null);
-	        if(sharedPreferences.getBoolean("background_global", false) == false && (filePath == null || new File(filePath).exists() == false))
-	        	background = BitmapFactory.decodeResource(getResources(), R.drawable.bg);
-	        else
-	        	background = BitmapFactory.decodeFile(filePath);
-	        
+			Log.i(TAG, "background: " + filePath);
+	        if(sharedPreferences.getBoolean("background_global", false) == false){
+	        	background = null;
+	        }else{
+	        	if(filePath != null && new File(filePath).exists())
+	        		background = BitmapFactory.decodeFile(filePath);
+	        	else
+	        		background = null;
+	        }
+	        		        
 	        activePonies.clear();
 	        for(Pony p : selectablePonies){
 	        	Log.i(TAG, "do we want \"" + p.name + "\"?");
@@ -294,12 +284,11 @@ public class MyLittleWallpaperService extends WallpaperService {
 	                touchY = event.getY();
 	                // Check if there is a pony at the touched point
 	                for(Pony p : activePonies){
-	                	if(p.isPonyOnLocation(touchX, touchY)){
-	                		Log.i("Pony[" + p.name + "]", "trigger Touchevent");
+	                	Log.i("Pony[" + p.name + "]", "trigger Touchevent");
+	                	p.setDestination(touchX, touchY);
 	                		/*p.touch();
 	                		drawFrame();
 	                		break;*/
-	                	}
 	                }	              
             	}else{
 	            	touchX = -1;
@@ -317,15 +306,16 @@ public class MyLittleWallpaperService extends WallpaperService {
         }
 
         private void drawFrame() {
-            long now = SystemClock.elapsedRealtime();
-            if(1000 / (now - lastTimeDrawn) > FPS)
+            long renderStartTime = SystemClock.elapsedRealtime();
+            if((1000 / (renderStartTime - lastTimeDrawn)) > FPS)
             	return;
+            
             final SurfaceHolder holder = getSurfaceHolder();
             Canvas c = null;
             long currentTime = SystemClock.elapsedRealtime();
             try {
             	c = holder.lockCanvas();
-                c.save();
+                //c.save();
             	drawBackground(c);
                 if (c != null) {
                 	if(loading == false){
@@ -335,33 +325,35 @@ public class MyLittleWallpaperService extends WallpaperService {
 	  	                	p.draw(c);
 	  	                }
                 	}
-                	c.restore();
+                	//c.restore();
                 }
             } finally {
                 if (c != null) holder.unlockCanvasAndPost(c);
             }
 
+            realFPS = 1000 / (renderStartTime - lastTimeDrawn);
+          	//Log.i("Render", "Frame took " + (renderStartTime - lastTimeDrawn) + " ms to render (" + (1000 / (renderStartTime - lastTimeDrawn)) + " fps)");
+            lastTimeDrawn = renderStartTime;
+            
             // Reschedule the next redraw
             drawHandler.removeCallbacks(drawCanvas);
             if (visible) {
                 drawHandler.postDelayed(drawCanvas, 1000 / FPS);
             }
-            realFPS = 1000 / (now - lastTimeDrawn);
-            lastTimeDrawn = now;
         }
         
         private void drawBackground(Canvas c){
-        	c.drawBitmap(background, this.centerX - (background.getWidth() / 2) + offset, 0, null);
-        	Paint p = new Paint();
-        	p.setColor(Color.WHITE);
-        	p.setTextAlign(Align.CENTER);
-        	p.setStyle(Paint.Style.FILL_AND_STROKE);
-        	if(loading)
-        		c.drawText("My Little Pony Wallpaper / loading...", this.centerX + offset, this.centerY - 15, p);        		
+        	if(background == null)
+        		c.drawColor(Color.BLACK);
         	else
-        		c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / " + realFPS + " FPS (cap at " + FPS + ")", this.centerX + offset, this.centerY - 15, p);
-        	c.drawText("©2011 ov3rk1ll", this.centerX + offset, this.centerY, p);
-        	c.drawText("http://android.ov3rk1ll.com", this.centerX + offset, this.centerY + 15, p);
+        		c.drawBitmap(background, this.centerX - (background.getWidth() / 2) + offset, 0, null);
+        	
+        	/*if(loading)
+        		c.drawText("My Little Pony Wallpaper / loading...", this.centerX + offset, this.centerY - 15, backgroundTextPaint);        		
+        	else
+        		c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / " + realFPS + " FPS (cap at " + FPS + ")", this.centerX, this.centerY - 15, backgroundTextPaint);
+        	c.drawText("©2011 ov3rk1ll", this.centerX, this.centerY, backgroundTextPaint);
+        	c.drawText("http://android.ov3rk1ll.com", this.centerX, this.centerY + 15, backgroundTextPaint);*/
         }
 
      

@@ -3,13 +3,14 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     
     <PreferenceCategory android:key="background_settings" android:title="Background Settings">
+    <Preference android:key="background_color" android:title="Select Background Color" android:enabled="false"></Preference>
     <CheckBoxPreference android:key="background_global" android:title="Use custom Background"></CheckBoxPreference>
     <Preference android:key="background_image" android:title="Select Background Image" android:dependency="background_global"></Preference>
     
     
 </PreferenceCategory><PreferenceCategory android:key="interaction_settings" android:title="Interaction">
-    <CheckBoxPreference android:summary="Interact when user touches pony" android:key="interact_user" android:title="User Interaction"></CheckBoxPreference>
-    <CheckBoxPreference android:summary="Ponies interact with each other" android:key="interact_pony" android:title="Pony Interaction"></CheckBoxPreference>
+    <CheckBoxPreference android:summary="Interact when user touches pony" android:key="interact_user" android:title="User Interaction" android:enabled="false"></CheckBoxPreference>
+    <CheckBoxPreference android:summary="Ponies interact with each other" android:key="interact_pony" android:title="Pony Interaction" android:enabled="false"></CheckBoxPreference>
     
 </PreferenceCategory><PreferenceCategory android:key="pony_settings" android:title="Ponies">
     <Preference android:title="Select Ponies" android:key="pony_select" android:summary="Choose which ponies should be displayed\n(More ponies equals more CPU)"></Preference>
