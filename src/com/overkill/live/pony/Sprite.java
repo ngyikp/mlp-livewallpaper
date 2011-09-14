@@ -34,6 +34,7 @@ public class Sprite {
 			Log.i("Sprite", "loading " + fileName);
 			this.gif = Movie.decodeStream(MyLittleWallpaperService.assets.open(fileName));
 			this.duration = gif.duration();
+			this.duration = Math.max(this.duration, 1);
 			this.spriteWidth = gif.width();
 			this.spriteHeight = gif.height();
 			this.initialized = true;

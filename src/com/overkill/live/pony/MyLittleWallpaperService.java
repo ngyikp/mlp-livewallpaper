@@ -25,6 +25,7 @@ import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+import android.widget.Toast;
 
 public class MyLittleWallpaperService extends WallpaperService {
 	public static final boolean DEBUG_RENDERTIME = false;
@@ -91,7 +92,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         rand = new Random();
         assets = getAssets();
 
-        WallpaperManager wm = WallpaperManager.getInstance(this);
+        WallpaperManager wm  = WallpaperManager.getInstance(this);
         wallpaperWidth = wm.getDesiredMinimumWidth();
         wallpaperHeight = wm.getDesiredMinimumHeight();
         
@@ -294,6 +295,10 @@ public class MyLittleWallpaperService extends WallpaperService {
             super.onSurfaceChanged(holder, format, width, height);
             frameWidth = width;
             frameHeight = height;
+            if(wallpaperWidth <= 0 || wallpaperHeight <= 0){
+            	wallpaperWidth = frameWidth;
+            	wallpaperHeight = frameHeight;
+            }
             viewPort = new RectF(0, 0, frameWidth, frameHeight);
             drawFrame();
         }
