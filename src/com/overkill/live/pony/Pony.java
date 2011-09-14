@@ -17,12 +17,8 @@ import android.util.Log;
  * @author ov3rk1ll
  *
  */
-public class Pony implements Cloneable{
+public class Pony{
 	private static final int MOVEMENT_DELAY_MS = 100;
-	
-	protected Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
 	
 	public String name;
 	
@@ -37,6 +33,8 @@ public class Pony implements Cloneable{
 	private long lastTimeMoved = 0;
 	
 	private boolean hasSpawned = false;
+
+	private Behavior previous_behavior;
 	
 	//private float largestSizeX;
 
@@ -75,7 +73,6 @@ public class Pony implements Cloneable{
 	public Pony(String name){
 		this.name = name;
 		this.behaviors = new ArrayList<Behavior>();
-		// TODO Random Spawnpoint
 		this.position = new PointF(0, 0);
 	}
 
@@ -83,7 +80,7 @@ public class Pony implements Cloneable{
 		if (current_behavior == null) { // If we have no behavior, select a random one
 			selectBehavior(null, globalTime);
 		} else if ((current_behavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
-			Log.i("Pony[" + name + "]", "Current Behavior ended");
+			if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Current Behavior ended");
 			if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
 				selectBehavior(current_behavior.linkedBehavior, globalTime);
 			} else { // Otherwise select a random one
@@ -256,7 +253,7 @@ public class Pony implements Cloneable{
        new_behavior.destination_ycoord = _ycoord; 
        
        
-       if (_Linked_Behavior != null &&_Linked_Behavior.length() > 0) {
+       if (_Linked_Behavior != null && _Linked_Behavior.length() > 0) {
     	   new_behavior.linkedBehaviorName = _Linked_Behavior;
        }
 		
@@ -378,12 +375,8 @@ public class Pony implements Cloneable{
 		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
 		long startTime = SystemClock.elapsedRealtime();
 		
-		// Tell the GC to pick up the old behavior
-		// TODO could be improved by checking if we picked the same behavior before destroying it
-		if(current_behavior != null)
-			current_behavior.current_image.recycle();
-		
-		Log.i("Pony[" + name + "]", "Picking from " + behaviors.size() + " Behaviors");
+		previous_behavior = current_behavior;
+
 		double dice;
 		
 		int selection = 0;
@@ -412,7 +405,7 @@ public class Pony implements Cloneable{
 			if (loop_total > 200) {
 				// If the Random number generator is being goofy, select the default behavior (usually standing)
 				current_behavior = behaviors.get(0);
-				Log.i("Pony[" + name + "]", "forced to 0");
+				if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "forced to 0");
 			}				
 		} else { // Set the forced behavior that was specified
 			destination = Specified_Behavior.getDestination(MyLittleWallpaperService.frameWidth, MyLittleWallpaperService.frameHeight);
@@ -502,12 +495,32 @@ public class Pony implements Cloneable{
 	    	current_behavior.right = false;
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
-		Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+	    
+	    // Tell the GC to pick up the old behavior
+		if(current_behavior != null && previous_behavior != null && (previous_behavior.equals(current_behavior) == false)){
+			previous_behavior.recycle();
+			previous_behavior = null;
+		}
+		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 	}
 	
 	public void setDestination(float x, float y){
 		this.destination = new PointF(x, y);
 		getAppropriateBehavior(AllowedMoves.All, true, null);
+	}
+	
+	public void linkBehaviors(){
+		for(Behavior b : behaviors){
+			if(b.linkedBehaviorName == null)
+				continue;
+			
+			for(Behavior links : behaviors){
+				if(links.name.equals(b.linkedBehaviorName)){
+					b.linkedBehavior = links;
+					break;
+				}
+			}
+		}
 	}
 	
 }

@@ -265,7 +265,7 @@ public class GifDecoder {
 		code_size = data_size + 1;
 		code_mask = (1 << code_size) - 1;
 		for (code = 0; code < clear; code++) {
-			prefix[code] = 0; // XXX ArrayIndexOutOfBoundsException
+			prefix[code] = 0;
 			suffix[code] = (byte) code;
 		}
 		// Decode GIF pixel stream.

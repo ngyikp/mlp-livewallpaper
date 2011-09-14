@@ -12,6 +12,7 @@ import android.app.WallpaperManager;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -26,8 +27,11 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 public class MyLittleWallpaperService extends WallpaperService {
+	public static final boolean DEBUG_RENDERTIME = false;
+	public static boolean DEBUG_TEXT = true;
 	public static final String TAG = "mlpWallpaper";
-	private static final int FPS = 20;
+	private static int FPS = 20;
+	private static int FRAMEDEALY = 1000 / FPS;
 	
 	private final Handler drawHandler = new Handler();
 	
@@ -51,27 +55,32 @@ public class MyLittleWallpaperService extends WallpaperService {
     public static boolean loading = true;
     
     public static Bitmap background = null;
+    public Bitmap backgroundCacheBitmap;
+    public Canvas backgroundCacheCanvas;
+    public int backgroundImageWidth = 0;
     
     public double realFPS = 0;
     
     public static AssetManager assets;
     
     public Paint backgroundTextPaint = new Paint();
-    
-    void displayFiles (AssetManager mgr, String path) {
-        try {
-            String list[] = mgr.list(path);
-            if (list != null)
-                for (int i=0; i<list.length; ++i)
-                    {
-                        Log.v("Assets:", path +"/"+ list[i]);
-                        displayFiles(mgr, path + "/" + list[i]);
-                    }
-        } catch (Exception e) {
-            Log.v("List error:", "can't list" + path);
-        }
-
-    }
+        
+	// Behavior options
+	public static final int BO_name = 1;
+	public static final int BO_probability = 2;
+	public static final int BO_max_duration = 3;
+	public static final int BO_min_duration = 4;
+	public static final int BO_speed = 5;
+	public static final int BO_right_image_path = 6;
+	public static final int BO_left_image_path = 7;
+	public static final int BO_movement_type = 8;
+	public static final int BO_linked_behavior = 9;
+	public static final int BO_speaking_start = 10;
+	public static final int BO_speaking_end = 11;
+	public static final int BO_skip = 12;
+	public static final int BO_xcoord = 13;
+	public static final int BO_ycoord = 14;
+	public static final int BO_object_to_follow = 15;
     
     @Override
     public void onCreate() {
@@ -110,40 +119,58 @@ public class MyLittleWallpaperService extends WallpaperService {
 			           if(line.startsWith("Name")){ p = new Pony(line.substring(5)); continue;}
 			           if(line.startsWith("Behavior")){
 				           	String[] data = splitWithQualifiers(line, ",", "\"");
+				           	
 				           	AllowedMoves movement = AllowedMoves.None;
-							if (data[8].trim().equalsIgnoreCase("none")) {
+				           	String linked_behavior = "";
+							int xcoord = 0;
+							int ycoord = 0;
+							boolean skip = false;
+				           	
+							if (data[BO_movement_type].trim().equalsIgnoreCase("none")) {
 								movement = AllowedMoves.None;
-							} else if (data[8].trim().equalsIgnoreCase("horizontal_only")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("horizontal_only")) {
 								movement = AllowedMoves.Horizontal_Only;
-							} else if (data[8].trim().equalsIgnoreCase("vertical_only")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("vertical_only")) {
 								movement = AllowedMoves.Vertical_Only;
-							} else if (data[8].trim().equalsIgnoreCase("horizontal_vertical")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("horizontal_vertical")) {
 								movement = AllowedMoves.Horizontal_Vertical;
-							} else if (data[8].trim().equalsIgnoreCase("diagonal_only")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("diagonal_only")) {
 								movement = AllowedMoves.Diagonal_Only;
-							} else if (data[8].trim().equalsIgnoreCase("diagonal_horizontal")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("diagonal_horizontal")) {
 								movement = AllowedMoves.Diagonal_Horizontal;
-							} else if (data[8].trim().equalsIgnoreCase("diagonal_vertical")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("diagonal_vertical")) {
 								movement = AllowedMoves.Diagonal_Vertical;
-							} else if (data[8].trim().equalsIgnoreCase("all")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("all")) {
 								movement = AllowedMoves.All;
-							} else if (data[8].trim().equalsIgnoreCase("mouseover")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("mouseover")) {
 								movement = AllowedMoves.MouseOver;
-							} else if (data[8].trim().equalsIgnoreCase("sleep")) {
+							} else if (data[BO_movement_type].trim().equalsIgnoreCase("sleep")) {
 								movement = AllowedMoves.Sleep;
 							}
 							if(data[6].trim().endsWith(".gif") == false)
 								continue;
+							
+							if (data.length > BO_linked_behavior) {
+								linked_behavior = data[BO_linked_behavior].trim();
+								skip = Boolean.parseBoolean(data[BO_skip].trim());
+								xcoord = Integer.parseInt(data[BO_xcoord].trim());
+								ycoord = Integer.parseInt(data[BO_ycoord].trim());
+							}
+							
 				            p.addBehavior(
-				            		data[1], 
-				            		Double.parseDouble(data[2]), 
-				            		Double.parseDouble(data[3]), 
-				            		Double.parseDouble(data[4]),
-				            		Double.parseDouble(data[5]),
-				            		folder.getPath() + "/" + data[6].trim(), 
-				            		folder.getPath() + "/" + data[7].trim(), 
+				            		data[BO_name], 
+				            		Double.parseDouble(data[BO_probability]), 
+				            		Double.parseDouble(data[BO_max_duration]), 
+				            		Double.parseDouble(data[BO_min_duration]),
+				            		Double.parseDouble(data[BO_speed]),
+				            		folder.getPath() + "/" + data[BO_right_image_path].trim(), 
+				            		folder.getPath() + "/" + data[BO_left_image_path].trim(), 
 				            		movement, 
-				            		null, false, 0, 0);
+				            		linked_behavior, 
+				            		skip, 
+				            		xcoord, 
+				            		ycoord);
+				            p.linkBehaviors();
 				            continue;
 			           }
 		    		
@@ -190,7 +217,7 @@ public class MyLittleWallpaperService extends WallpaperService {
             viewPort = new RectF(0, 0, 0, 0);            
             
         	backgroundTextPaint.setColor(Color.WHITE);
-        	backgroundTextPaint.setTextAlign(Align.CENTER);
+        	backgroundTextPaint.setTextAlign(Align.LEFT);
         	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
@@ -200,16 +227,25 @@ public class MyLittleWallpaperService extends WallpaperService {
 
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+			DEBUG_TEXT = sharedPreferences.getBoolean("debug_info", false);
+			FPS = Integer.valueOf(sharedPreferences.getString("framerate_cap", "10"));
+			FRAMEDEALY = 1000 / FPS;
 			// get Background image if we want one
 			String filePath = sharedPreferences.getString("background_image", null);
 			Log.i(TAG, "background: " + filePath);
 	        if(sharedPreferences.getBoolean("background_global", false) == false){
 	        	background = null;
 	        }else{
-	        	if(filePath != null && new File(filePath).exists())
+	        	if(filePath != null && new File(filePath).exists()){
 	        		background = BitmapFactory.decodeFile(filePath);
-	        	else
+		        	backgroundCacheBitmap = Bitmap.createBitmap(wallpaperWidth, wallpaperHeight, Config.RGB_565);
+		            backgroundCacheCanvas = new Canvas();
+		            backgroundCacheCanvas.setBitmap(backgroundCacheBitmap);
+		            backgroundCacheCanvas.drawBitmap(background, 0, 0, null);
+		            backgroundImageWidth = backgroundCacheBitmap.getWidth();
+	        	}else{
 	        		background = null;
+	        	}
 	        }
 	        		        
 	        activePonies.clear();
@@ -230,7 +266,8 @@ public class MyLittleWallpaperService extends WallpaperService {
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
             super.onCreate(surfaceHolder);
-            setTouchEventsEnabled(true);
+            // TODO add useful touch interaction
+            setTouchEventsEnabled(false);
         }
 
         @Override
@@ -276,34 +313,33 @@ public class MyLittleWallpaperService extends WallpaperService {
             drawFrame();
         }
 
-        @Override
-        public void onTouchEvent(MotionEvent event) {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            	if(keyLook==false){
-	                touchX = event.getX();
-	                touchY = event.getY();
-	                // Check if there is a pony at the touched point
-	                for(Pony p : activePonies){
-	                	Log.i("Pony[" + p.name + "]", "trigger Touchevent");
-	                	p.setDestination(touchX, touchY);
-	                		/*p.touch();
-	                		drawFrame();
-	                		break;*/
-	                }	              
-            	}else{
-	            	touchX = -1;
-	                touchY = -1;	            		
-            	}
-            } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            	touchX = -1;
-                touchY = -1;
-                keyLook = false;
-            } else {
-            	touchX = -1;
-                touchY = -1;
-            }
-            super.onTouchEvent(event);
-        }
+//        @Override
+//        public void onTouchEvent(MotionEvent event) {
+//            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//            	if(keyLook==false){
+//	                touchX = event.getX();
+//	                touchY = event.getY();
+//	                for(Pony p : activePonies){
+//	                	Log.i("Pony[" + p.name + "]", "trigger Touchevent");
+//	                	p.setDestination(touchX, touchY);
+//	                		/*p.touch();
+//	                		drawFrame();
+//	                		break;*/
+//	                }	              
+//            	}else{
+//	            	touchX = -1;
+//	                touchY = -1;	            		
+//            	}
+//            } else if (event.getAction() == MotionEvent.ACTION_UP) {
+//            	touchX = -1;
+//                touchY = -1;
+//                keyLook = false;
+//            } else {
+//            	touchX = -1;
+//                touchY = -1;
+//            }
+//            super.onTouchEvent(event);
+//        }
 
         private void drawFrame() {
             long renderStartTime = SystemClock.elapsedRealtime();
@@ -314,49 +350,61 @@ public class MyLittleWallpaperService extends WallpaperService {
             Canvas c = null;
             long currentTime = SystemClock.elapsedRealtime();
             try {
+            	long t1 = System.currentTimeMillis();
             	c = holder.lockCanvas();
+              	if(DEBUG_RENDERTIME) Log.i("Render Lock Canvas", "took " + (System.currentTimeMillis() - t1) + " ms");
                 //c.save();
             	drawBackground(c);
                 if (c != null) {
                 	if(loading == false){
+                    	long t0 = System.currentTimeMillis();
 	                	for(int i=0; i < activePonies.size(); i++){
 	                		Pony p = activePonies.get(i);
 	  	                	p.update(currentTime);
 	  	                	p.draw(c);
 	  	                }
+	                	if(DEBUG_RENDERTIME) Log.i("Render Pony", "took " + (System.currentTimeMillis() - t0) + " ms");
                 	}
                 	//c.restore();
                 }
-            } finally {
+            } catch (Exception e) {
+            	e.printStackTrace();
+			}
+            finally {
+            	long t0 = System.currentTimeMillis();
                 if (c != null) holder.unlockCanvasAndPost(c);
-            }
-
+                if(DEBUG_RENDERTIME) Log.i("Render Draw Canvas", "took " + (System.currentTimeMillis() - t0) + " ms");
+            } 
             realFPS = 1000 / (renderStartTime - lastTimeDrawn);
-          	//Log.i("Render", "Frame took " + (renderStartTime - lastTimeDrawn) + " ms to render (" + (1000 / (renderStartTime - lastTimeDrawn)) + " fps)");
-            lastTimeDrawn = renderStartTime;
+            if(DEBUG_RENDERTIME) Log.i("Render Frame", "took " + (renderStartTime - lastTimeDrawn) + " ms to render (" + realFPS + " fps)");
             
             // Reschedule the next redraw
             drawHandler.removeCallbacks(drawCanvas);
             if (visible) {
-                drawHandler.postDelayed(drawCanvas, 1000 / FPS);
+            	// TODO change delay by a small amount if we took to long
+//            	long renderDiff = (renderStartTime - lastTimeDrawn) - FRAMEDEALY;
+//            	Log.i("Render", "renderDiff = " + renderDiff);
+//            	if(renderDiff > 0)
+//            		drawHandler.postDelayed(drawCanvas, FRAMEDEALY - renderDiff);
+//            	else
+            		drawHandler.postDelayed(drawCanvas, FRAMEDEALY);
             }
+            lastTimeDrawn = renderStartTime;
         }
         
         private void drawBackground(Canvas c){
+        	long t0 = System.currentTimeMillis();
         	if(background == null)
         		c.drawColor(Color.BLACK);
         	else
-        		c.drawBitmap(background, this.centerX - (background.getWidth() / 2) + offset, 0, null);
-        	
-        	/*if(loading)
-        		c.drawText("My Little Pony Wallpaper / loading...", this.centerX + offset, this.centerY - 15, backgroundTextPaint);        		
-        	else
-        		c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / " + realFPS + " FPS (cap at " + FPS + ")", this.centerX, this.centerY - 15, backgroundTextPaint);
-        	c.drawText("©2011 ov3rk1ll", this.centerX, this.centerY, backgroundTextPaint);
-        	c.drawText("http://android.ov3rk1ll.com", this.centerX, this.centerY + 15, backgroundTextPaint);*/
-        }
+        		c.drawBitmap(backgroundCacheBitmap, this.centerX - (backgroundImageWidth / 2) + offset, 0, null);        	
 
-     
+        	if(DEBUG_TEXT){
+	        	c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / " + realFPS + " FPS (cap at " + FPS + ")", 5, 50, backgroundTextPaint);
+	        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, 65, backgroundTextPaint);
+        	}
+        	if(DEBUG_RENDERTIME) Log.i("Render Background", "took " + (System.currentTimeMillis() - t0) + " ms");
+        }     
     } // End of SpriteEngine
     
 	public static String[] splitWithQualifiers(String SourceText, String TextDelimiter, String TextQualifier) {

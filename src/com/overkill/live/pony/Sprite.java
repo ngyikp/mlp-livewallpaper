@@ -43,7 +43,7 @@ public class Sprite {
 			gif.read(MyLittleWallpaperService.assets.open(fileName));
 			this.frameCount = gif.getFrameCount();
 			if(this.frameCount > 1)
-				this.fps = 1000 / gif.getDelay(0);
+				this.fps = gif.getDelay(0);
 			this.currentFrame = 0;
 			this.frameTime = 0;
 			this.spriteWidth = gif.width;
@@ -106,6 +106,9 @@ public class Sprite {
 		}
 	}
 
+	/**
+	 * Destroys the GifDecoder to free memory
+	 */
 	public void recycle() {
 		this.gif.recycle();
 		this.initialized = false;

@@ -14,12 +14,16 @@
     
 </PreferenceCategory><PreferenceCategory android:key="pony_settings" android:title="Ponies">
     <Preference android:title="Select Ponies" android:key="pony_select" android:summary="Choose which ponies should be displayed\n(More ponies equals more CPU)"></Preference>
+    <ListPreference android:title="Target Framerate" android:key="framerate_cap" android:summary="Higher Framerate means more CPU usage" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues"></ListPreference>
+    
     
 </PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="More">
     <Preference android:key="more_about" android:title="@string/app_name" android:summary="© 2011 ov3rk1ll"></Preference>
     <Preference android:title="Version" android:key="more_version" android:summary="1.0"></Preference>
     <Preference android:title="Visit" android:key="more_link" android:summary="http://android.ov3rk1ll.com"></Preference>
     <Preference android:key="more_donate" android:title="Donate (PayPal)" android:summary="Support this App"></Preference>
+    
+    <CheckBoxPreference android:key="debug_info" android:summary="Show Framerate and Errors in topleft corner" android:title="Show Debug info"></CheckBoxPreference>
 </PreferenceCategory>
     
 </PreferenceScreen>

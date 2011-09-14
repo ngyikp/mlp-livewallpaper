@@ -22,7 +22,7 @@ public class Behavior {
 	
 	public AllowedMoves allowedMoves;
 	
-	public String linkedBehaviorName;
+	public String linkedBehaviorName = null;
 	public Behavior linkedBehavior;
 
 	public long endTime;
@@ -125,4 +125,12 @@ public class Behavior {
         	return;
         }
     }
+	
+	public boolean equals(Behavior b){
+		return this.name.endsWith(b.name);
+	}
+	
+	public void recycle(){
+		this.current_image.recycle();
+	}
 }
