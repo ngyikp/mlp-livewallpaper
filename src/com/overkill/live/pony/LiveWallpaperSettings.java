@@ -8,7 +8,8 @@ import java.nio.channels.FileChannel;
 import java.util.List;
 
 import android.app.AlertDialog;
-import android.app.WallpaperManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
@@ -17,10 +18,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
@@ -29,13 +28,16 @@ import android.widget.Toast;
 
 public class LiveWallpaperSettings extends PreferenceActivity {
 	private static final String URL = "http://android.ov3rk1ll.com";
-	private static final String PAYPAL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=JBA3WQ9LAFH8C&lc=US&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted";
+	private static final String PAYPAL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4E99YZ7MYNAEE";
 	
 	String poniesName[];
     boolean poniesState[];
     
-	private static final int IMAGE_PICK = 1;
-	private static final int CROP_FROM_CAMERA = 2;
+	private Uri selectedImageUri;
+    
+	private static final int CROP_FROM_CAMERA = 1;
+	private static final int PICK_FROM_FILE = 2;
+
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -49,11 +51,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			e1.printStackTrace();
 		}
         
-        //poniesName = new String[ponyFolders.length];
         poniesState = new boolean[poniesName.length];
         
         for(int i = 0; i < poniesName.length; i++){
-        	//poniesName[i] = ponyFolders[i].getName();
         	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean(poniesName[i], false);
         }
         
@@ -116,97 +116,49 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		((Preference)findPreference("background_image")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				try {
-					Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);
-					intent.setType("image/*");
-					WallpaperManager wm = WallpaperManager.getInstance(LiveWallpaperSettings.this);
-		            int wallpaperWidth = wm.getDesiredMinimumWidth();
-		            int wallpaperHeight = wm.getDesiredMinimumHeight();
-		        	
-					intent.putExtra("crop", "true");
-		            intent.putExtra("outputX", wallpaperWidth);
-		            intent.putExtra("outputX", wallpaperWidth);
-		            intent.putExtra("outputY", wallpaperHeight);
-		            intent.putExtra("aspectX", wallpaperWidth);
-		            intent.putExtra("aspectY", wallpaperHeight);
-		            intent.putExtra("scale", true);
-		            intent.putExtra("return-data", false);
-		            intent.putExtra("setWallpaper", false);
-					intent.putExtra(MediaStore.EXTRA_OUTPUT, getTempUri());
-					intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-					intent.putExtra("noFaceDetection", true); // lol, negative boolean noFaceDetection}
-					startActivityForResult(intent, CROP_FROM_CAMERA);
-				} catch (Exception e) {
-					Toast.makeText(LiveWallpaperSettings.this, "Error", Toast.LENGTH_LONG).show();
-					e.printStackTrace();
-				}
-
-				
-				
-//				Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//				intent.setType("image/*");
-//				startActivityForResult(intent, IMAGE_PICK);
-				return true;
+				Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, "Pick image from"), PICK_FROM_FILE);                
+                return true;
 			}
 		});
 				
 	}
 	
-	private Uri getTempUri() {
-		return Uri.fromFile(getTempFile());
-		}
-
-		private File getTempFile() {
-		if (isSDCARDMounted()) {
-
-		File f = new File(Environment.getExternalStorageDirectory(), "background.jpg");
-		try {
-		f.createNewFile();
-		} catch (IOException e) {
-		e.printStackTrace();
-		Toast.makeText(this, "IO Error", Toast.LENGTH_LONG).show();
-		}
-		return f;
-		} else {
-		return null;
-		}
-		}
-
-		private boolean isSDCARDMounted(){
-		String status = Environment.getExternalStorageState();
-
-		if (status.equals(Environment.MEDIA_MOUNTED))
-			return true;
-		return false;
-		}
+	/**
+	 * Creates an empty public access file for the crop intent to write to
+	 * @return The Uri to the empty file
+	 * @throws IOException 
+	 */
+	private Uri getTempUri() throws IOException {
+		File f = new File(getFilesDir(), "temp_background.jpg");
+		if(f.exists()) f.delete();
+		FileOutputStream fos = openFileOutput("temp_background.jpg", Context.MODE_WORLD_WRITEABLE);
+        fos.close();         
+        return Uri.fromFile(f);
+	}
 	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) { 
-	    super.onActivityResult(requestCode, resultCode, data); 
+		if (resultCode != RESULT_OK) return;
 
 	    switch(requestCode) { 
-	    case IMAGE_PICK:
-	        if(resultCode == RESULT_OK){  
-	            doCrop(data.getData());
-//	            String[] filePathColumn = {MediaStore.Images.Media.DATA};
-//
-//	            Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-//	            cursor.moveToFirst();
-//
-//	            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-//	            String filePath = cursor.getString(columnIndex);
-//	            cursor.close();
-//
-//	            Editor editor = getPreferenceManager().getSharedPreferences().edit();
-//	            editor.putString("background_image", filePath);
-//	            editor.commit();
-	        }
+	    case PICK_FROM_FILE: 
+	    	selectedImageUri = data.getData();
+	    	try {
+				doCrop();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+
+	    	break;	  
 		case CROP_FROM_CAMERA:
 			if (resultCode != RESULT_OK) return;
 	        Bundle extras = data.getExtras();	
 	        if (extras != null) {
-	            //Bitmap photo = extras.getParcelable("data");
+	        	
 	            File newfile = new File(getFilesDir(), "background.jpg");
-	            File temp = getTempFile();
+	            File temp = new File(getFilesDir(), "temp_background.jpg");
 	            try {
 					copyFile(temp, newfile);
 		            temp.delete();
@@ -217,7 +169,6 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	            	Toast.makeText(this, "No image found", Toast.LENGTH_LONG).show();
 	            	return;
 	            }
-	            //saveBitmapToFile(filePath, photo); 
 	            Editor editor = getPreferenceManager().getSharedPreferences().edit();
 	            editor.putString("background_image", newfile.getPath());
 	            editor.commit();
@@ -226,64 +177,52 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	    }
 	}
 	
-	private void doCrop(Uri selectedImage) {
- 
-        Intent intent = new Intent("com.android.camera.action.CROP");
+	private void doCrop() throws IOException {
+    	
+    	Intent intent = new Intent("com.android.camera.action.CROP");
         intent.setType("image/*");
- 
+        
         List<ResolveInfo> list = getPackageManager().queryIntentActivities(intent, 0);
- 
+        
         int size = list.size();
- 
-        if (size == 0) {
-            Toast.makeText(this, "Can not find image crop app", Toast.LENGTH_SHORT).show(); 
+        
+        if (size == 0) {	        
+        	Toast.makeText(this, "Can not find image crop app", Toast.LENGTH_SHORT).show();
+        	
             return;
         } else {
-        	 WallpaperManager wm = WallpaperManager.getInstance(this);
-             int wallpaperWidth = wm.getDesiredMinimumWidth();
-             int wallpaperHeight = wm.getDesiredMinimumHeight();
-        	
-            intent.setData(selectedImage);
- 
-            intent.putExtra("outputX", wallpaperWidth);
-            intent.putExtra("outputY", wallpaperHeight);
-            intent.putExtra("aspectX", wallpaperWidth);
-            intent.putExtra("aspectY", wallpaperHeight);
-            intent.putExtra("scale", true);
-            intent.putExtra("return-data", true);
- 
-            Intent i = new Intent(intent);
-            //ResolveInfo res = list.get(0);
- 
-            //i.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
- 
-            startActivityForResult(i, CROP_FROM_CAMERA);
+        	intent.setData(selectedImageUri);
             
+        	int w = getWallpaperDesiredMinimumWidth();
+        	int h = getWallpaperDesiredMinimumHeight();
+        	
+            intent.putExtra("outputX", w);
+            intent.putExtra("outputY", h);
+            intent.putExtra("aspectX", w);
+            intent.putExtra("aspectY", h);
+            intent.putExtra("scale", true);
+            
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, getTempUri());
+            intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+
+            
+        	
+        	Intent i = new Intent(intent);
+	        ResolveInfo res	= list.get(0);
+
+	        i.setComponent( new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+
+	        startActivityForResult(i, CROP_FROM_CAMERA);
         }
-    }
-	
-	public boolean saveBitmapToFile(String path, Bitmap bitmap) {
-		File file = new File(path);
-		boolean res = false;
-		if (!file.exists()) {
-			try {
-				FileOutputStream fos = new FileOutputStream(file); 
-				res = bitmap.compress(CompressFormat.JPEG, 100, fos); 
-				fos.close();
-			} catch (Exception e) { }
-		}
-		return res;
-	}	
+	}
+		
 	
 	public static void copyFile(File src, File dst) throws IOException {
 	    FileChannel inChannel = new FileInputStream(src).getChannel();
 	    FileChannel outChannel = new FileOutputStream(dst).getChannel();
-	    try
-	    {
+	    try {
 	        inChannel.transferTo(0, inChannel.size(), outChannel);
-	    }
-	    finally
-	    {
+	    } finally {
 	        if (inChannel != null)
 	            inChannel.close();
 	        if (outChannel != null)
