@@ -3,7 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     
     <PreferenceCategory android:key="background_settings" android:title="Background Settings">
-    <Preference android:key="background_color" android:title="Select Background Color" android:enabled="false"></Preference>
+    <Preference android:key="background_color" android:title="Select Background Color"></Preference>
     <CheckBoxPreference android:key="background_global" android:title="Use custom Background"></CheckBoxPreference>
     <Preference android:key="background_image" android:title="Select Background Image" android:dependency="background_global"></Preference>
     

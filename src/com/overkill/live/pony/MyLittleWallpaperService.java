@@ -59,6 +59,8 @@ public class MyLittleWallpaperService extends WallpaperService {
     public Canvas backgroundCacheCanvas;
     public int backgroundImageWidth = 0;
     
+    public int backgroundColor = 0;
+    
     public double realFPS = 0;
     
     public static AssetManager assets;
@@ -231,8 +233,9 @@ public class MyLittleWallpaperService extends WallpaperService {
 			FPS = Integer.valueOf(sharedPreferences.getString("framerate_cap", "10"));
 			FRAMEDEALY = 1000 / FPS;
 			// get Background image if we want one
+			backgroundColor = sharedPreferences.getInt("background_color", 0xff000000);
+			
 			String filePath = sharedPreferences.getString("background_image", null);
-			Log.i(TAG, "background: " + filePath);
 	        if(sharedPreferences.getBoolean("background_global", false) == false){
 	        	background = null;
 	        }else{
@@ -395,7 +398,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         private void drawBackground(Canvas c){
         	long t0 = System.currentTimeMillis();
         	if(background == null)
-        		c.drawColor(Color.BLACK);
+        		c.drawColor(backgroundColor);
         	else
         		c.drawBitmap(backgroundCacheBitmap, this.centerX - (backgroundImageWidth / 2) + offset, 0, null);        	
 

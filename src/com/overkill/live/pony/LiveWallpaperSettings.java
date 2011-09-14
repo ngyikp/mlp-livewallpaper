@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
+import yuku.ambilwarna.AmbilWarnaDialog;
+import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener;
+import yuku.ambilwarna.AmbilWarnaKotak;
+
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -38,12 +42,15 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	private static final int CROP_FROM_CAMERA = 1;
 	private static final int PICK_FROM_FILE = 2;
 
+	private Context context;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
         addPreferencesFromResource(R.xml.preferences);
+        
+        context = getApplicationContext();
         
         try {
 			poniesName  = getAssets().list("ponies");
@@ -123,7 +130,32 @@ public class LiveWallpaperSettings extends PreferenceActivity {
                 return true;
 			}
 		});
+						
+		((Preference)findPreference("background_color")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				colorpicker();
+                return true;
+			}
+		});
 				
+	}
+	
+	public void colorpicker(){
+	    
+		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LiveWallpaperSettings.this, getPreferenceManager().getSharedPreferences().getInt("background_color", 0xff000000), new OnAmbilWarnaListener(){
+			@Override
+			public void onCancel(AmbilWarnaDialog dialog) { }
+
+			@Override
+			public void onOk(AmbilWarnaDialog dialog, int color) {
+				Editor editor = getPreferenceManager().getSharedPreferences().edit();
+				editor.putInt("background_color", color);
+				editor.commit();				
+			}				
+		});
+
+	    dialog.show();
 	}
 	
 	/**
