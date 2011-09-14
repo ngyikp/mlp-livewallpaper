@@ -2,15 +2,18 @@ package com.overkill.live.pony;
 
 import java.io.FileNotFoundException;
 import android.graphics.Canvas;
-import android.graphics.Movie;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.util.Log;
 
-public class Sprite {
+public class GIFSprite {
 	
 	private String fileName;
-	private Movie gif;
-	private int duration;
+	private GifDecoder gif;
+	private int fps;
+	private long frameTime;
+	private int currentFrame;
+	private int frameCount;
 	private int spriteWidth;
 	private int spriteHeight;
 	
@@ -21,8 +24,10 @@ public class Sprite {
 	 * @param fileName
 	 * @throws FileNotFoundException
 	 */
-	public Sprite(String fileName) throws FileNotFoundException{
+	public GIFSprite(String fileName) throws FileNotFoundException{
 		this.fileName = fileName;
+		gif = new GifDecoder();
+		gif.init();		
 	}
 
 	/**
@@ -32,10 +37,18 @@ public class Sprite {
 		long t0 = System.currentTimeMillis();
 		try {
 			Log.i("Sprite", "loading " + fileName);
-			this.gif = Movie.decodeStream(MyLittleWallpaperService.assets.open(fileName));
-			this.duration = gif.duration();
-			this.spriteWidth = gif.width();
-			this.spriteHeight = gif.height();
+			if(gif == null){
+				gif = new GifDecoder();
+				gif.init();
+			}
+			gif.read(MyLittleWallpaperService.assets.open(fileName));
+			this.frameCount = gif.getFrameCount();
+			if(this.frameCount > 1)
+				this.fps = gif.getDelay(0);
+			this.currentFrame = 0;
+			this.frameTime = 0;
+			this.spriteWidth = gif.width;
+			this.spriteHeight = gif.height;
 			this.initialized = true;
 			Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load");
 		} catch (Exception e) {
@@ -67,8 +80,14 @@ public class Sprite {
 	 */
 	public void update(long globalTime) {
 		if(!initialized) this.initialize();
-		int pos = (int)(globalTime % this.duration);
-        this.gif.setTime(pos);
+		if(globalTime > this.frameTime + this.fps ) {
+            this.frameTime = globalTime;
+            this.currentFrame +=1;
+     
+            if(this.currentFrame >= this.frameCount) {
+                this.currentFrame = 0;
+            }
+        }		
 	}
 
 	/**
@@ -82,7 +101,8 @@ public class Sprite {
 		try{
 			PointF temp = new PointF(position.x, position.y);
 			temp.x += MyLittleWallpaperService.offset;
-			this.gif.draw(canvas, temp.x, temp.y);
+			RectF dest = new RectF(temp.x, position.y, temp.x + this.spriteWidth, position.y + this.spriteHeight);	 
+		    canvas.drawBitmap(this.gif.getFrame(this.currentFrame), null, dest, null);		
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -92,6 +112,7 @@ public class Sprite {
 	 * Destroys the GifDecoder to free memory
 	 */
 	public void recycle() {
+		this.gif.recycle();
 		this.initialized = false;
 		this.gif = null;
 	}

@@ -18,7 +18,7 @@ import android.util.Log;
  *
  */
 public class Pony{
-	private static final int MOVEMENT_DELAY_MS = 100;
+	private static final int MOVEMENT_DELAY_MS = 50;
 	
 	public String name;
 	
@@ -35,7 +35,7 @@ public class Pony{
 	private boolean hasSpawned = false;
 
 	private Behavior previous_behavior;
-	
+
 	//private float largestSizeX;
 
 	//private int largestSizeY;
@@ -76,16 +76,23 @@ public class Pony{
 		this.position = new PointF(0, 0);
 	}
 
-	public void update(long globalTime) {
+	public void update(final long globalTime) {
 		if (current_behavior == null) { // If we have no behavior, select a random one
 			selectBehavior(null, globalTime);
 		} else if ((current_behavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
-			if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Current Behavior ended");
-			if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
-				selectBehavior(current_behavior.linkedBehavior, globalTime);
-			} else { // Otherwise select a random one
-				selectBehavior(null, globalTime);
-			}
+			Thread think = new Thread(new Runnable() {				
+				@Override
+				public void run() {
+					if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Current Behavior ended");
+					if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
+						selectBehavior(current_behavior.linkedBehavior, globalTime);
+					} else { // Otherwise select a random one
+						selectBehavior(null, globalTime);
+					}					
+				}
+			});
+			think.start();
+			
 		}   	        
 	    // Move the Pony
 		if(hasSpawned == false){
