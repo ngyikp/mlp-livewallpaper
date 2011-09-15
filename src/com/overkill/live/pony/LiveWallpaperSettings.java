@@ -206,6 +206,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	    	break;	  
 		case CROP_FROM_CAMERA:
 			if (resultCode != RESULT_OK) return;
+			if (data == null) return;
 	        Bundle extras = data.getExtras();	
 	        if (extras != null) {
 	        	
