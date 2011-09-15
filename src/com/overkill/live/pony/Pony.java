@@ -80,18 +80,18 @@ public class Pony{
 		if (current_behavior == null) { // If we have no behavior, select a random one
 			selectBehavior(null, globalTime);
 		} else if ((current_behavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
-			Thread think = new Thread(new Runnable() {				
-				@Override
-				public void run() {
+//			Thread think = new Thread(new Runnable() {				
+//				@Override
+//				public void run() {
 					if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Current Behavior ended");
 					if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
 						selectBehavior(current_behavior.linkedBehavior, globalTime);
 					} else { // Otherwise select a random one
 						selectBehavior(null, globalTime);
 					}					
-				}
-			});
-			think.start();
+//				}
+//			});
+//			think.start();
 			
 		}   	        
 	    // Move the Pony
@@ -528,6 +528,5 @@ public class Pony{
 				}
 			}
 		}
-	}
-	
+	}	
 }

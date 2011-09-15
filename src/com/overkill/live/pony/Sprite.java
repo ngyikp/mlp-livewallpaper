@@ -1,9 +1,14 @@
 package com.overkill.live.pony;
 
 import java.io.FileNotFoundException;
+
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Movie;
 import android.graphics.PointF;
+import android.graphics.Bitmap.Config;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.RectF;
 import android.util.Log;
 
 public class Sprite {
@@ -13,8 +18,14 @@ public class Sprite {
 	private int duration;
 	private int spriteWidth;
 	private int spriteHeight;
+	private int lastDrawnFrame = -1;
+	
+	private Bitmap cacheBitmap;
+	private Canvas cacheCanvas;
 	
 	private boolean initialized = false;
+	
+	private boolean frameInCache = false;
 	
 	/**
 	 * Sets the file and initializes the GifDecoder
@@ -31,14 +42,16 @@ public class Sprite {
 	public void initialize(){
 		long t0 = System.currentTimeMillis();
 		try {
-			Log.i("Sprite", "loading " + fileName);
 			this.gif = Movie.decodeStream(MyLittleWallpaperService.assets.open(fileName));
 			this.duration = gif.duration();
 			this.duration = Math.max(this.duration, 1);
 			this.spriteWidth = gif.width();
-			this.spriteHeight = gif.height();
+			this.spriteHeight = gif.height();		
+			cacheBitmap = Bitmap.createBitmap(this.spriteWidth, this.spriteHeight, Config.ARGB_4444);
+	        cacheCanvas = new Canvas();
+	        cacheCanvas.setBitmap(cacheBitmap);
 			this.initialized = true;
-			Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load");
+			if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
@@ -50,16 +63,16 @@ public class Sprite {
 	 */
 	public int getSpriteHeight() {
 		if(!initialized) this.initialize();
-		return this.spriteHeight;
+		return (int) (this.spriteHeight * MyLittleWallpaperService.SCALE);
 	}
 	
 	/**
 	 * Returns the width to the GIF
 	 * @return width to the GIF
 	 */
-	public float getSpriteWidth() {
+	public int getSpriteWidth() {
 		if(!initialized) this.initialize();
-		return this.spriteWidth;
+		return (int) (this.spriteWidth * MyLittleWallpaperService.SCALE);
 	}
 	
 	/**
@@ -68,8 +81,13 @@ public class Sprite {
 	 */
 	public void update(long globalTime) {
 		if(!initialized) this.initialize();
-		int pos = (int)(globalTime % this.duration);
+		int pos  = (int)(globalTime % this.duration);
         this.gif.setTime(pos);
+        if(pos == lastDrawnFrame)
+        	frameInCache = true;
+        else
+        	frameInCache = false;
+        lastDrawnFrame = pos;
 	}
 
 	/**
@@ -80,23 +98,26 @@ public class Sprite {
 	public void draw(Canvas canvas, PointF position) {
 		if(canvas == null || position == null) return;
 		if(!initialized) this.initialize();
-		try{
-			PointF temp = new PointF(position.x, position.y);
-			temp.x += MyLittleWallpaperService.offset;
-			this.gif.draw(canvas, temp.x, temp.y);
-		}catch (Exception e) {
-			e.printStackTrace();
+
+		PointF realPosition = new PointF(position.x + MyLittleWallpaperService.offset, position.y);
+		// only resize Bitmap if we need to
+		if(MyLittleWallpaperService.SCALE != 1.0f){
+			// if we need to draw a new frame
+			if(frameInCache == false){
+				cacheCanvas.drawColor(0, Mode.CLEAR);
+				this.gif.draw(cacheCanvas, 0, 0);
+			}	            
+			canvas.drawBitmap(cacheBitmap, null, new RectF(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
+		}else{
+			this.gif.draw(canvas, realPosition.x, realPosition.y);
 		}
 	}
 
 	/**
-	 * Destroys the GifDecoder to free memory
+	 * Destroys the Movie to free memory
 	 */
 	public void recycle() {
 		this.initialized = false;
 		this.gif = null;
-	}
-
-
-	
+	}	
 }

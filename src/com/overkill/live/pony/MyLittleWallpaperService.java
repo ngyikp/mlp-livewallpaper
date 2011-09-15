@@ -23,16 +23,17 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.widget.Toast;
 
 public class MyLittleWallpaperService extends WallpaperService {
+	public static final String TAG = "mlpWallpaper";
+	
+	// Settings
 	public static final boolean DEBUG_RENDERTIME = false;
 	public static boolean DEBUG_TEXT = true;
-	public static final String TAG = "mlpWallpaper";
-	private static int FPS = 20;
-	private static int FRAMEDEALY = 1000 / FPS;
+	public static int FPS = 20;
+	public static int FRAMEDEALY = 1000 / FPS;
+	public static float SCALE = 1.0f;
 	
 	private final Handler drawHandler = new Handler();
 	
@@ -233,6 +234,9 @@ public class MyLittleWallpaperService extends WallpaperService {
 			DEBUG_TEXT = sharedPreferences.getBoolean("debug_info", false);
 			FPS = Integer.valueOf(sharedPreferences.getString("framerate_cap", "10"));
 			FRAMEDEALY = 1000 / FPS;
+			
+			SCALE = Float.valueOf(sharedPreferences.getString("pony_scale", "1.0"));
+
 			// get Background image if we want one
 			backgroundColor = sharedPreferences.getInt("background_color", 0xff000000);
 			
@@ -408,7 +412,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         		c.drawBitmap(backgroundCacheBitmap, this.centerX - (backgroundImageWidth / 2) + offset, 0, null);        	
 
         	if(DEBUG_TEXT){
-	        	c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / " + realFPS + " FPS (cap at " + FPS + ")", 5, 50, backgroundTextPaint);
+	        	c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / Scale is " + SCALE + " / " + realFPS + " FPS (cap at " + FPS + ")", 5, 50, backgroundTextPaint);
 	        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, 65, backgroundTextPaint);
         	}
         	if(DEBUG_RENDERTIME) Log.i("Render Background", "took " + (System.currentTimeMillis() - t0) + " ms");

@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
     
 <application android:label="@string/app_name" android:icon="@drawable/icon">
-    <activity android:label="@string/app_name" android:name=".LiveWallpaperSettings" android:exported="true" android:theme="@android:style/Theme.Light">
+    <activity android:label="@string/app_name" android:name=".LiveWallpaperSettings" android:exported="true" android:theme="@android:style/Theme.Light.NoTitleBar">
     </activity>
     <service 
 		    android:name="MyLittleWallpaperService"

@@ -15,6 +15,7 @@
 </PreferenceCategory><PreferenceCategory android:key="pony_settings" android:title="Ponies">
     <Preference android:title="Select Ponies" android:key="pony_select" android:summary="Choose which ponies should be displayed\n(More ponies equals more CPU)"></Preference>
     <ListPreference android:title="Target Framerate" android:key="framerate_cap" android:summary="Higher Framerate means more CPU usage" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues"></ListPreference>
+    <EditTextPreference android:title="Scale" android:key="pony_scale" android:summary="Resize the ponies" android:defaultValue="1" android:inputType="numberDecimal"></EditTextPreference>
     
     
 </PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="More">

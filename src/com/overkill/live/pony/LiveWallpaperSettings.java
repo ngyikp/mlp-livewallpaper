@@ -9,7 +9,6 @@ import java.util.List;
 
 import yuku.ambilwarna.AmbilWarnaDialog;
 import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener;
-import yuku.ambilwarna.AmbilWarnaKotak;
 
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -24,10 +23,15 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.provider.MediaStore;
+import android.text.method.DigitsKeyListener;
+import android.widget.EditText;
 import android.widget.Toast;
 
 public class LiveWallpaperSettings extends PreferenceActivity {
@@ -41,16 +45,12 @@ public class LiveWallpaperSettings extends PreferenceActivity {
     
 	private static final int CROP_FROM_CAMERA = 1;
 	private static final int PICK_FROM_FILE = 2;
-
-	private Context context;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
         addPreferencesFromResource(R.xml.preferences);
-        
-        context = getApplicationContext();
         
         try {
 			poniesName  = getAssets().list("ponies");
@@ -79,6 +79,24 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			public boolean onPreferenceClick(Preference preference) {
 				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(URL));
 				startActivity(i);
+				return true;
+			}
+		});
+		
+		((CheckBoxPreference)findPreference("background_global")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+			@Override
+			public boolean onPreferenceChange(Preference preference, Object newValue) {
+				boolean value = (Boolean) newValue;
+				if(value == false){
+					return true;
+				}else{
+					if(getPreferenceManager().getSharedPreferences().getString("background_image", null) == null){
+						Intent intent = new Intent();
+		                intent.setType("image/*");
+		                intent.setAction(Intent.ACTION_GET_CONTENT);
+		                startActivityForResult(Intent.createChooser(intent, "Pick image from"), PICK_FROM_FILE);
+					}
+				}
 				return true;
 			}
 		});
@@ -119,6 +137,8 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
+		EditText editText = (EditText)((EditTextPreference)findPreference("pony_scale")).getEditText();
+        editText.setKeyListener(DigitsKeyListener.getInstance(false, true));
 		
 		((Preference)findPreference("background_image")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
@@ -172,7 +192,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	}
 	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) { 
-		if (resultCode != RESULT_OK) return;
+		if (resultCode != RESULT_OK){ ((CheckBoxPreference)findPreference("background_global")).setChecked(false); return;}
 
 	    switch(requestCode) { 
 	    case PICK_FROM_FILE: 
