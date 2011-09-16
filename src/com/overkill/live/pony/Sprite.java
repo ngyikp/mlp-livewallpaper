@@ -3,12 +3,12 @@ package com.overkill.live.pony;
 import java.io.FileNotFoundException;
 
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Movie;
-import android.graphics.PointF;
-import android.graphics.Bitmap.Config;
+import android.graphics.Point;
 import android.graphics.PorterDuff.Mode;
-import android.graphics.RectF;
+import android.graphics.Rect;
 import android.util.Log;
 
 public class Sprite {
@@ -18,21 +18,18 @@ public class Sprite {
 	private int duration;
 	private int spriteWidth;
 	private int spriteHeight;
-	private int lastDrawnFrame = -1;
 	
 	private Bitmap cacheBitmap;
 	private Canvas cacheCanvas;
 	
 	private boolean initialized = false;
 	
-	private boolean frameInCache = false;
-	
 	/**
 	 * Sets the file and initializes the GifDecoder
 	 * @param fileName
 	 * @throws FileNotFoundException
 	 */
-	public Sprite(String fileName) throws FileNotFoundException{
+	public Sprite(String fileName){
 		this.fileName = fileName;
 	}
 
@@ -47,7 +44,7 @@ public class Sprite {
 			this.duration = Math.max(this.duration, 1);
 			this.spriteWidth = gif.width();
 			this.spriteHeight = gif.height();		
-			cacheBitmap = Bitmap.createBitmap(this.spriteWidth, this.spriteHeight, Config.ARGB_4444);
+			cacheBitmap = Bitmap.createBitmap(this.spriteWidth, this.spriteHeight, Config.ARGB_4444); // no need for 8888 cuz of the 8bit graphics
 	        cacheCanvas = new Canvas();
 	        cacheCanvas.setBitmap(cacheBitmap);
 			this.initialized = true;
@@ -83,11 +80,6 @@ public class Sprite {
 		if(!initialized) this.initialize();
 		int pos  = (int)(globalTime % this.duration);
         this.gif.setTime(pos);
-        if(pos == lastDrawnFrame)
-        	frameInCache = true;
-        else
-        	frameInCache = false;
-        lastDrawnFrame = pos;
 	}
 
 	/**
@@ -95,29 +87,19 @@ public class Sprite {
 	 * @param canvas The {@link Canvas} to draw on
 	 * @param position The position on the canvas
 	 */
-	public void draw(Canvas canvas, PointF position) {
+	public void draw(Canvas canvas, Point position) {
 		if(canvas == null || position == null) return;
 		if(!initialized) this.initialize();
 
-		PointF realPosition = new PointF(position.x + MyLittleWallpaperService.offset, position.y);
+		Point realPosition = new Point(position.x + MyLittleWallpaperService.offset, position.y);
 		// only resize Bitmap if we need to
-		if(MyLittleWallpaperService.SCALE != 1.0f){
-			// if we need to draw a new frame
-			if(frameInCache == false){
-				cacheCanvas.drawColor(0, Mode.CLEAR);
-				this.gif.draw(cacheCanvas, 0, 0);
-			}	            
-			canvas.drawBitmap(cacheBitmap, null, new RectF(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
+		if(MyLittleWallpaperService.SCALE != 1){
+			//Clean up
+			cacheCanvas.drawColor(0, Mode.CLEAR);
+			this.gif.draw(cacheCanvas, 0, 0);	            
+			canvas.drawBitmap(cacheBitmap, null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
 		}else{
 			this.gif.draw(canvas, realPosition.x, realPosition.y);
 		}
 	}
-
-	/**
-	 * Destroys the Movie to free memory
-	 */
-	public void recycle() {
-		this.initialized = false;
-		this.gif = null;
-	}	
 }

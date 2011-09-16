@@ -12,7 +12,6 @@ import android.app.WallpaperManager;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -50,16 +49,14 @@ public class MyLittleWallpaperService extends WallpaperService {
 	public static int frameWidth;
 	public static int frameHeight;
 
-    public static float offset;
+    public static int offset;
     
     public static RectF viewPort;
 	
     public static boolean loading = true;
     
     public static Bitmap background = null;
-    public Bitmap backgroundCacheBitmap;
-    public Canvas backgroundCacheCanvas;
-    public int backgroundImageWidth = 0;
+    public int backgroundWidth = 0;
     
     public int backgroundColor = 0;
     
@@ -245,12 +242,10 @@ public class MyLittleWallpaperService extends WallpaperService {
 	        	background = null;
 	        }else{
 	        	if(filePath != null && new File(filePath).exists()){
-	        		background = BitmapFactory.decodeFile(filePath);
-		        	backgroundCacheBitmap = Bitmap.createBitmap(wallpaperWidth, wallpaperHeight, Config.RGB_565);
-		            backgroundCacheCanvas = new Canvas();
-		            backgroundCacheCanvas.setBitmap(backgroundCacheBitmap);
-		            backgroundCacheCanvas.drawBitmap(background, 0, 0, null);
-		            backgroundImageWidth = backgroundCacheBitmap.getWidth();
+	        		BitmapFactory.Options opts = new BitmapFactory.Options();
+	        		opts.inPurgeable = true;
+	        		background = BitmapFactory.decodeFile(filePath, opts);
+		            backgroundWidth = background.getWidth();
 	        	}else{
 	        		background = null;
 	        	}
@@ -362,23 +357,23 @@ public class MyLittleWallpaperService extends WallpaperService {
             Canvas c = null;
             long currentTime = SystemClock.elapsedRealtime();
             try {
-            	long t1 = System.currentTimeMillis();
-            	c = holder.lockCanvas();
-              	if(DEBUG_RENDERTIME) Log.i("Render Lock Canvas", "took " + (System.currentTimeMillis() - t1) + " ms");
-                //c.save();
-            	drawBackground(c);
-                if (c != null) {
-                	if(loading == false){
-                    	long t0 = System.currentTimeMillis();
-	                	for(int i=0; i < activePonies.size(); i++){
-	                		Pony p = activePonies.get(i);
-	  	                	p.update(currentTime);
-	  	                	p.draw(c);
-	  	                }
-	                	if(DEBUG_RENDERTIME) Log.i("Render Pony", "took " + (System.currentTimeMillis() - t0) + " ms");
-                	}
-                	//c.restore();
-                }
+            	synchronized (holder) {
+	            	long t1 = System.currentTimeMillis();
+	            	c = holder.lockCanvas(null);
+	              	if(DEBUG_RENDERTIME) Log.i("Render Lock Canvas", "took " + (System.currentTimeMillis() - t1) + " ms");
+	            	drawBackground(c);
+	                if (c != null) {
+	                	if(loading == false){
+	                    	long t0 = System.currentTimeMillis();
+		                	for(int i=0; i < activePonies.size(); i++){
+		                		Pony p = activePonies.get(i);
+		  	                	p.update(currentTime);
+		  	                	p.draw(c);
+		  	                }
+		                	if(DEBUG_RENDERTIME) Log.i("Render Pony", "took " + (System.currentTimeMillis() - t0) + " ms");
+	                	}
+	                }
+            	}
             } catch (Exception e) {
             	e.printStackTrace();
 			}
@@ -409,7 +404,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         	if(background == null)
         		c.drawColor(backgroundColor);
         	else
-        		c.drawBitmap(backgroundCacheBitmap, this.centerX - (backgroundImageWidth / 2) + offset, 0, null);        	
+        		c.drawBitmap(background, this.centerX - (backgroundWidth / 2) + offset, 0, null);        	
 
         	if(DEBUG_TEXT){
 	        	c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / Scale is " + SCALE + " / " + realFPS + " FPS (cap at " + FPS + ")", 5, 50, backgroundTextPaint);

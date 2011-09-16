@@ -1,8 +1,9 @@
 package com.overkill.live.pony;
 
 import android.graphics.Canvas;
-import android.graphics.PointF;
+import android.graphics.Point;
 import android.graphics.Rect;
+
 import com.overkill.live.pony.Pony.AllowedMoves;
 
 public class Behavior {
@@ -12,13 +13,13 @@ public class Behavior {
 	public double minDuration; 
 	public double speed;
 	
-	public Sprite current_image;
+	private Sprite current_image = null;
 	
 	public String image_right_path;
-	public Sprite image_right;
+	//private Sprite image_right = null;
 	
 	public String image_left_path;
-	public Sprite image_left;
+	//private Sprite image_left = null;
 	
 	public AllowedMoves allowedMoves;
 	
@@ -30,6 +31,7 @@ public class Behavior {
 	public AllowedMoves Allowed_Movement;
 	public boolean Skip;
 	public boolean right;
+	private boolean currentRight = true;
 	public int destination_xcoord;
 	public int destination_ycoord;
 	public boolean horizontal;
@@ -48,7 +50,7 @@ public class Behavior {
 	 * @param globalTime The time
 	 */
 	public void update(long globalTime) {
-		this.current_image.update(globalTime);
+		this.getCurrentImage().update(globalTime);
 	}
 
 	/**
@@ -56,24 +58,60 @@ public class Behavior {
 	 * @param canvas The {@link Canvas} to draw on
 	 * @param position The position on the canvas
 	 */
-	public void draw(Canvas canvas, PointF position) {
-		this.current_image.draw(canvas, position);
+	public void draw(Canvas canvas, Point position) {
+		this.getCurrentImage().draw(canvas, position);
 	}	
 	
-	public PointF getDestination(int screenWidth, int screenHeight) {
+	/**
+	 * Set the current image if it is null or we need to change direction
+	 * @return
+	 */
+	public Sprite getCurrentImage(){
+		if(current_image == null){
+			 this.selectCurrentImage();
+		}
+		if(currentRight != right){
+			this.selectCurrentImage();
+			currentRight = right;
+		}
+		return current_image;
+	}
+	
+	/**
+	 * Set Image depending on current direction
+	 */
+	private void selectCurrentImage(){
+		if (this.right)
+	        current_image = new Sprite(image_right_path);
+	    else
+	        current_image = new Sprite(image_left_path);
+	}
+		
+	public Point getDestination(int screenWidth, int screenHeight) {
 	    // If we have a coordinate to go to
 	    if (destination_xcoord != 0 && destination_ycoord != 0) {
 	    	// Return its position on the screen
 	    	Rect screenBounds = new Rect(0, 0, screenWidth, screenHeight);
-	        return new PointF((int)(((destination_xcoord * screenBounds.right) / 100) + screenBounds.left),
+	        return new Point((int)(((destination_xcoord * screenBounds.right) / 100) + screenBounds.left),
 	                         (int)(((destination_ycoord * screenBounds.bottom) / 100) + screenBounds.top));
 	    }
 
 	    // Otherwise return a blank Point
-    	return new PointF();
+    	return new Point();
     }
 	
-	public void bounce(Pony pony, PointF current_location, PointF new_location, int x_movement, int y_movement) {
+	/**
+	 * Bounce the Pony of the screen edge
+	 * @param pony
+	 * @param current_location
+	 * @param new_location
+	 * @param x_movement
+	 * @param y_movement
+	 */
+	public void bounce(Pony pony, Point current_location, Point new_location, int x_movement, int y_movement) {
+		// Force the engine to load images again
+		this.destroy();
+		
     	if (x_movement == 0 && y_movement == 0)
     		return;
     	
@@ -91,8 +129,8 @@ public class Behavior {
     	boolean x_bad = false;
     	boolean y_bad = false;
     	
-    	PointF new_location_x = new PointF(new_location.x, current_location.y);
-    	PointF new_location_y = new PointF(current_location.x, new_location.y);
+    	Point new_location_x = new Point(new_location.x, current_location.y);
+    	Point new_location_y = new Point(current_location.x, new_location.y);
 
         if (x_movement != 0 && y_movement != 0) {
 	        if (!pony.isPonyOnWallpaper(new_location_x)) {
@@ -126,11 +164,13 @@ public class Behavior {
         }
     }
 	
+	
 	public boolean equals(Behavior b){
+		// Compare the name since they should be unique
 		return this.name.endsWith(b.name);
 	}
 	
-	public void recycle(){
-		this.current_image.recycle();
+	public void destroy(){
+		this.current_image = null;
 	}
 }
