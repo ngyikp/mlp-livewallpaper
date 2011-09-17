@@ -9,7 +9,6 @@ import java.util.List;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -28,7 +27,7 @@ public class Pony{
 	
 	//private AllowedMoves movement;
 	public ArrayList<Behavior> behaviors;
-	private Behavior current_behavior;
+	private Behavior current_behavior = null;
 	private boolean ponyDirection;
 
 	private long lastTimeMoved = 0;
@@ -81,19 +80,12 @@ public class Pony{
 		if (current_behavior == null) { // If we have no behavior, select a random one
 			selectBehavior(null, globalTime);
 		} else if ((current_behavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
-//			Thread think = new Thread(new Runnable() {				
-//				@Override
-//				public void run() {
-					if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Current Behavior ended");
-					if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
-						selectBehavior(current_behavior.linkedBehavior, globalTime);
-					} else { // Otherwise select a random one
-						selectBehavior(null, globalTime);
-					}					
-//				}
-//			});
-//			think.start();
-			
+			if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Current Behavior ended");
+			if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
+				selectBehavior(current_behavior.linkedBehavior, globalTime);
+			} else { // Otherwise select a random one
+				selectBehavior(null, globalTime);
+			}					
 		}   	        
 	    // Move the Pony
 		if(hasSpawned == false){
@@ -107,9 +99,8 @@ public class Pony{
 	public void teleport() {
 		Point teleport_location = new Point();		
 		for (int i = 0; i < 300; i++) {
-			// Then select a random location to appear at
-			Rect screenBounds = new Rect(0, 0, MyLittleWallpaperService.wallpaperWidth, MyLittleWallpaperService.wallpaperHeight);		
-		    teleport_location = new Point(MyLittleWallpaperService.rand.nextInt((int)screenBounds.width()) + (int)screenBounds.left, MyLittleWallpaperService.rand.nextInt((int)screenBounds.height()) + (int)screenBounds.top);
+			// Then select a random location to appear at		
+		    teleport_location = new Point(MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.width()) + (int)RenderEngine.screenBounds.left, MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.height()) + (int)RenderEngine.screenBounds.top);
 		
 		    if(isPonyOnWallpaper(teleport_location) == true) break;
 		}	
@@ -127,7 +118,7 @@ public class Pony{
 		double speed = current_behavior.speed;
 				
 		// Get the destination for following (will be blank(0,0) if not following)
-		destination = current_behavior.getDestination(MyLittleWallpaperService.wallpaperWidth, MyLittleWallpaperService.wallpaperHeight);
+		destination = current_behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
 		
 		// Calculate the movement speed
 		int x_movement = 0;
@@ -168,19 +159,10 @@ public class Pony{
 	
 	    if (destination.x == 0 && destination.y == 0) {
 	    	current_behavior.bounce(this, position, new_location, x_movement, y_movement);
-		    //paint(globalTime);
 	    }
 	    
 	}
-	
-//	private void paint(long globalTime) {	
-//		// Set the correct image to the behavior (left or right)
-//	    if (current_behavior.right)
-//	        current_behavior.current_image = current_behavior.getRightImage();
-//	    else
-//	        current_behavior.current_image = current_behavior.getLeftImage();
-//	}
-	
+		
 	public void touch() {
 		current_behavior = behaviors.get(0);
 		for (Behavior behavior : behaviors) {
@@ -189,7 +171,6 @@ public class Pony{
 				break;
 			}
 		}
-		//paint(SystemClock.elapsedRealtime());
 	}
 	
 	public void draw(Canvas canvas) {
@@ -198,13 +179,13 @@ public class Pony{
 		}
 	}
 	
-	public boolean isPonyOnLocation(float x, float y){
-		RectF ponyBox = new RectF(position.x, position.y, position.x + current_behavior.getCurrentImage().getSpriteWidth(), position.y + current_behavior.getCurrentImage().getSpriteHeight());
+	public boolean isPonyOnLocation(int x, int y){
+		Rect ponyBox = new Rect(position.x, position.y, position.x + current_behavior.getCurrentImage().getSpriteWidth(), position.y + current_behavior.getCurrentImage().getSpriteHeight());
 		return ponyBox.contains(x, y);
 	}
 	
 	/**
-	 * Checks if location is withing the wallpaper
+	 * Checks if location is on the wallpaper
 	 * @param location
 	 * @return
 	 */
@@ -215,24 +196,28 @@ public class Pony{
 		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth(), location.y));
 		points.add(new Point(location.x, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
 
-		for (Point point : points) {
-			Rect screenBounds = new Rect(0, 0, MyLittleWallpaperService.wallpaperWidth, MyLittleWallpaperService.wallpaperHeight);				
-			if (screenBounds.contains(point.x, point.y) == false) {
+		for (Point point : points) {				
+			if (RenderEngine.screenBounds.contains(point.x, point.y) == false) {
 				return false;
 			}
 		}
 		return true;
 	}
 	
+	/**
+	 * Checks if the Pony is currently visible on the screen
+	 * @param location Location to check
+	 * @return True if visible
+	 */
 	public boolean isPonyOnScreen(Point location){
 		List<Point> points = new LinkedList<Point>();
-		points.add(new Point(location.x + MyLittleWallpaperService.offset, location.y));
-		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth() + MyLittleWallpaperService.offset, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
-		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth() + MyLittleWallpaperService.offset, location.y));
-		points.add(new Point(location.x + MyLittleWallpaperService.offset, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
+		points.add(new Point(location.x + RenderEngine.OFFSET, location.y));
+		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
+		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y));
+		points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
 
 		for (Point point : points) {
-			if (MyLittleWallpaperService.viewPort.contains(point.x, point.y) == true) {
+			if (RenderEngine.visibleScreenArea.contains(point.x, point.y) == true) {
 				return true;
 			}
 		}
@@ -266,11 +251,7 @@ public class Pony{
        }
 		
        new_behavior.image_right_path = right_image_path;
-       //new_behavior.image_right = new Sprite(right_image_path);
        new_behavior.image_left_path = left_image_path;
-       //new_behavior.image_left = new Sprite(left_image_path);
-			
-       //new_behavior.current_image = new_behavior.getRightImage();
 			
        // Add this new behavior to the list
        behaviors.add(new_behavior);			
@@ -379,18 +360,12 @@ public class Pony{
 		return direction;
 	}
 	
-	// TODO clean up
 	public void selectBehavior(Behavior Specified_Behavior, long globalTime) {
 		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
 		long startTime = SystemClock.elapsedRealtime();
+						
+		previous_behavior = current_behavior;
 		
-		// ------- GC - Y U NOT CLEAN UP ?? ---------
-		if(current_behavior != null){
-			current_behavior.destroy();
-			current_behavior = null;
-		}
-		// ------------------------------------------
-				
 		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Picking from " + behaviors.size());
 
 		double dice;
@@ -408,7 +383,7 @@ public class Pony{
 				selection = MyLittleWallpaperService.rand.nextInt(behaviors.size());
 				if (dice <= behaviors.get(selection).chance && behaviors.get(selection).Skip == false) {
 		
-	                destination = behaviors.get(selection).getDestination(MyLittleWallpaperService.frameWidth, MyLittleWallpaperService.frameHeight);
+	                destination = behaviors.get(selection).getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
 	
 	                //if (!(destination.x == 0 && destination.y == 0)) {
 						current_behavior = behaviors.get(selection);
@@ -424,7 +399,7 @@ public class Pony{
 				if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "forced to 0");
 			}				
 		} else { // Set the forced behavior that was specified
-			destination = Specified_Behavior.getDestination(MyLittleWallpaperService.frameWidth, MyLittleWallpaperService.frameHeight);
+			destination = Specified_Behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
 
 			if (destination.x == 0 && destination.y == 0) {
 				selectBehavior(null, globalTime);
@@ -512,15 +487,14 @@ public class Pony{
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
 	    
-	    // Tell the GC to pick up the old behavior
+	    // TODO Tell the GC to pick up the old behavior
 		if(current_behavior != null && previous_behavior != null && (previous_behavior.equals(current_behavior) == false)){
 			Log.i("Pony[" + name + "]", "swaping from " + previous_behavior.name + " to " + current_behavior.name);
 			previous_behavior.destroy();
 			previous_behavior = null;
-			System.gc();
+			//System.gc();
 		}
 	    
-	    previous_behavior = null;
 		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 	}
 	

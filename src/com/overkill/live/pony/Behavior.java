@@ -3,6 +3,7 @@ package com.overkill.live.pony;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.util.Log;
 
 import com.overkill.live.pony.Pony.AllowedMoves;
 
@@ -16,10 +17,10 @@ public class Behavior {
 	private Sprite current_image = null;
 	
 	public String image_right_path;
-	//private Sprite image_right = null;
+	private Sprite image_right = null;
 	
 	public String image_left_path;
-	//private Sprite image_left = null;
+	private Sprite image_left = null;
 	
 	public AllowedMoves allowedMoves;
 	
@@ -67,6 +68,11 @@ public class Behavior {
 	 * @return
 	 */
 	public Sprite getCurrentImage(){
+		if(image_left == null)
+			image_left = new Sprite(image_left_path);
+		if(image_right == null){
+			image_right = new Sprite(image_right_path);
+		}
 		if(current_image == null){
 			 this.selectCurrentImage();
 		}
@@ -81,10 +87,11 @@ public class Behavior {
 	 * Set Image depending on current direction
 	 */
 	private void selectCurrentImage(){
+		current_image = null;
 		if (this.right)
-	        current_image = new Sprite(image_right_path);
+	        current_image = image_right;
 	    else
-	        current_image = new Sprite(image_left_path);
+	        current_image = image_left;
 	}
 		
 	public Point getDestination(int screenWidth, int screenHeight) {
@@ -109,8 +116,6 @@ public class Behavior {
 	 * @param y_movement
 	 */
 	public void bounce(Pony pony, Point current_location, Point new_location, int x_movement, int y_movement) {
-		// Force the engine to load images again
-		this.destroy();
 		
     	if (x_movement == 0 && y_movement == 0)
     		return;
@@ -171,6 +176,9 @@ public class Behavior {
 	}
 	
 	public void destroy(){
+		Log.i("Behavior[" + name + "]", "destroy()");
 		this.current_image = null;
+		this.image_left = null;
+		this.image_right = null;
 	}
 }

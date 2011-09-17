@@ -17,6 +17,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -29,43 +30,24 @@ public class MyLittleWallpaperService extends WallpaperService {
 	
 	// Settings
 	public static final boolean DEBUG_RENDERTIME = false;
-	public static boolean DEBUG_TEXT = true;
-	public static int FPS = 20;
-	public static int FRAMEDEALY = 1000 / FPS;
-	public static float SCALE = 1.0f;
-	
-	private final Handler drawHandler = new Handler();
-	
-	public ArrayList<Pony> randomPonySet = new ArrayList<Pony>();
+		
+	//public ArrayList<Pony> randomPonySet = new ArrayList<Pony>();
 
-    public ArrayList<Pony> activePonies = new ArrayList<Pony>();
+    // public ArrayList<Pony> activePonies = new ArrayList<Pony>();
     public ArrayList<Pony> selectablePonies = new ArrayList<Pony>();
     
     public static Random rand;
 
-	public static int wallpaperWidth;
-	public static int wallpaperHeight;
-	
-	public static int frameWidth;
-	public static int frameHeight;
-
-    public static int offset;
+//	public static int wallpaperWidth;
+//	public static int wallpaperHeight;
+//	
+//	public static int frameWidth;
+//	public static int frameHeight;
     
-    public static RectF viewPort;
-	
-    public static boolean loading = true;
-    
-    public static Bitmap background = null;
-    public int backgroundWidth = 0;
-    
-    public int backgroundColor = 0;
-    
-    public double realFPS = 0;
-    
+    //public static Rect visibleScreenArea;
+	    
     public static AssetManager assets;
-    
-    public Paint backgroundTextPaint = new Paint();
-        
+            
 	// Behavior options
 	public static final int BO_name = 1;
 	public static final int BO_probability = 2;
@@ -84,15 +66,11 @@ public class MyLittleWallpaperService extends WallpaperService {
 	public static final int BO_object_to_follow = 15;
     
     @Override
-    public void onCreate() {
+    public void onCreate() {    	
         super.onCreate();        
         
         rand = new Random();
-        assets = getAssets();
-
-        WallpaperManager wm  = WallpaperManager.getInstance(this);
-        wallpaperWidth = wm.getDesiredMinimumWidth();
-        wallpaperHeight = wm.getDesiredMinimumHeight();
+        assets = getAssets();        
         
 		try {
 			String[] ponyFolders  = assets.list("ponies");
@@ -104,7 +82,6 @@ public class MyLittleWallpaperService extends WallpaperService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		loading = false;
         
         
     }
@@ -119,7 +96,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 			           if(line.startsWith("'")) continue; //skip comments
 			           if(line.startsWith("Name")){ p = new Pony(line.substring(5)); continue;}
 			           if(line.startsWith("Behavior")){
-				           	String[] data = splitWithQualifiers(line, ",", "\"");
+				           	String[] data = ToolSet.splitWithQualifiers(line, ",", "\"");
 				           	
 				           	AllowedMoves movement = AllowedMoves.None;
 				           	String linked_behavior = "";
@@ -196,128 +173,74 @@ public class MyLittleWallpaperService extends WallpaperService {
     }
 
     class SpriteEngine extends Engine implements SharedPreferences.OnSharedPreferenceChangeListener {
-        private float touchX = -1;
-        private float touchY = -1;
-        //private long startTime;
-        private float centerX;
-        private float centerY;
-        private boolean keyLook = false;
-                
-        private boolean visible;
-        
-        private long lastTimeDrawn = 0;
-
+    	private RenderEngine engine;
         private SharedPreferences preferences;
 
         SpriteEngine() {
-            lastTimeDrawn = SystemClock.elapsedRealtime() - (1000 / FPS);         
-           
-            this.centerX = wallpaperWidth/2.0f;
-            this.centerY = wallpaperHeight/2.0f;
-            
-            viewPort = new RectF(0, 0, 0, 0);            
-            
-        	backgroundTextPaint.setColor(Color.WHITE);
-        	backgroundTextPaint.setTextAlign(Align.LEFT);
-        	
+        	this.engine = new RenderEngine(getBaseContext(), getSurfaceHolder());            	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
             onSharedPreferenceChanged(preferences, null);
-
         }
 
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-			DEBUG_TEXT = sharedPreferences.getBoolean("debug_info", false);
-			FPS = Integer.valueOf(sharedPreferences.getString("framerate_cap", "10"));
-			FRAMEDEALY = 1000 / FPS;
-			
-			SCALE = Float.valueOf(sharedPreferences.getString("pony_scale", "1.0"));
+			engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
+			engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
+			engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));
 
 			// get Background image if we want one
-			backgroundColor = sharedPreferences.getInt("background_color", 0xff000000);
+			this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
 			
 			String filePath = sharedPreferences.getString("background_image", null);
 	        if(sharedPreferences.getBoolean("background_global", false) == false){
-	        	background = null;
+	        	this.engine.setBackground((Bitmap) null);
 	        }else{
-	        	if(filePath != null && new File(filePath).exists()){
-	        		BitmapFactory.Options opts = new BitmapFactory.Options();
-	        		opts.inPurgeable = true;
-	        		background = BitmapFactory.decodeFile(filePath, opts);
-		            backgroundWidth = background.getWidth();
-	        	}else{
-	        		background = null;
-	        	}
+	        	this.engine.setBackground(filePath);
 	        }
 	        		        
-	        activePonies.clear();
+	        this.engine.clearPonies();
 	        for(Pony p : selectablePonies){
 	        	Log.i(TAG, "do we want \"" + p.name + "\"?");
 	        	if(sharedPreferences.getBoolean(p.name, false) == false)
 	        		continue;
-	        	activePonies.add(p);
+	        	 this.engine.addPony(p);
 	        }
 		}  
-                
-        private final Runnable drawCanvas = new Runnable() {
-            public void run() {
-            	drawFrame();              
-            }
-        };
-        
-        @Override
-        public void onCreate(SurfaceHolder surfaceHolder) {
-            super.onCreate(surfaceHolder);
-            // TODO add useful touch interaction
-            setTouchEventsEnabled(false);
-        }
-
-        @Override
-        public void onDestroy() {
-            super.onDestroy();
-            drawHandler.removeCallbacks(drawCanvas);
-        }
-
+                        
         @Override
         public void onVisibilityChanged(boolean visible) {
-            this.visible = visible;
-            if (this.visible) {
-                drawFrame();
-            } else {
-                drawHandler.removeCallbacks(drawCanvas);
+        	this.engine.setVisibility(visible);
+        	if(visible){
+                this.engine.resume();
+            }else{
+            	this.engine.pause();
             }
         }
 
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
-            frameWidth = width;
-            frameHeight = height;
-            if(wallpaperWidth <= 0 || wallpaperHeight <= 0){
-            	wallpaperWidth = frameWidth;
-            	wallpaperHeight = frameHeight;
-            }
-            viewPort = new RectF(0, 0, frameWidth, frameHeight);
-            drawFrame();
+            this.engine.setFrameSize(width, height);
+            this.engine.render();
         }
 
         @Override
         public void onSurfaceCreated(SurfaceHolder holder) {
             super.onSurfaceCreated(holder);
+            this.engine.start();
         }
 
         @Override
         public void onSurfaceDestroyed(SurfaceHolder holder) {
             super.onSurfaceDestroyed(holder);
-            this.visible = false;
-            drawHandler.removeCallbacks(drawCanvas);
+            this.engine.stop();
         }
 
         @Override
         public void onOffsetsChanged(float xOffset, float yOffset, float xStep, float yStep, int xPixels, int yPixels) {
-            offset = xPixels;      
-            drawFrame();
+            engine.setOffset(xPixels);     
+            engine.render();
         }
 
 //        @Override
@@ -348,118 +271,6 @@ public class MyLittleWallpaperService extends WallpaperService {
 //            super.onTouchEvent(event);
 //        }
 
-        private void drawFrame() {
-            long renderStartTime = SystemClock.elapsedRealtime();
-            if((1000 / (renderStartTime - lastTimeDrawn)) > FPS)
-            	return;
-            
-            final SurfaceHolder holder = getSurfaceHolder();
-            Canvas c = null;
-            long currentTime = SystemClock.elapsedRealtime();
-            try {
-            	synchronized (holder) {
-	            	long t1 = System.currentTimeMillis();
-	            	c = holder.lockCanvas(null);
-	              	if(DEBUG_RENDERTIME) Log.i("Render Lock Canvas", "took " + (System.currentTimeMillis() - t1) + " ms");
-	            	drawBackground(c);
-	                if (c != null) {
-	                	if(loading == false){
-	                    	long t0 = System.currentTimeMillis();
-		                	for(int i=0; i < activePonies.size(); i++){
-		                		Pony p = activePonies.get(i);
-		  	                	p.update(currentTime);
-		  	                	p.draw(c);
-		  	                }
-		                	if(DEBUG_RENDERTIME) Log.i("Render Pony", "took " + (System.currentTimeMillis() - t0) + " ms");
-	                	}
-	                }
-            	}
-            } catch (Exception e) {
-            	e.printStackTrace();
-			}
-            finally {
-            	long t0 = System.currentTimeMillis();
-                if (c != null) holder.unlockCanvasAndPost(c);
-                if(DEBUG_RENDERTIME) Log.i("Render Draw Canvas", "took " + (System.currentTimeMillis() - t0) + " ms");
-            } 
-            realFPS = 1000 / (renderStartTime - lastTimeDrawn);
-            if(DEBUG_RENDERTIME) Log.i("Render Frame", "took " + (renderStartTime - lastTimeDrawn) + " ms to render (" + realFPS + " fps)");
-            
-            // Reschedule the next redraw
-            drawHandler.removeCallbacks(drawCanvas);
-            if (visible) {
-            	// TODO change delay by a small amount if we took to long
-//            	long renderDiff = (renderStartTime - lastTimeDrawn) - FRAMEDEALY;
-//            	Log.i("Render", "renderDiff = " + renderDiff);
-//            	if(renderDiff > 0)
-//            		drawHandler.postDelayed(drawCanvas, FRAMEDEALY - renderDiff);
-//            	else
-            		drawHandler.postDelayed(drawCanvas, FRAMEDEALY);
-            }
-            lastTimeDrawn = renderStartTime;
-        }
-        
-        private void drawBackground(Canvas c){
-        	long t0 = System.currentTimeMillis();
-        	if(background == null)
-        		c.drawColor(backgroundColor);
-        	else
-        		c.drawBitmap(background, this.centerX - (backgroundWidth / 2) + offset, 0, null);        	
-
-        	if(DEBUG_TEXT){
-	        	c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / Scale is " + SCALE + " / " + realFPS + " FPS (cap at " + FPS + ")", 5, 50, backgroundTextPaint);
-	        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, 65, backgroundTextPaint);
-        	}
-        	if(DEBUG_RENDERTIME) Log.i("Render Background", "took " + (System.currentTimeMillis() - t0) + " ms");
-        }     
+           
     } // End of SpriteEngine
-    
-	public static String[] splitWithQualifiers(String SourceText, String TextDelimiter, String TextQualifier) {
-		return splitWithQualifiers(SourceText, TextDelimiter, TextQualifier, "");
-	}
-    public static String[] splitWithQualifiers(String SourceText, String TextDelimiter, String TextQualifier, String ClosingTextQualifier) {
-		String[] strTemp;
-		String[] strRes; int I; int J; String A; String B; boolean blnStart = false;
-		B = "";
-		
-		if (TextDelimiter != " ") SourceText = SourceText.trim();
-		if (ClosingTextQualifier.length() > 0) SourceText = SourceText.replace(ClosingTextQualifier, TextQualifier);
-		strTemp = SourceText.split(TextDelimiter);
-		for (I = 0; I < strTemp.length; I++) {
-		    J = strTemp[I].indexOf(TextQualifier, 0);
-		    if (J > -1) {
-		        A = strTemp[I].replace(TextQualifier, "").trim();
-		        String C = strTemp[I].replace(TextQualifier, "");
-		        if (strTemp[I].trim().equals(TextQualifier + A + TextQualifier)) {
-		                B = B + A + " \n";
-		                blnStart = false;
-		        } else if (strTemp[I].trim().equals(TextQualifier + C + TextQualifier)) {
-	                B = B + C + " \n";
-	                blnStart = false;
-		        } else if (strTemp[I].trim().equals(TextQualifier + A)) {
-		                B = B + A + TextDelimiter;
-		                blnStart = true;
-		        } else if (strTemp[I].trim().equals(A)) {
-		                B = B + A + TextDelimiter;
-		                blnStart = false;
-		        } else if (strTemp[I].trim().equals(A + TextQualifier)) {
-		                B = B + A + "\n";
-		                blnStart = false;
-		        }
-		    } else {
-		        if (blnStart)
-		            B = B + strTemp[I] + TextDelimiter;
-		        else
-		            B = B + strTemp[I] + "\n";
-		    }
-		}
-		if (B.length() > 0) {
-		    B = B.substring(0, B.length());
-		    strRes = B.split("\n");
-		} else {
-		    strRes = new String[1];
-		    strRes[0] = SourceText;
-		}
-		return strRes;
-	}
 }
