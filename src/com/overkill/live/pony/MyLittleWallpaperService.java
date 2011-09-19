@@ -2,6 +2,9 @@ package com.overkill.live.pony;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
@@ -19,6 +22,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.service.wallpaper.WallpaperService;
@@ -37,16 +41,9 @@ public class MyLittleWallpaperService extends WallpaperService {
     public ArrayList<Pony> selectablePonies = new ArrayList<Pony>();
     
     public static Random rand;
-
-//	public static int wallpaperWidth;
-//	public static int wallpaperHeight;
-//	
-//	public static int frameWidth;
-//	public static int frameHeight;
-    
-    //public static Rect visibleScreenArea;
 	    
     public static AssetManager assets;
+    File localFolder;
             
 	// Behavior options
 	public static final int BO_name = 1;
@@ -72,12 +69,23 @@ public class MyLittleWallpaperService extends WallpaperService {
         rand = new Random();
         assets = getAssets();        
         
+        if(isSDMounted())
+			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
+		else
+			localFolder = new File(getFilesDir(), "ponies");
+        
 		try {
-			String[] ponyFolders  = assets.list("ponies");
-		        
-		    for(String pony : ponyFolders){
-		    	Log.i("Pony", "loading folder " + pony);
-		        selectablePonies.add(createPonyFromFolder("ponies/" + pony));
+			//String[] ponyFolders  = assets.list("ponies");
+			File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
+				@Override
+				public boolean accept(File pathname) {
+					return pathname.isDirectory();
+				}
+			});
+			
+		    for(File pony : ponyFolders){
+		    	Log.i("Pony", "loading folder " + pony.getPath() + " " + pony.exists());
+		        selectablePonies.add(createPonyFromFile(pony));
 		    }
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -86,12 +94,18 @@ public class MyLittleWallpaperService extends WallpaperService {
         
     }
     
-    public Pony createPonyFromFolder(String path){
+    private boolean isSDMounted(){
+		String state = Environment.getExternalStorageState();
+		return state.equals(Environment.MEDIA_MOUNTED);
+	}
+    
+    public Pony createPonyFromFile(File folder){
     	Pony p = new Pony("Derp");
     	try{
 		    String line = "";
-		    File folder = new File(path);
-		    BufferedReader content = new BufferedReader(new InputStreamReader(assets.open(path + "/Pony.ini")));
+		    File iniFile = new File(folder, "pony.ini");
+		    Log.i("Pony", "loading file " + iniFile.getPath() + " " + iniFile.exists());
+		    BufferedReader content = new BufferedReader(new FileReader(iniFile));
 		    while ((line = content.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
 			           if(line.startsWith("Name")){ p = new Pony(line.substring(5)); continue;}
@@ -161,7 +175,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 		}
 		return p;
     }
-    
+        
     @Override
     public void onDestroy() {
         super.onDestroy();

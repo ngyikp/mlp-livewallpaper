@@ -1,10 +1,6 @@
 package com.overkill.live.pony;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-
-import javax.security.auth.Destroyable;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -17,16 +13,19 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.util.Log;
 
-public class Sprite {
+public class MovieSprite {
 	
 	private String fileName;
-	private GifDecoder gif;
+	private Movie gif;
+	private int duration;
 	private int spriteWidth;
 	private int spriteHeight;
 	
-	private long lastFrameTime = 0;
-	private int currentFrame = 0;
+	private Bitmap cacheBitmap;
+	private Canvas cacheCanvas;
 	
+	private Paint paintClear = new Paint();
+	private Paint paintRender = new Paint();
 	
 	private boolean initialized = false;
 	
@@ -35,8 +34,10 @@ public class Sprite {
 	 * @param fileName
 	 * @throws FileNotFoundException
 	 */
-	public Sprite(String fileName){
-		this.fileName = fileName;		
+	public MovieSprite(String fileName){
+		this.fileName = fileName;
+		paintClear.setXfermode(new PorterDuffXfermode(Mode.CLEAR));
+		paintRender.setDither(false);
 	}
 
 	/**
@@ -45,10 +46,14 @@ public class Sprite {
 	public void initialize(){
 		long t0 = System.currentTimeMillis();
 		try {
-			this.gif = new GifDecoder();
-			this.gif.read(new FileInputStream(this.fileName));
-			this.spriteWidth = gif.width;
-			this.spriteHeight = gif.height;		
+			this.gif = Movie.decodeStream(MyLittleWallpaperService.assets.open(fileName));
+			this.duration = gif.duration();
+			this.duration = Math.max(this.duration, 1);
+			this.spriteWidth = gif.width();
+			this.spriteHeight = gif.height();		
+			cacheBitmap = Bitmap.createBitmap(this.spriteWidth, this.spriteHeight, Config.ARGB_4444); // no need for 8888 'cuz of the 8bit graphics
+	        cacheCanvas = new Canvas();
+	        cacheCanvas.setBitmap(cacheBitmap);
 			this.initialized = true;
 			Log.i("Sprite[" + fileName + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load");
 		} catch (Exception e) {
@@ -80,13 +85,8 @@ public class Sprite {
 	 */
 	public void update(long globalTime) {
 		if(!initialized) this.initialize();
-		if (globalTime > lastFrameTime + gif.getDelay(currentFrame)) {
-			lastFrameTime = globalTime;
-			currentFrame++;
-			if (currentFrame >= gif.getFrameCount()) {
-				currentFrame = 0;
-			}
-		}
+		int pos  = (int)(globalTime % this.duration);
+        this.gif.setTime(pos);
 	}
 
 	/**
@@ -99,12 +99,16 @@ public class Sprite {
 		if(!initialized) this.initialize();
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);
-		canvas.drawBitmap(gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
-	}
-	
-	public void destroy(){
-		if(this.gif != null) this.gif.destroy();
-		this.gif = null;
-		this.initialized = false;
+		// only resize Bitmap if we need to
+		if(RenderEngine.CONFIG_SCALE != 1){
+			// Clean up canvas
+			cacheCanvas.drawPaint(paintClear);
+			// draw gif frame to canvas
+			this.gif.draw(cacheCanvas, 0, 0);	 
+			// Draw & scale canvas to screen
+			canvas.drawBitmap(cacheBitmap, null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), paintRender);
+		}else{
+			this.gif.draw(canvas, realPosition.x, realPosition.y, paintRender);
+		}
 	}
 }

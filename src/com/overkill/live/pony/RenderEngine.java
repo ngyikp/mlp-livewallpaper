@@ -36,7 +36,9 @@ public class RenderEngine {
 	
     private ArrayList<Pony> activePonies = new ArrayList<Pony>();
 	private long realFPS;
+	
 	private Point screenCenter;
+	private Point wallpaperCenter;
 
 	public static Rect screenBounds;
 	public static Rect visibleScreenArea;
@@ -97,11 +99,17 @@ public class RenderEngine {
     	if(backgroundBitmap == null)
     		c.drawColor(backgroundColor);
     	else
-    		c.drawBitmap(backgroundBitmap, this.screenCenter.x - (backgroundWidth / 2) + OFFSET, 0, null);        	
+    		c.drawBitmap(backgroundBitmap, this.wallpaperCenter.x - (backgroundWidth / 2) + OFFSET, 0, null);        	
 
     	if(CONFIG_DEBUG_TEXT){
+    		backgroundTextPaint.setTextAlign(Align.LEFT);
         	c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / Scale is " + CONFIG_SCALE + " / " + realFPS + " FPS (cap at " + CONFIG_FPS + ")", 5, 50, backgroundTextPaint);
         	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, 65, backgroundTextPaint);
+    	}
+    	
+    	if(activePonies.size() == 0){
+    		backgroundTextPaint.setTextAlign(Align.CENTER);
+    		c.drawText("No ponies selected. Go to settings", screenCenter.x, screenCenter.y, backgroundTextPaint);
     	}
     }   
     
@@ -128,11 +136,12 @@ public class RenderEngine {
     	if(RenderEngine.screenBounds.width() <= 0 || RenderEngine.screenBounds.height() <= 0){
         	this.setWallpaperSize(w, h);   		
     	}
+    	this.screenCenter = new Point(w / 2, h / 2);
     }
     
     public void setWallpaperSize(int w, int h){
         RenderEngine.screenBounds = new Rect(0, 0, w, h);
-    	this.screenCenter = new Point(w / 2, h / 2);
+    	this.wallpaperCenter = new Point(w / 2, h / 2);
     }
     
     public void setBackground(int color){

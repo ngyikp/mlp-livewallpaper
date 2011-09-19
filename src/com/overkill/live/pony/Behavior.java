@@ -177,8 +177,9 @@ public class Behavior {
 	
 	public void destroy(){
 		Log.i("Behavior[" + name + "]", "destroy()");
-		this.current_image = null;
-		this.image_left = null;
-		this.image_right = null;
+		this.current_image.destroy();
+		this.image_left.destroy();
+		this.image_right.destroy();
+		System.gc();
 	}
 }

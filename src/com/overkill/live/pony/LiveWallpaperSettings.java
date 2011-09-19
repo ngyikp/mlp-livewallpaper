@@ -1,8 +1,12 @@
 package com.overkill.live.pony;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.List;
@@ -23,6 +27,7 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -31,6 +36,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.provider.MediaStore;
 import android.text.method.DigitsKeyListener;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -42,9 +48,15 @@ public class LiveWallpaperSettings extends PreferenceActivity {
     boolean poniesState[];
     
 	private Uri selectedImageUri;
+	private File localFolder;
     
 	private static final int CROP_FROM_CAMERA = 1;
 	private static final int PICK_FROM_FILE = 2;
+	
+	private boolean isSDMounted(){
+		String state = Environment.getExternalStorageState();
+		return state.equals(Environment.MEDIA_MOUNTED);
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,19 +64,45 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
         addPreferencesFromResource(R.xml.preferences);
         
-        try {
-			poniesName  = getAssets().list("ponies");
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+        if(isSDMounted())
+			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
+		else
+			localFolder = new File(getFilesDir(), "ponies");
         
+			//String[] ponyFolders  = assets.list("ponies");
+		File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.isDirectory();
+			}
+		});
+		
+		poniesName = new String[ponyFolders.length];
+		
+		for(int i = 0; i < ponyFolders.length; i++){
+			String line = "";
+		    File iniFile = new File(ponyFolders[i], "pony.ini");
+		    Log.i("Pony", "loading file " + iniFile.getPath() + " " + iniFile.exists());
+		    BufferedReader content;
+			try {
+				content = new BufferedReader(new FileReader(iniFile));
+				while ((line = content.readLine()) != null) {		    	
+			    	if(line.startsWith("'")) continue;
+				    if(line.startsWith("Name")){ poniesName[i] = line.substring(5).trim(); break;}
+			    }
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		    
+		}
+                
         poniesState = new boolean[poniesName.length];
         
         for(int i = 0; i < poniesName.length; i++){
         	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean(poniesName[i], false);
-        }
-        
-        
+        }       
         
 		try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);

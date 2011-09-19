@@ -3,4 +3,5 @@
     <string name="hello">Hello World, MyLittleWallpaperService!</string>
     <string name="app_name">MyLittleWallpaper</string>
     <string name="description">My Little Pony</string>
+    <string name="pony_manager">Pony Manager</string>
 </resources>

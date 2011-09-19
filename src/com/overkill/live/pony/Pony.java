@@ -18,7 +18,7 @@ import android.util.Log;
  *
  */
 public class Pony{
-	private static final int MOVEMENT_DELAY_MS = 50;
+	private static final int MOVEMENT_DELAY_MS = 100;
 	
 	public String name;
 	
