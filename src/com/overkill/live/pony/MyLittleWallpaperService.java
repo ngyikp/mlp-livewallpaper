@@ -212,8 +212,13 @@ public class MyLittleWallpaperService extends WallpaperService {
 	        }else{
 	        	this.engine.setBackground(filePath);
 	        }
-	        		        
+	        	
+	        for(Pony p : this.engine.getPonies()){
+	        	p.cleanUp();
+	        }
+	        
 	        this.engine.clearPonies();
+	        
 	        for(Pony p : selectablePonies){
 	        	Log.i(TAG, "do we want \"" + p.name + "\"?");
 	        	if(sharedPreferences.getBoolean(p.name, false) == false)

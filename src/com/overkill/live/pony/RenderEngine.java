@@ -190,6 +190,10 @@ public class RenderEngine {
     	this.activePonies.clear();
     }
     
+    public ArrayList<Pony> getPonies(){
+    	return this.activePonies;
+    }
+    
     public void setVisibility(boolean visible){
     	this.visible = visible;
     }

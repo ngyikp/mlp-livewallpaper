@@ -45,10 +45,12 @@ public class Sprite {
 	public void initialize(){
 		long t0 = System.currentTimeMillis();
 		try {
-			this.gif = new GifDecoder();
-			this.gif.read(new FileInputStream(this.fileName));
-			this.spriteWidth = gif.width;
-			this.spriteHeight = gif.height;		
+			GifDecoder decoder = new GifDecoder();
+			Log.i("GifDecoder.read", this.fileName);
+			decoder.read(new FileInputStream(this.fileName));
+			this.spriteWidth = decoder.width;
+			this.spriteHeight = decoder.height;		
+			this.gif = decoder;
 			this.initialized = true;
 			Log.i("Sprite[" + fileName + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load");
 		} catch (Exception e) {
@@ -103,7 +105,8 @@ public class Sprite {
 	}
 	
 	public void destroy(){
-		if(this.gif != null) this.gif.destroy();
+		Log.i("Sprite.destroy", this.fileName);
+		//if(this.gif != null) this.gif.destroy();
 		this.gif = null;
 		this.initialized = false;
 	}

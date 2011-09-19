@@ -67,12 +67,7 @@ public class Behavior {
 	 * Set the current image if it is null or we need to change direction
 	 * @return
 	 */
-	public Sprite getCurrentImage(){
-		if(image_left == null)
-			image_left = new Sprite(image_left_path);
-		if(image_right == null){
-			image_right = new Sprite(image_right_path);
-		}
+	public Sprite getCurrentImage(){		
 		if(current_image == null){
 			 this.selectCurrentImage();
 		}
@@ -88,10 +83,16 @@ public class Behavior {
 	 */
 	private void selectCurrentImage(){
 		current_image = null;
-		if (this.right)
+		if (this.right){
+			if(image_right == null){
+				image_right = new Sprite(image_right_path);
+			}
 	        current_image = image_right;
-	    else
+		}else{
+	    	if(image_left == null)
+				image_left = new Sprite(image_left_path);
 	        current_image = image_left;
+	    }
 	}
 		
 	public Point getDestination(int screenWidth, int screenHeight) {
@@ -176,10 +177,12 @@ public class Behavior {
 	}
 	
 	public void destroy(){
-		Log.i("Behavior[" + name + "]", "destroy()");
-		this.current_image.destroy();
-		this.image_left.destroy();
-		this.image_right.destroy();
-		System.gc();
+		//Log.i("Behavior[" + name + "]", "destroy()");
+		if(this.current_image != null) this.current_image.destroy();
+		this.current_image = null;
+		if(this.image_left != null) this.image_left.destroy();
+		this.image_left = null;
+		if(this.image_right != null) this.image_right.destroy();
+		this.image_right = null;
 	}
 }

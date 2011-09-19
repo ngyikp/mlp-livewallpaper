@@ -489,10 +489,10 @@ public class Pony{
 	    
 	    // TODO Tell the GC to pick up the old behavior
 		if(current_behavior != null && previous_behavior != null && (previous_behavior.equals(current_behavior) == false)){
-			Log.i("Pony[" + name + "]", "swaping from " + previous_behavior.name + " to " + current_behavior.name);
+			//Log.i("Pony[" + name + "]", "swaping from " + previous_behavior.name + " to " + current_behavior.name);
 			previous_behavior.destroy();
 			previous_behavior = null;
-			//System.gc();
+			System.gc();
 		}
 	    
 		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
@@ -516,4 +516,9 @@ public class Pony{
 			}
 		}
 	}	
+	
+	public void cleanUp(){
+		for(Behavior b : behaviors)
+			b.destroy();
+	}
 }
