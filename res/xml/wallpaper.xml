@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wallpaper android:settingsActivity="com.overkill.live.pony.LiveWallpaperSettings"
-	android:thumbnail="@drawable/icon" xmlns:android="http://schemas.android.com/apk/res/android"
+	android:thumbnail="@drawable/ic_launcher" xmlns:android="http://schemas.android.com/apk/res/android"
 	android:description="@string/description" />

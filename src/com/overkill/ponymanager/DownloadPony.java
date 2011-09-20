@@ -1,7 +1,6 @@
 package com.overkill.ponymanager;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 public class DownloadPony {
 	public static final String STATE_INSTALLED = "installed";

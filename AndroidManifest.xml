@@ -6,13 +6,13 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
     
-<application android:label="@string/app_name" android:icon="@drawable/icon">
-    <activity android:label="@string/app_name" android:name=".LiveWallpaperSettings" android:exported="true" android:theme="@android:style/Theme.Light.NoTitleBar">
+<application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:theme="@android:style/Theme.Light">
+    <activity android:label="@string/app_name" android:name=".LiveWallpaperSettings" android:exported="true" android:theme="@android:style/Theme.Light.NoTitleBar" android:icon="@drawable/ic_launcher">
     </activity>
     <service 
 		    android:name="MyLittleWallpaperService"
 		    android:enabled="true"
-		    android:icon="@drawable/icon"
+		    android:icon="@drawable/ic_launcher"
 		    android:label="@string/app_name"
 		    android:permission="android.permission.BIND_WALLPAPER">
 	    <intent-filter android:priority="1" >
@@ -22,7 +22,7 @@
 	      android:name="android.service.wallpaper" 
 	      android:resource="@xml/wallpaper" />
 	</service>
-    <activity android:name="com.overkill.ponymanager.PonyManager" android:theme="@android:style/Theme.Light" android:label="@string/pony_manager" android:icon="@drawable/icon">
+    <activity android:name="com.overkill.ponymanager.PonyManager" android:theme="@android:style/Theme.Light" android:label="@string/pony_manager" android:icon="@drawable/ic_launcher">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"></action>
             <category android:name="android.intent.category.LAUNCHER"></category>

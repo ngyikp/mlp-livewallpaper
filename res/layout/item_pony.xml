@@ -4,7 +4,7 @@
   android:orientation="vertical"
   android:layout_width="fill_parent"
   android:layout_height="fill_parent">
-  	<ImageView android:layout_height="wrap_content" android:src="@drawable/icon" android:layout_width="wrap_content" android:layout_alignParentTop="true" android:layout_alignParentLeft="true" android:id="@+id/imagePony" android:layout_alignBottom="@+id/textState" android:scaleType="fitCenter"></ImageView>
+  	<ImageView android:layout_height="wrap_content" android:src="@drawable/ponytemp" android:layout_width="wrap_content" android:layout_alignParentTop="true" android:layout_alignParentLeft="true" android:id="@+id/imagePony" android:layout_alignBottom="@+id/textState" android:scaleType="fitCenter"></ImageView>
     <TextView android:layout_height="wrap_content" android:text="TextView" android:textAppearance="?android:attr/textAppearanceLarge" android:layout_alignParentTop="true" android:layout_toRightOf="@+id/imagePony" android:id="@+id/textName" android:layout_width="fill_parent" android:layout_marginLeft="5dp"></TextView>
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TextView" android:textAppearance="?android:attr/textAppearanceSmall" android:layout_below="@+id/textName" android:layout_alignLeft="@+id/textName" android:id="@+id/textState"></TextView>
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="?android:attr/textAppearanceSmall" android:layout_alignTop="@+id/textState" android:layout_toRightOf="@+id/textState" android:id="@+id/textDivider" android:text="|" android:layout_marginLeft="2dp" android:layout_marginRight="2dp"></TextView>

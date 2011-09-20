@@ -3,7 +3,6 @@ package com.overkill.live.pony;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.util.Log;
 
 import com.overkill.live.pony.Pony.AllowedMoves;
 

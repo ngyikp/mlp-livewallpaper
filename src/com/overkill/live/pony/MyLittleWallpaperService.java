@@ -3,28 +3,16 @@ package com.overkill.live.pony;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
 import com.overkill.live.pony.Pony.AllowedMoves;
 
-import android.app.WallpaperManager;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Paint.Align;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.SystemClock;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -164,7 +152,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 				            		ycoord);
 				            p.linkBehaviors();
 				            continue;
-			           }
+			           } // Behavior
 		    		
 		    	}
 	        content.close();
