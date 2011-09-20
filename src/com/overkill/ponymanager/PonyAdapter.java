@@ -36,19 +36,18 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
 
         	((TextView)v.findViewById(R.id.textName)).setText(p.getName());
         	((TextView)v.findViewById(R.id.textState)).setText(p.getState());
-        	if(p.getState().equals(DownloadPony.STATE_INSTALLED))
+        	
+        	if(p.getState() == R.string.pony_state_installed)
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.GREEN);
-        	if(p.getState().equals(DownloadPony.STATE_NOT_INSTALLED))
+        	if(p.getState() == R.string.pony_state_not_installed)
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.RED);
         	
-        	if(p.getState().equals(DownloadPony.STATE_RUNNING)){
+        	if(p.getState() == R.string.pony_state_loading){
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.rgb(255, 126, 0));
-        		((TextView)v.findViewById(R.id.textInfo)).setText("Files: " + p.getDoneFileCount() + "/" + p.getTotalFileCount());
+        		((TextView)v.findViewById(R.id.textInfo)).setText(context.getString(R.string.pony_info_loading, p.getDoneFileCount() ,p.getTotalFileCount()));
         	}else{
-        		((TextView)v.findViewById(R.id.textInfo)).setText("Files: " + p.getTotalFileCount() + " Size: " + p.getBytes());
-        	}
-        	
-        	
+        		((TextView)v.findViewById(R.id.textInfo)).setText(context.getString(R.string.pony_info, p.getTotalFileCount(), p.getBytes()));
+        	}      
         }
         return v;
 	}

@@ -2,21 +2,16 @@ package com.overkill.ponymanager;
 
 import android.graphics.Bitmap;
 
-public class DownloadPony {
-	public static final String STATE_INSTALLED = "installed";
-	public static final String STATE_NOT_INSTALLED = "not installed";
-	public static final String STATE_RUNNING = "loading";
-	
-	
+public class DownloadPony {	
 	private String name;
 	private String folder;
-	private String state;
+	private int state;
 	private Bitmap image;
 	private int size;
 	private int totalFileCount;
 	private int doneFileCount;
 		
-	public DownloadPony(String name, String folder, int totalFileCount, int size, String state) {
+	public DownloadPony(String name, String folder, int totalFileCount, int size, int state) {
 		this.name = name;
 		this.folder = folder;
 		this.size = size;
@@ -69,11 +64,11 @@ public class DownloadPony {
 		return formatBytes(size);
 	}
 	
-	public String getState() {
+	public int getState() {
 		return state;
 	}
 
-	public void setState(String state) {
+	public void setState(int state) {
 		this.state = state;
 	}
 	

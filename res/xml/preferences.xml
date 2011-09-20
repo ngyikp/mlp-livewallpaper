@@ -2,29 +2,29 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <PreferenceCategory android:key="background_settings" android:title="Background Settings">
-    <Preference android:key="background_color" android:title="Select Background Color"></Preference>
-    <CheckBoxPreference android:key="background_global" android:title="Use custom Background"></CheckBoxPreference>
-    <Preference android:key="background_image" android:title="Select Background Image" android:dependency="background_global"></Preference>
+    <PreferenceCategory android:key="background_settings" android:title="@string/background_settings">
+    <Preference android:key="background_color" android:title="@string/background_color_title"></Preference>
+    <CheckBoxPreference android:key="background_global" android:title="@string/background_global_title"></CheckBoxPreference>
+    <Preference android:key="background_image" android:dependency="background_global" android:title="@string/background_image_title"></Preference>
     
     
 </PreferenceCategory><PreferenceCategory android:key="interaction_settings" android:title="Interaction">
-    <CheckBoxPreference android:summary="Interact when user touches pony" android:key="interact_user" android:title="User Interaction" android:enabled="false"></CheckBoxPreference>
-    <CheckBoxPreference android:summary="Ponies interact with each other" android:key="interact_pony" android:title="Pony Interaction" android:enabled="false"></CheckBoxPreference>
+    <CheckBoxPreference android:key="interact_user" android:enabled="false" android:summary="@string/interact_user_summary" android:title="@string/interact_user_title"></CheckBoxPreference>
+    <CheckBoxPreference android:key="interact_pony" android:enabled="false" android:summary="@string/interact_pony_summary" android:title="@string/interact_pony_title"></CheckBoxPreference>
     
-</PreferenceCategory><PreferenceCategory android:key="pony_settings" android:title="Ponies">
-    <Preference android:title="Select Ponies" android:key="pony_select" android:summary="Choose which ponies should be displayed\n(More ponies equals more CPU)"></Preference>
-    <ListPreference android:title="Target Framerate" android:key="framerate_cap" android:summary="Higher Framerate means more CPU usage" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues"></ListPreference>
-    <EditTextPreference android:title="Scale" android:key="pony_scale" android:summary="Resize the ponies" android:defaultValue="1" android:inputType="numberDecimal"></EditTextPreference>
+</PreferenceCategory><PreferenceCategory android:key="pony_settings" android:title="@string/pony_settings_title">
+    <Preference android:key="pony_select" android:title="@string/pony_select_title" android:summary="@string/pony_select_summary"></Preference>
+    <ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference>
+    <EditTextPreference android:key="pony_scale" android:defaultValue="1" android:inputType="numberDecimal" android:title="@string/pony_scale_title" android:summary="@string/pony_scale_summary"></EditTextPreference>
     
     
-</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="More">
+</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="@string/more_settings_title">
     <Preference android:key="more_about" android:title="@string/app_name" android:summary="© 2011 ov3rk1ll"></Preference>
     <Preference android:title="Version" android:key="more_version" android:summary="1.0"></Preference>
-    <Preference android:title="Visit" android:key="more_link" android:summary="http://android.ov3rk1ll.com"></Preference>
-    <Preference android:key="more_donate" android:title="Donate (PayPal)" android:summary="Support this App"></Preference>
+    <Preference android:key="more_link" android:summary="http://android.ov3rk1ll.com" android:title="@string/more_link_title"></Preference>
+    <Preference android:title="@string/more_donate_paypal_title" android:key="more_donate_paypal" android:summary="@string/more_donate_paypal_summary"></Preference>
     
-    <CheckBoxPreference android:key="debug_info" android:summary="Show Framerate and Errors in topleft corner" android:title="Show Debug info"></CheckBoxPreference>
+    <CheckBoxPreference android:key="debug_info" android:summary="@string/debug_info_summary" android:title="@string/debug_info_title"></CheckBoxPreference>
 </PreferenceCategory>
     
 </PreferenceScreen>

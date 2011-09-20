@@ -39,7 +39,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	@Override
 	public void onDownloadStart(int position) {	
-		adapter.getItem(position).setState(DownloadPony.STATE_RUNNING);
+		adapter.getItem(position).setState(R.string.pony_state_loading);
 		adapter.getItem(position).setDoneFileCount(0);
 		runOnUiThread(new Runnable() {			
 			@Override
@@ -58,7 +58,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 
 	@Override
 	public void onDownloadDone(int position) {
-		adapter.getItem(position).setState(DownloadPony.STATE_INSTALLED);
+		adapter.getItem(position).setState(R.string.pony_state_installed);
 		runOnUiThread(new Runnable() {			
 			@Override
 			public void run() {	adapter.notifyDataSetChanged();	}
@@ -138,9 +138,9 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 					continue;
 				String data[] = line.split(",");
 				File local = new File(localFolder, data[1]);
-				String state = DownloadPony.STATE_NOT_INSTALLED;
+				int state = R.string.pony_state_not_installed;
 				if(local.exists())
-					state = DownloadPony.STATE_INSTALLED;
+					state = R.string.pony_state_installed;
 				DownloadPony p = new DownloadPony(data[0], data[1], Integer.valueOf(data[2]), Integer.valueOf(data[3]), state);
 				p.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.ponytemp));
 				new AsynImageLoader(REMOTE_BASE_URL + data[1] + "/preview.gif", adapter.getCount(), this).start();
@@ -160,10 +160,10 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
 		currentContextSelection = info.position;
 		DownloadPony p = adapter.getItem(currentContextSelection);
-		if(p.getState().equals(DownloadPony.STATE_INSTALLED))
+		if(p.getState() == R.string.pony_state_installed)
 			menu.add(0, ACTION_DELETE, 0, "Delete");
 
-		if(p.getState().equals(DownloadPony.STATE_NOT_INSTALLED))
+		if(p.getState() == R.string.pony_state_not_installed)
 			menu.add(0, ACTION_INSTALL, 0, "Download");
 		
 		/*if(p.getState().equals(DownloadPony.STATE_RUNNING))
@@ -184,7 +184,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				f.delete();
 			}
 			folder.delete();
-			p.setState(DownloadPony.STATE_NOT_INSTALLED);
+			p.setState(R.string.pony_state_not_installed);
 			adapter.notifyDataSetChanged();
 			break;
 		case ACTION_STOP:

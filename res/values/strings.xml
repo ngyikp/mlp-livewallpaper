@@ -1,7 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, MyLittleWallpaperService!</string>
     <string name="app_name">MyLittleWallpaper</string>
     <string name="description">My Little Pony</string>
     <string name="pony_manager">Pony Manager</string>
+    <string name="background_settings">Background Settings</string>
+    <string name="background_color_title">Select Background Color</string>
+    <string name="background_global_title">Use custom Background</string>
+    <string name="background_image_title">Select Background Image</string>
+    <string name="interact_user_title">User Interaction</string>
+    <string name="interact_user_summary">Interact when user touches pony</string>
+    <string name="interact_pony_title">Pony Interaction</string>
+    <string name="interact_pony_summary">Ponies interact with each other</string>
+    <string name="pony_settings_title">Ponies</string>
+    <string name="pony_select_title">Select Ponies</string>
+    <string name="pony_select_summary">Choose which ponies should be displayed\n(More ponies equals more CPU)</string>
+    <string name="framerate_cap_title">Target Framerate</string>
+    <string name="framerate_cap_summary">Higher Framerate means higher CPU usage</string>
+    <string name="pony_scale_title">Scale</string>
+    <string name="pony_scale_summary">Resize the ponies</string>
+    <string name="more_settings_title">More</string>
+    <string name="more_link_title">Visit</string>
+    <string name="more_donate_paypal_title">Donate (PayPal)</string>
+    <string name="more_donate_paypal_summary">Support this App</string>
+    <string name="debug_info_title">Show Debug info</string>
+    <string name="debug_info_summary">Show Framerate and Errors in topleft corner</string>
+    <string name="pick_image_from">Pick image from</string>
+    <string name="no_crop_app">Can not find image crop app</string>
+    <string name="error_custom_image">There was an error saving your custom image</string>
+    <string name="no_ponies_selected">No ponies selected. Go to settings</string>
+    <string name="debug_text">My Little Pony Wallpaper / %1$d ponies active / Scale %2$.2f / %3$d FPS (max %4$d)</string>
+    <string name="pony_state_installed">•</string>
+    <string name="pony_state_not_installed">•</string>
+    <string name="pony_state_loading">•</string>
+    <string name="pony_info_loading">Files: %1$d / %2$d</string>
+    <string name="pony_info">Files: %1$d Size: %2$s</string>   
 </resources>

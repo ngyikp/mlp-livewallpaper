@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
+import com.overkill.ponymanager.PonyManager;
+
 import yuku.ambilwarna.AmbilWarnaDialog;
 import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener;
 
@@ -132,14 +134,14 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 						Intent intent = new Intent();
 		                intent.setType("image/*");
 		                intent.setAction(Intent.ACTION_GET_CONTENT);
-		                startActivityForResult(Intent.createChooser(intent, "Pick image from"), PICK_FROM_FILE);
+		                startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_image_from)), PICK_FROM_FILE);
 					}
 				}
 				return true;
 			}
 		});
 		
-		((Preference)findPreference("more_donate")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+		((Preference)findPreference("more_donate_paypal")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
 				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(PAYPAL));
@@ -151,8 +153,14 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		((Preference)findPreference("pony_select")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
+				if(poniesName.length == 0){
+					// we have no ponies, open PonyMananger
+					Intent i = new Intent(getBaseContext(), PonyManager.class);
+					startActivity(i);
+					return false;
+				}
 				AlertDialog.Builder builder = new AlertDialog.Builder(LiveWallpaperSettings.this);
-		        builder.setTitle("Pick ponies");
+		        builder.setTitle(R.string.pony_select_title);
 		        builder.setMultiChoiceItems(poniesName, poniesState, new DialogInterface.OnMultiChoiceClickListener() {			
 					@Override
 					public void onClick(DialogInterface dialog, int which, boolean isChecked) {
@@ -184,7 +192,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				Intent intent = new Intent();
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Pick image from"), PICK_FROM_FILE);                
+                startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_image_from)), PICK_FROM_FILE);                
                 return true;
 			}
 		});
@@ -257,7 +265,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					e.printStackTrace();
 				}
 	            if(newfile.exists() == false){
-	            	Toast.makeText(this, "No image found", Toast.LENGTH_LONG).show();
+	            	Toast.makeText(this, R.string.error_custom_image, Toast.LENGTH_LONG).show();
 	            	return;
 	            }
 	            Editor editor = getPreferenceManager().getSharedPreferences().edit();
@@ -278,8 +286,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         int size = list.size();
         
         if (size == 0) {	        
-        	Toast.makeText(this, "Can not find image crop app", Toast.LENGTH_SHORT).show();
-        	
+        	Toast.makeText(this, R.string.no_crop_app, Toast.LENGTH_SHORT).show();        	
             return;
         } else {
         	intent.setData(selectedImageUri);
@@ -294,9 +301,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
             intent.putExtra("scale", true);
             
             intent.putExtra(MediaStore.EXTRA_OUTPUT, getTempUri());
-            intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-
-            
+            intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());            
         	
         	Intent i = new Intent(intent);
 	        ResolveInfo res	= list.get(0);

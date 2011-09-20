@@ -25,6 +25,7 @@ public class RenderEngine {
 	
     private RenderThread renderThread;
     private SurfaceHolder surfaceHolder;
+    private Context context;
     private boolean visible = false;
     
     private Bitmap backgroundBitmap = null;
@@ -49,8 +50,9 @@ public class RenderEngine {
     	RenderEngine.screenBounds = new Rect(0, 0, 0, 0);
     	RenderEngine.visibleScreenArea = new Rect(0, 0, 0, 0);
     	this.surfaceHolder = surfaceHolder;
+    	this.context = context;
     	this.renderThread = new RenderThread(this);
-    	WallpaperManager wm  = WallpaperManager.getInstance(context);
+    	WallpaperManager wm  = WallpaperManager.getInstance(this.context);
     	this.setWallpaperSize(wm.getDesiredMinimumWidth(), wm.getDesiredMinimumHeight());
     	this.lastTimeDrawn = 0;
     	this.visible = true;
@@ -102,14 +104,14 @@ public class RenderEngine {
     		c.drawBitmap(backgroundBitmap, this.wallpaperCenter.x - (backgroundWidth / 2) + OFFSET, 0, null);        	
 
     	if(CONFIG_DEBUG_TEXT){
-    		backgroundTextPaint.setTextAlign(Align.LEFT);
-        	c.drawText("My Little Pony Wallpaper / " + activePonies.size() + " ponies active / Scale is " + CONFIG_SCALE + " / " + realFPS + " FPS (cap at " + CONFIG_FPS + ")", 5, 50, backgroundTextPaint);
+    		backgroundTextPaint.setTextAlign(Align.LEFT);    		
+        	c.drawText(this.context.getString(R.string.debug_text, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, 50, backgroundTextPaint);
         	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, 65, backgroundTextPaint);
     	}
     	
     	if(activePonies.size() == 0){
     		backgroundTextPaint.setTextAlign(Align.CENTER);
-    		c.drawText("No ponies selected. Go to settings", screenCenter.x, screenCenter.y, backgroundTextPaint);
+    		c.drawText(this.context.getString(R.string.no_ponies_selected), screenCenter.x, screenCenter.y, backgroundTextPaint);
     	}
     }   
     
