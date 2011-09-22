@@ -1,5 +1,7 @@
 package com.overkill.live.pony;
 
+import com.overkill.live.pony.Pony.Directions;
+
 public class ToolSet {
 	public static String[] splitWithQualifiers(String SourceText, String TextDelimiter, String TextQualifier) {
 		return splitWithQualifiers(SourceText, TextDelimiter, TextQualifier, "");
@@ -48,5 +50,32 @@ public class ToolSet {
 		    strRes[0] = SourceText;
 		}
 		return strRes;
+	}
+    public static Directions getDirection(String setting) throws Exception {
+		if (setting.trim().equalsIgnoreCase("top"))
+			return Directions.top;
+		if (setting.trim().equalsIgnoreCase("bottom"))
+			return Directions.bottom;
+		if (setting.trim().equalsIgnoreCase("left"))
+			return Directions.left;
+		if (setting.trim().equalsIgnoreCase("right"))
+			return Directions.right;
+		if (setting.trim().equalsIgnoreCase("bottom_right"))
+			return Directions.bottom_right;
+		if (setting.trim().equalsIgnoreCase("bottom_left"))
+			return Directions.bottom_left;
+		if (setting.trim().equalsIgnoreCase("top_right"))
+			return Directions.top_right;
+		if (setting.trim().equalsIgnoreCase("top_left"))
+			return Directions.top_left;
+		if (setting.trim().equalsIgnoreCase("center"))
+			return Directions.center;
+		if (setting.trim().equalsIgnoreCase("any"))
+			return Directions.random;
+		if (setting.trim().equalsIgnoreCase("any_notcenter"))
+			return Directions.random_not_center;
+		
+		// If not a valid direction, throw excepion
+		throw new Exception("Invalid placement direction or centering for effect.");
 	}
 }

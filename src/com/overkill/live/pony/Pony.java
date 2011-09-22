@@ -2,7 +2,6 @@ package com.overkill.live.pony;
 
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,8 +24,7 @@ public class Pony{
 	private Point position;	
 	private Point destination;
 	
-	//private AllowedMoves movement;
-	public ArrayList<Behavior> behaviors;
+	public List<Behavior> behaviors;
 	private Behavior current_behavior = null;
 	private boolean ponyDirection;
 
@@ -35,6 +33,8 @@ public class Pony{
 	private boolean hasSpawned = false;
 
 	private Behavior previous_behavior;
+
+	private List<Effect> activeEffects;
 
 	//private float largestSizeX;
 
@@ -72,7 +72,8 @@ public class Pony{
 
 	public Pony(String name){
 		this.name = name;
-		this.behaviors = new ArrayList<Behavior>();
+		this.behaviors = new LinkedList<Behavior>();
+		this.activeEffects = new LinkedList<Effect>();
 		this.position = new Point(0, 0);
 	}
 
@@ -94,6 +95,9 @@ public class Pony{
 		}
 	    move(globalTime);
 	    current_behavior.update(globalTime);
+	    for (Effect effect : this.activeEffects) {
+			effect.update(globalTime);
+		}
 	}
 	
 	public void teleport() {
@@ -145,24 +149,103 @@ public class Pony{
 		// Point to determine where we would end up at this speed
 		Point new_location = new Point(position.x + x_movement, position.y + y_movement);
 		
-	
+
+	    
 	    if (isPonyOnWallpaper(new_location)) {
-	        position = new_location;   
-		    //paint(globalTime);     
-	        return;
+	        position = new_location;      
+	    }else {		
+		    //Nothing to worry about, we are on screen, but our current behavior would take us 
+		    // off-screen in the next move.  Just do something else.
+		    // if we are moving to a destination, our path is blocked, and we need to abort the behavior
+		    // if we are just moving normally, just "bounce" off of the barrier.
+		
+		    if (destination.x == 0 && destination.y == 0) {
+		    	current_behavior.bounce(this, position, new_location, x_movement, y_movement);
+		    }
 	    }
-	
-	    //Nothing to worry about, we are on screen, but our current behavior would take us 
-	    // off-screen in the next move.  Just do something else.
-	    // if we are moving to a destination, our path is blocked, and we need to abort the behavior
-	    // if we are just moving normally, just "bounce" off of the barrier.
-	
-	    if (destination.x == 0 && destination.y == 0) {
-	    	current_behavior.bounce(this, position, new_location, x_movement, y_movement);
-	    }
+	    loadEffects(globalTime); 
 	    
 	}
 		
+	public void loadEffects(long globalTime){
+		List<Effect> effectsToRemove = new LinkedList<Effect>();
+		
+        for (Effect effect : this.activeEffects) {
+        	if (effect.Close_On_New_Behavior) {
+        		if (!current_behavior.name.trim().equalsIgnoreCase(effect.behavior_name.trim())) {
+        			effect.setVisible(false);
+        			effectsToRemove.add(effect);
+        		}
+        	}
+        		
+        	if(effect.endTime < globalTime)
+        		effectsToRemove.add(effect);
+        	
+        	if (effect.follow)
+        		effect.setLocation(getEffectLocation(effect.getImage().getSpriteWidth(), effect.getImage().getSpriteHeight(), effect.direction, effect.centering));
+        }
+        
+        for (Effect effect : effectsToRemove) {
+        	effect.destroy();
+            this.activeEffects.remove(effect);
+        }
+        
+    	// Loop through the effects for this behavior
+        for (Effect effect : current_behavior.effects) {
+	        // Determine if we should initialize or repeat the behavior
+	        if ((globalTime - effect.last_used) >= (effect.repeat_delay * 1000)) {
+	           	// If the effect has no repeat delay, only show once
+	           	if (effect.repeat_delay != 0 || effect.already_played_for_currentbehavior == false) {
+	           		Log.i("Effect[" + effect.name + "]", "init");
+	           		effect.already_played_for_currentbehavior = true;
+	           						                
+		            // Set the duration of the effect
+		            if (effect.duration != 0) {
+		            	effect.endTime = globalTime + Math.round(effect.duration * 1000);
+		            	effect.Close_On_New_Behavior = false;
+		            } else {
+		               	effect.endTime = current_behavior.endTime;		               	
+		               	effect.Close_On_New_Behavior = true;
+		            }
+			                
+		            // Load the effect animation
+		            if (current_behavior.right) {
+		            	effect.direction = effect.placement_direction_right;
+			            effect.centering = effect.centering_right;			            
+		            } else {
+		            	effect.direction = effect.placement_direction_left;
+		               	effect.centering = effect.centering_left;
+		            }
+		               	            
+		            if (effect.direction == Pony.Directions.random)
+		            	effect.direction = GetRandomDirection(true);
+		            if (effect.centering == Pony.Directions.random)
+		               	effect.centering = GetRandomDirection(true);
+		            if (effect.direction == Pony.Directions.random_not_center)
+		               	effect.direction = GetRandomDirection(false);
+		            if (effect.centering == Pony.Directions.random_not_center)
+		               	effect.centering = GetRandomDirection(false);
+		
+		            // Initialize the effect values
+		            // effect.behavior_name = current_behavior.name;
+		
+		            // Position the effect's initial location and size
+		            if (current_behavior.right) {
+		            	effect.setLocation(getEffectLocation(effect.getRightImage().getSpriteWidth(), effect.getRightImage().getSpriteHeight(), effect.direction, effect.centering));
+		            	effect.current_image = effect.getRightImage();
+		            } else {
+		              	effect.setLocation(getEffectLocation(effect.getLeftImage().getSpriteWidth(), effect.getLeftImage().getSpriteHeight(), effect.direction, effect.centering));
+			            effect.current_image = effect.getLeftImage();
+		            }  		                
+		            // Set the timestamp
+		            effect.last_used = globalTime;
+
+		            this.activeEffects.add(effect);
+	            }
+	        }
+        }
+	}
+	
 	public void touch() {
 		current_behavior = behaviors.get(0);
 		for (Behavior behavior : behaviors) {
@@ -174,9 +257,12 @@ public class Pony{
 	}
 	
 	public void draw(Canvas canvas) {
+		for (Effect effect : this.activeEffects) {
+			effect.draw(canvas);
+		}
 		if(isPonyOnScreen(position)){
 			this.current_behavior.draw(canvas, position);
-		}
+		}		
 	}
 	
 	public boolean isPonyOnLocation(int x, int y){
@@ -234,6 +320,7 @@ public class Pony{
 		
 		// Set its values
        new_behavior.name = name.trim();
+       new_behavior.pony_name = this.name;
        new_behavior.chance = chance;
        new_behavior.maxDuration = max_duration;
        new_behavior.minDuration = min_duration;
@@ -360,7 +447,7 @@ public class Pony{
 		return direction;
 	}
 	
-	public void selectBehavior(Behavior Specified_Behavior, long globalTime) {
+	public void selectBehavior(Behavior specified_Behavior, long globalTime) {
 		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
 		long startTime = SystemClock.elapsedRealtime();
 						
@@ -373,22 +460,24 @@ public class Pony{
 		int selection = 0;
 		
 		// Are we being forced into a specific behavior or not?
-		if (Specified_Behavior == null) {
-			int loop_total = 0;
+		if (specified_Behavior == null) {
+			dice = MyLittleWallpaperService.rand.nextDouble();
+			if(dice < 0.5)
+				current_behavior = behaviors.get(1);
+			else
+				current_behavior = behaviors.get(2);
+				
+			/*int loop_total = 0;
 			
 			// Randomly select a non-skip behavior
 			while(loop_total <= 200) {
 				dice = MyLittleWallpaperService.rand.nextDouble();
 				
 				selection = MyLittleWallpaperService.rand.nextInt(behaviors.size());
-				if (dice <= behaviors.get(selection).chance && behaviors.get(selection).Skip == false) {
-		
-	                destination = behaviors.get(selection).getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
-	
-	                //if (!(destination.x == 0 && destination.y == 0)) {
-						current_behavior = behaviors.get(selection);
-						break;
-	                //}
+				if (dice <= behaviors.get(selection).chance && behaviors.get(selection).Skip == false) {		
+	                //destination = behaviors.get(selection).getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());	
+					current_behavior = behaviors.get(selection);
+					break;
 				}
 				loop_total++;
 			}
@@ -397,15 +486,10 @@ public class Pony{
 				// If the Random number generator is being goofy, select the default behavior (usually standing)
 				current_behavior = behaviors.get(0);
 				if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "forced to 0");
-			}				
+			}	*/			
 		} else { // Set the forced behavior that was specified
-			destination = Specified_Behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
-
-			if (destination.x == 0 && destination.y == 0) {
-				selectBehavior(null, globalTime);
-				return;
-			}
-			current_behavior = Specified_Behavior;
+			// destination = Specified_Behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
+			current_behavior = specified_Behavior;
 		}
 		
 		
@@ -489,18 +573,115 @@ public class Pony{
 	    
 	    // TODO Tell the GC to pick up the old behavior
 		if(current_behavior != null && previous_behavior != null && (previous_behavior.equals(current_behavior) == false)){
-			//Log.i("Pony[" + name + "]", "swaping from " + previous_behavior.name + " to " + current_behavior.name);
+			Log.i("Pony[" + name + "]", "swaping from " + previous_behavior.name + " to " + current_behavior.name);
 			previous_behavior.destroy();
 			previous_behavior = null;
-			System.gc();
+			//System.gc();
 		}
 	    
-		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+		Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 	}
 	
 	public void setDestination(int x, int y){
 		this.destination = new Point(x, y);
 		getAppropriateBehavior(AllowedMoves.All, true, null);
+	}
+	
+	private Point getEffectLocation(int width, int height, Pony.Directions direction, Pony.Directions centering) {
+		Log.i("Pony[" + name + "]", "getEffectLocation");
+		Point point = null;
+		
+		switch(direction) {
+			case bottom:
+				point = new Point(this.position.x + (this.current_behavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + this.current_behavior.getCurrentImage().getSpriteHeight());
+				break;
+			case bottom_left:
+				point = new Point(this.position.x, this.position.y + this.current_behavior.getCurrentImage().getSpriteHeight());
+				break;
+			case bottom_right:
+				point = new Point(this.position.x + this.current_behavior.getCurrentImage().getSpriteWidth(), this.position.y + this.current_behavior.getCurrentImage().getSpriteHeight());
+				break;
+			case center:
+				point = new Point(this.position.x + (this.current_behavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + (this.current_behavior.getCurrentImage().getSpriteHeight() / 2));
+				break;
+			case left:
+				point = new Point(this.position.x, this.position.y + (this.current_behavior.getCurrentImage().getSpriteHeight() / 2));
+				break;
+			case right:
+				point = new Point(this.position.x + this.current_behavior.getCurrentImage().getSpriteWidth(), this.position.y + (this.current_behavior.getCurrentImage().getSpriteHeight() / 2));
+				break;
+			case top:
+				point = new Point(this.position.x + (this.current_behavior.getCurrentImage().getSpriteWidth() / 2), this.position.y);
+				break;
+			case top_left:
+				point = new Point(this.position.x, this.position.y);
+				break;
+			case top_right:
+				point = new Point(this.position.x + this.current_behavior.getCurrentImage().getSpriteWidth(), this.position.y);
+				break;
+		}
+		
+		switch(centering) {
+			case bottom:
+				point = new Point(point.x - (width / 2), point.y - height);
+				break;
+	        case bottom_left:
+				point = new Point(point.x, point.y - height);
+				break;
+	        case bottom_right:
+				point = new Point(point.x - width, point.y - height);
+				break;
+	        case center:
+				point = new Point(point.x - (width / 2), point.y - (height / 2));
+				break;
+	        case left:
+				point = new Point(point.x, point.y - (height / 2));
+				break;
+	        case right:
+				point = new Point(point.x - width, point.y - (height / 2));
+				break;
+	        case top:
+				point = new Point(point.x - (width / 2), point.y);
+				break;
+	        case top_left:
+				// no change
+				break;
+	        case top_right:
+				point = new Point(point.x - width, point.y);
+				break;
+		}
+		
+		return point;
+	}
+	
+	private Pony.Directions GetRandomDirection(boolean IncludeCentered) {
+		int dice;
+		if (IncludeCentered)
+			dice = MyLittleWallpaperService.rand.nextInt(9);
+		else
+			dice = MyLittleWallpaperService.rand.nextInt(8);
+		
+		switch(dice) {
+			case 0:
+				return Pony.Directions.bottom;
+			case 1:
+				return Pony.Directions.bottom_left;
+			case 2:
+				return Pony.Directions.bottom_right;
+			case 3:
+				return Pony.Directions.left;
+			case 4:
+				return Pony.Directions.right;
+			case 5:
+				return Pony.Directions.top;
+			case 6:
+				return Pony.Directions.top_left;
+			case 7:
+				return Pony.Directions.top_right;
+			case 8:
+			default:
+				return Pony.Directions.center;
+		}
 	}
 	
 	public void linkBehaviors(){

@@ -644,6 +644,7 @@ public class GifDecoder {
 		//image = null;
 		if(lastBitmap != null) lastBitmap.recycle();
 		//lastBitmap = null;
+		frames = null;
 	}
 }
 

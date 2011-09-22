@@ -60,12 +60,10 @@ public class RenderEngine {
 	
     public void render(){
     	if(visible == false) return;
-    	long renderStartTime = SystemClock.elapsedRealtime();
-    	
-        if((renderStartTime - lastTimeDrawn) < RenderEngine.CONFIG_FRAME_DELAY)
-        	return;
-        
-        //Log.i("render? " + fpsCap, "fps " + (1000 / Math.max(1, (renderStartTime - lastTimeDrawn))));
+    	long renderStartTime = SystemClock.elapsedRealtime();    	
+    	// Do only render if enough time elapsed since last time rendering 
+        if((renderStartTime - lastTimeDrawn) < RenderEngine.CONFIG_FRAME_DELAY) return;
+
         Canvas canvas = null;
         try{
             canvas = this.surfaceHolder.lockCanvas(null);
@@ -88,7 +86,7 @@ public class RenderEngine {
             if (canvas != null) {
 	               	for(int i=0; i < activePonies.size(); i++){
 	               		Pony p = activePonies.get(i);
-	  	               	p.update(currentTime);
+	               	    p.update(currentTime);
 	  	               	p.draw(canvas);
 	               	}
            }

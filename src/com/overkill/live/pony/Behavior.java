@@ -1,5 +1,8 @@
 package com.overkill.live.pony;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -8,6 +11,7 @@ import com.overkill.live.pony.Pony.AllowedMoves;
 
 public class Behavior {
 	public String name;
+	public String pony_name;
 	public double chance;
 	public double maxDuration;
 	public double minDuration; 
@@ -39,6 +43,8 @@ public class Behavior {
 	public boolean up;
 	public int delay;
 
+	public List<Effect> effects = new LinkedList<Effect>();
+	
 	/**
 	 * Default Constructor
 	 */
@@ -183,5 +189,25 @@ public class Behavior {
 		this.image_left = null;
 		if(this.image_right != null) this.image_right.destroy();
 		this.image_right = null;
+	}
+
+	public void addEffect(String effectname, String right_image, String left_image, double duration, double repeat_delay, Pony.Directions direction_right, Pony.Directions centering_right, Pony.Directions direction_left, Pony.Directions centering_left, boolean follow) {
+		Effect new_effect = new Effect();
+    	
+    	new_effect.behavior_name = this.name;
+    	new_effect.pony_Name = this.pony_name;
+        new_effect.name = effectname;
+        new_effect.right_image_path = right_image;
+        new_effect.left_image_path = left_image;
+        new_effect.duration = duration;
+        new_effect.repeat_delay = 0; //repeat_delay;
+        new_effect.placement_direction_right = direction_right;
+        new_effect.centering_right = centering_right;
+        new_effect.placement_direction_left = direction_left;
+        new_effect.centering_left = centering_left;
+        new_effect.follow = follow;
+
+        effects.add(new_effect);
+		
 	}
 }

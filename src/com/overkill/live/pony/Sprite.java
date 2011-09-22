@@ -96,8 +96,8 @@ public class Sprite {
 	}
 	
 	public void destroy(){
-		Log.i("Sprite.destroy", this.fileName);
-		//if(this.gif != null) this.gif.destroy();
+		//Log.i("Sprite.destroy", this.fileName);
+		if(this.gif != null) this.gif.destroy();
 		this.gif = null;
 		this.initialized = false;
 	}

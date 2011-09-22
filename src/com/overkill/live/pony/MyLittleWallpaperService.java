@@ -8,30 +8,51 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import com.overkill.live.pony.Pony.AllowedMoves;
+import com.overkill.live.pony.Pony.Directions;
+import com.overkill.ponymanager.PonyManager;
 
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.os.Environment;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
 public class MyLittleWallpaperService extends WallpaperService {
-	public static final String TAG = "mlpWallpaper";
-	
+	public static final String TAG = "mlpWallpaper";	
 	// Settings
 	public static final boolean DEBUG_RENDERTIME = false;
-		
-	//public ArrayList<Pony> randomPonySet = new ArrayList<Pony>();
+	private boolean RENDER_ON_SWIPE = true;	
 
-    // public ArrayList<Pony> activePonies = new ArrayList<Pony>();
     public ArrayList<Pony> selectablePonies = new ArrayList<Pony>();
     
     public static Random rand;
-	    
-    public static AssetManager assets;
-    File localFolder;
+
+    public File localFolder;
+    
+    //1 = effect name
+    //2 = behavior name
+    //3 = right image
+	//4 = left image
+    //5 = duration
+    //6 = delay before next
+    //7 = location relative to pony, right
+    //8 = center of effect, right
+	//9 = location relative to pony, left
+	//10 = center of effect, left
+    //11 = effect follows pony
+    public static final int EF_effect_name = 1;
+    public static final int EF_behavior_name = 2;
+    public static final int EF_right_image = 3;
+    public static final int EF_left_image = 4;
+    public static final int EF_duration = 5;
+    public static final int EF_delay_before_next = 6;
+    public static final int EF_location_right = 7;
+    public static final int EF_center_right = 8;
+    public static final int EF_location_left = 9;
+    public static final int EF_center_left = 10;
+    public static final int EF_follow = 11;
             
 	// Behavior options
 	public static final int BO_name = 1;
@@ -52,10 +73,9 @@ public class MyLittleWallpaperService extends WallpaperService {
     
     @Override
     public void onCreate() {    	
-        super.onCreate();        
-        
-        rand = new Random();
-        assets = getAssets();        
+        super.onCreate();       
+                
+        rand = new Random();      
         
         if(isSDMounted())
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
@@ -63,7 +83,6 @@ public class MyLittleWallpaperService extends WallpaperService {
 			localFolder = new File(getFilesDir(), "ponies");
         
 		try {
-			//String[] ponyFolders  = assets.list("ponies");
 			File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
 				@Override
 				public boolean accept(File pathname) {
@@ -87,18 +106,18 @@ public class MyLittleWallpaperService extends WallpaperService {
 		return state.equals(Environment.MEDIA_MOUNTED);
 	}
     
-    public Pony createPonyFromFile(File folder){
-    	Pony p = new Pony("Derp");
+    public Pony createPonyFromFile(File localFolder){
+    	Pony newPony = new Pony("Derp");
     	try{
 		    String line = "";
-		    File iniFile = new File(folder, "pony.ini");
+		    File iniFile = new File(localFolder, "pony.ini");
 		    Log.i("Pony", "loading file " + iniFile.getPath() + " " + iniFile.exists());
-		    BufferedReader content = new BufferedReader(new FileReader(iniFile));
-		    while ((line = content.readLine()) != null) {		    	
+		    BufferedReader br = new BufferedReader(new FileReader(iniFile));
+		    while ((line = br.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
-			           if(line.startsWith("Name")){ p = new Pony(line.substring(5)); continue;}
-			           if(line.startsWith("Behavior")){
-				           	String[] data = ToolSet.splitWithQualifiers(line, ",", "\"");
+			           if(line.toLowerCase().startsWith("name")){ newPony = new Pony(line.substring(5)); continue;}
+			           if(line.toLowerCase().startsWith("behavior")){
+				           	String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");
 				           	
 				           	AllowedMoves movement = AllowedMoves.None;
 				           	String linked_behavior = "";
@@ -106,62 +125,99 @@ public class MyLittleWallpaperService extends WallpaperService {
 							int ycoord = 0;
 							boolean skip = false;
 				           	
-							if (data[BO_movement_type].trim().equalsIgnoreCase("none")) {
+							if (columns[BO_movement_type].trim().equalsIgnoreCase("none")) {
 								movement = AllowedMoves.None;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("horizontal_only")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("horizontal_only")) {
 								movement = AllowedMoves.Horizontal_Only;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("vertical_only")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("vertical_only")) {
 								movement = AllowedMoves.Vertical_Only;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("horizontal_vertical")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("horizontal_vertical")) {
 								movement = AllowedMoves.Horizontal_Vertical;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("diagonal_only")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_only")) {
 								movement = AllowedMoves.Diagonal_Only;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("diagonal_horizontal")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_horizontal")) {
 								movement = AllowedMoves.Diagonal_Horizontal;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("diagonal_vertical")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_vertical")) {
 								movement = AllowedMoves.Diagonal_Vertical;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("all")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("all")) {
 								movement = AllowedMoves.All;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("mouseover")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("mouseover")) {
 								movement = AllowedMoves.MouseOver;
-							} else if (data[BO_movement_type].trim().equalsIgnoreCase("sleep")) {
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("sleep")) {
 								movement = AllowedMoves.Sleep;
 							}
-							if(data[6].trim().endsWith(".gif") == false)
+							
+							if(columns[BO_right_image_path].trim().endsWith(".gif") == false)
 								continue;
 							
-							if (data.length > BO_linked_behavior) {
-								linked_behavior = data[BO_linked_behavior].trim();
-								skip = Boolean.parseBoolean(data[BO_skip].trim());
-								xcoord = Integer.parseInt(data[BO_xcoord].trim());
-								ycoord = Integer.parseInt(data[BO_ycoord].trim());
+							if (columns.length > BO_linked_behavior) {
+								linked_behavior = columns[BO_linked_behavior].trim();
+								skip = Boolean.parseBoolean(columns[BO_skip].trim());
+								xcoord = Integer.parseInt(columns[BO_xcoord].trim());
+								ycoord = Integer.parseInt(columns[BO_ycoord].trim());
 							}
 							
-				            p.addBehavior(
-				            		data[BO_name], 
-				            		Double.parseDouble(data[BO_probability]), 
-				            		Double.parseDouble(data[BO_max_duration]), 
-				            		Double.parseDouble(data[BO_min_duration]),
-				            		Double.parseDouble(data[BO_speed]),
-				            		folder.getPath() + "/" + data[BO_right_image_path].trim(), 
-				            		folder.getPath() + "/" + data[BO_left_image_path].trim(), 
+				            newPony.addBehavior(
+				            		columns[BO_name], 
+				            		Double.parseDouble(columns[BO_probability]), 
+				            		Double.parseDouble(columns[BO_max_duration]), 
+				            		Double.parseDouble(columns[BO_min_duration]),
+				            		Double.parseDouble(columns[BO_speed]),
+				            		localFolder.getPath() + "/" + columns[BO_right_image_path].trim(), 
+				            		localFolder.getPath() + "/" + columns[BO_left_image_path].trim(), 
 				            		movement, 
 				            		linked_behavior, 
 				            		skip, 
 				            		xcoord, 
 				            		ycoord);
-				            p.linkBehaviors();
+				            newPony.linkBehaviors();
 				            continue;
 			           } // Behavior
+			           if(line.toLowerCase().startsWith("effect")){
+							String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");							
+							boolean found_behavior = false;
+							
+							// Try to find the behavior to associate with
+							for (Behavior behavior : newPony.behaviors) {
+								if (behavior.name.equalsIgnoreCase(columns[EF_behavior_name].replace('"', ' ').trim())) {
+									Directions direction_right = Directions.center;
+									Directions centering_right = Directions.center;
+									Directions direction_left = Directions.center;
+									Directions centering_left = Directions.center;
+									
+									try {
+										direction_right = ToolSet.getDirection(columns[EF_location_right]);
+										centering_right = ToolSet.getDirection(columns[EF_center_right]);
+										direction_left = ToolSet.getDirection(columns[EF_location_left]);
+										centering_left = ToolSet.getDirection(columns[EF_center_left]);
+									} catch (Exception ex) {
+										// Debug output
+										System.out.println("Invalid placement direction or centering for effect " + columns[EF_effect_name] + " for pony " + newPony.name + ":\n" + line);
+									}
+																		
+							        // This is where we load the animation image
+									String rightimage = localFolder.getPath() + "/" + columns[EF_right_image].trim();
+									String leftimage = localFolder.getPath() + "/" + columns[EF_left_image].trim();									
+									// Add the effect to the behavior if the image loaded correctly
+									behavior.addEffect(columns[EF_effect_name].replace('"', ' ').trim(), rightimage, leftimage, Double.parseDouble(columns[EF_duration].trim()), Double.parseDouble(columns[EF_delay_before_next].trim()), direction_right, centering_right, direction_left, centering_left, Boolean.parseBoolean(columns[EF_follow].trim()));
+									found_behavior = true;
+									break;
+								}
+							}
+							if (!found_behavior) {
+								// Debug output
+								System.out.println("Could not find behavior for effect " + columns[1] + " for pony " + newPony.name + ":\n" + line);
+							}
+			           } // Effect
 		    		
 		    	}
-	        content.close();
-	        Log.i("loading", p.name + " with " + p.behaviors.size() + " Behaviors");
+	        br.close();
+	        Log.i("loading", newPony.name + " with " + newPony.behaviors.size() + " Behaviors");
 		  	
     	}catch (Exception e) {
 			e.printStackTrace();
 		}
-		return p;
+		return newPony;
     }
         
     @Override
@@ -191,6 +247,8 @@ public class MyLittleWallpaperService extends WallpaperService {
 			engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
 			engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));
 
+			RENDER_ON_SWIPE = sharedPreferences.getBoolean("render_on_swipe", true);
+			
 			// get Background image if we want one
 			this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
 			
@@ -247,9 +305,25 @@ public class MyLittleWallpaperService extends WallpaperService {
         @Override
         public void onOffsetsChanged(float xOffset, float yOffset, float xStep, float yStep, int xPixels, int yPixels) {
             engine.setOffset(xPixels);     
-            engine.render();
+            if(RENDER_ON_SWIPE) engine.render();
         }
-
+        
+        @Override
+        public Bundle onCommand(String action, int x, int y, int z,	Bundle extras, boolean resultRequested) {
+        	Log.i("onCommand", action);
+        	if(action.equals(PonyManager.ACTION_REMOVE_PONY)){
+        		Log.i("onCommand", action + " " + extras.getString("pony"));
+        		String removedPonyName = extras.getString("pony");
+        		for(Pony p : this.engine.getPonies()){
+        			if(p.name.equals(removedPonyName)){
+        				this.engine.getPonies().remove(p);
+        				break;
+        			}
+        		}
+        	}
+        	return super.onCommand(action, x, y, z, extras, resultRequested);
+        }
+        
 //        @Override
 //        public void onTouchEvent(MotionEvent event) {
 //            if (event.getAction() == MotionEvent.ACTION_DOWN) {
