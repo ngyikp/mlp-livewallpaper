@@ -464,13 +464,8 @@ public class Pony{
 		
 		// Are we being forced into a specific behavior or not?
 		if (specified_Behavior == null) {
-			dice = MyLittleWallpaperService.rand.nextDouble();
-			if(dice < 0.5)
-				current_behavior = behaviors.get(1);
-			else
-				current_behavior = behaviors.get(2);
 				
-			/*int loop_total = 0;
+			int loop_total = 0;
 			
 			// Randomly select a non-skip behavior
 			while(loop_total <= 200) {
@@ -489,7 +484,7 @@ public class Pony{
 				// If the Random number generator is being goofy, select the default behavior (usually standing)
 				current_behavior = behaviors.get(0);
 				if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "forced to 0");
-			}	*/			
+			}		
 		} else { // Set the forced behavior that was specified
 			// destination = Specified_Behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
 			current_behavior = specified_Behavior;
@@ -595,7 +590,6 @@ public class Pony{
 	}
 	
 	private Point getEffectLocation(int width, int height, Pony.Directions direction, Pony.Directions centering) {
-		Log.i("Pony[" + name + "]", "getEffectLocation");
 		Point point = null;
 		
 		switch(direction) {

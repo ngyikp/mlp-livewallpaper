@@ -38,7 +38,7 @@ public class EffectWindow{
 	}
 
 	public void destroy() {
-		this.image.destroy();
+		if(this.image != null) this.image.destroy();
 		this.image = null;
 	}
 	
