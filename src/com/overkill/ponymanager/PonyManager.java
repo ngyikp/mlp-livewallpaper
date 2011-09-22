@@ -12,6 +12,7 @@ import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
 import com.overkill.ponymanager.AsynImageLoader.onImageListener;
 
 import android.app.ListActivity;
+import android.app.WallpaperManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -26,6 +27,8 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class PonyManager extends ListActivity implements onDownloadListener, onImageListener{
+	public static final String ACTION_REMOVE_PONY = "com.overkill.live.pony.action.removed";
+	
 	public static final String REMOTE_BASE_URL = "http://mlp-livewallpaper.googlecode.com/svn/assets/";
 	public static final int ACTION_INSTALL = 1;
 	public static final int ACTION_DELETE = 2;
@@ -147,10 +150,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				adapter.add(p);
 			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}
@@ -185,6 +186,10 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			}
 			folder.delete();
 			p.setState(R.string.pony_state_not_installed);
+			WallpaperManager wm = WallpaperManager.getInstance(getBaseContext());
+			Bundle extras = new Bundle();
+			extras.putString("pony", p.getName());
+			wm.sendWallpaperCommand(getListView().getWindowToken(), ACTION_REMOVE_PONY, 0, 0, 0, extras);
 			adapter.notifyDataSetChanged();
 			break;
 		case ACTION_STOP:

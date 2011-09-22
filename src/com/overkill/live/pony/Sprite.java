@@ -16,8 +16,7 @@ public class Sprite {
 	private int spriteHeight;
 	
 	private long lastFrameTime = 0;
-	private int currentFrame = 0;
-	
+	private int currentFrame = 0;	
 	
 	private boolean initialized = false;
 	
@@ -27,7 +26,12 @@ public class Sprite {
 	 * @throws FileNotFoundException
 	 */
 	public Sprite(String fileName){
-		this.fileName = fileName;		
+		this(fileName, false);	
+	}
+	
+	public Sprite(String fileName, boolean initializeGIF){
+		this.fileName = fileName;	
+		if(initializeGIF) this.initialize();
 	}
 
 	/**

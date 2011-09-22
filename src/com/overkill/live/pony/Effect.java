@@ -21,8 +21,6 @@ public class Effect {
     public Pony.Directions centering_right;
     public Pony.Directions placement_direction_left;
     public Pony.Directions centering_left;
-    public Pony.Directions direction;
-	public Pony.Directions centering;
 	
 	public Point position;
 	
@@ -30,19 +28,7 @@ public class Effect {
 
     public long last_used = 0;
     public boolean already_played_for_currentbehavior = false;
-	public boolean Close_On_New_Behavior;
-	
-	private boolean visible;
-	public long endTime;
-	
-	public boolean isVisible() {
-		return visible;
-	}
-
-	public void setVisible(boolean visible) {
-		this.visible = visible;		
-	}
-	
+		
 	public Sprite getImage(){
 		return current_image;
 	}
@@ -51,14 +37,22 @@ public class Effect {
 		position = effectLocation;		
 	}
 	
-	public Sprite getRightImage(){
-		if(right_image == null) right_image = new Sprite(right_image_path);
+	public Sprite getRightImage(boolean initializeGIF){
+		if(right_image == null) right_image = new Sprite(right_image_path, initializeGIF);
 		return right_image;
 	}
 	
-	public Sprite getLeftImage(){
-		if(left_image == null) left_image = new Sprite(left_image_path);
+	public Sprite getLeftImage(boolean initializeGIF){
+		if(left_image == null) left_image = new Sprite(left_image_path, initializeGIF);
 		return left_image;
+	}
+	
+	public Sprite getRightImage(){
+		return getRightImage(false);
+	}
+	
+	public Sprite getLeftImage(){
+		return getLeftImage(false);
 	}
 	
 	public void destroy(){
