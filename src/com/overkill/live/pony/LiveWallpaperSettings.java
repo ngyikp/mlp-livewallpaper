@@ -73,39 +73,6 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         
         if(localFolder.exists() == false)
         	localFolder.mkdir();
-
-		File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.isDirectory();
-			}
-		});
-		
-		poniesName = new String[ponyFolders.length];
-		
-		for(int i = 0; i < ponyFolders.length; i++){
-			String line = "";
-		    File iniFile = new File(ponyFolders[i], "pony.ini");
-		    BufferedReader content;
-			try {
-				content = new BufferedReader(new FileReader(iniFile));
-				while ((line = content.readLine()) != null) {		    	
-			    	if(line.startsWith("'")) continue;
-				    if(line.startsWith("Name")){ poniesName[i] = line.substring(5).trim(); break;}
-			    }
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		    
-		}
-                
-        poniesState = new boolean[poniesName.length];
-        
-        for(int i = 0; i < poniesName.length; i++){
-        	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean(poniesName[i], false);
-        }       
         
 		try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);
@@ -164,6 +131,39 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		((Preference)findPreference("pony_select")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
+				File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
+					@Override
+					public boolean accept(File pathname) {
+						return pathname.isDirectory();
+					}
+				});
+				
+				poniesName = new String[ponyFolders.length];
+				
+				for(int i = 0; i < ponyFolders.length; i++){
+					String line = "";
+				    File iniFile = new File(ponyFolders[i], "pony.ini");
+				    BufferedReader content;
+					try {
+						content = new BufferedReader(new FileReader(iniFile));
+						while ((line = content.readLine()) != null) {		    	
+					    	if(line.startsWith("'")) continue;
+						    if(line.startsWith("Name")){ poniesName[i] = line.substring(5).trim(); break;}
+					    }
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				    
+				}
+		                
+		        poniesState = new boolean[poniesName.length];
+		        
+		        for(int i = 0; i < poniesName.length; i++){
+		        	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean(poniesName[i], false);
+		        }       
+				
 				if(poniesName.length == 0){
 					// we have no ponies, open PonyMananger
 					Toast.makeText(LiveWallpaperSettings.this, R.string.no_ponies_installed, Toast.LENGTH_LONG).show();

@@ -82,25 +82,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         if(isSDMounted() && preferences.getBoolean("force_local_storage", false) == false)
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
 		else
-			localFolder = new File(getFilesDir(), "ponies");
-        
-		try {
-			File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
-				@Override
-				public boolean accept(File pathname) {
-					return pathname.isDirectory();
-				}
-			});
-			
-		    for(File pony : ponyFolders){
-		    	Log.i("Pony", "loading folder " + pony.getPath() + " " + pony.exists());
-		        selectablePonies.add(createPonyFromFile(pony));
-		    }
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        
-        
+			localFolder = new File(getFilesDir(), "ponies");    
     }
     
     private boolean isSDMounted(){
@@ -113,7 +95,6 @@ public class MyLittleWallpaperService extends WallpaperService {
     	try{
 		    String line = "";
 		    File iniFile = new File(localFolder, "pony.ini");
-		    Log.i("Pony", "loading file " + iniFile.getPath() + " " + iniFile.exists());
 		    BufferedReader br = new BufferedReader(new FileReader(iniFile));
 		    while ((line = br.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
@@ -253,6 +234,24 @@ public class MyLittleWallpaperService extends WallpaperService {
         
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+			selectablePonies.clear();
+			if(localFolder.exists()){
+				try {
+					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
+						@Override
+						public boolean accept(File pathname) {
+							return pathname.isDirectory();
+						}
+					});
+					
+				    for(File pony : ponyFolders){
+				        selectablePonies.add(createPonyFromFile(pony));
+				    }
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+	        }
+			
 			engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
 			engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
 			engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));

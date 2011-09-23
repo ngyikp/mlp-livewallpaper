@@ -25,6 +25,7 @@ import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
@@ -87,6 +88,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		super.onCreate(savedInstanceState);
 		
 		if(isSDMounted())
@@ -120,11 +122,13 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				runOnUiThread(new Runnable() {					
 					@Override
 					public void run() {
-						adapter.notifyDataSetChanged();						
+						adapter.notifyDataSetChanged();		
+						setProgressBarIndeterminateVisibility(false);				
 					}
 				});
 			}
 		}).start();
+		setProgressBarIndeterminateVisibility(true);
 		
 	}
 	
