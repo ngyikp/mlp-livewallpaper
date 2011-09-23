@@ -24,7 +24,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 	// Settings
 	public static final boolean DEBUG_RENDERTIME = false;
 	private boolean RENDER_ON_SWIPE = true;	
-
+	
     public ArrayList<Pony> selectablePonies = new ArrayList<Pony>();
     
     public static Random rand;
@@ -75,9 +75,11 @@ public class MyLittleWallpaperService extends WallpaperService {
     public void onCreate() {    	
         super.onCreate();       
                 
+        SharedPreferences preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);    
+        
         rand = new Random();      
         
-        if(isSDMounted())
+        if(isSDMounted() && preferences.getBoolean("force_local_storage", false) == false)
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
 		else
 			localFolder = new File(getFilesDir(), "ponies");
@@ -233,7 +235,8 @@ public class MyLittleWallpaperService extends WallpaperService {
     class SpriteEngine extends Engine implements SharedPreferences.OnSharedPreferenceChangeListener {
     	private RenderEngine engine;
         private SharedPreferences preferences;
-
+        private boolean previewMode = false;
+        
         SpriteEngine() {
         	this.engine = new RenderEngine(getBaseContext(), getSurfaceHolder());            	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
@@ -241,9 +244,17 @@ public class MyLittleWallpaperService extends WallpaperService {
             onSharedPreferenceChanged(preferences, null);
         }
 
+        @Override
+        public void onCreate(SurfaceHolder surfaceHolder) {
+        	super.onCreate(surfaceHolder);
+        	previewMode = isPreview();
+        	this.engine.setPreviewMode(previewMode);
+        }
+        
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 			engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
+			engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
 			engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
 			engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));
 
@@ -304,7 +315,10 @@ public class MyLittleWallpaperService extends WallpaperService {
 
         @Override
         public void onOffsetsChanged(float xOffset, float yOffset, float xStep, float yStep, int xPixels, int yPixels) {
-            engine.setOffset(xPixels);     
+        	if(previewMode)
+                engine.setOffset(0);     
+        	else
+        		engine.setOffset(xPixels);     
             if(RENDER_ON_SWIPE) engine.render();
         }
         

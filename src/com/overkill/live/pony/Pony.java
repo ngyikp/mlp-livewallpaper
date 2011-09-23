@@ -163,7 +163,8 @@ public class Pony{
 		    	current_behavior.bounce(this, position, new_location, x_movement, y_movement);
 		    }
 	    }
-	    loadEffects(globalTime); 
+	    if(RenderEngine.CONFIG_SHOW_EFFECTS)
+	    	loadEffects(globalTime); 
 	    
 	}
 		
@@ -195,7 +196,6 @@ public class Pony{
 	        if ((globalTime - effect.last_used) >= (effect.repeat_delay * 1000)) {
 	           	// If the effect has no repeat delay, only show once
 	           	if (effect.repeat_delay != 0 || effect.already_played_for_currentbehavior == false) {
-	           		Log.i("Effect[" + effect.name + "]", "init");
 	           		effect.already_played_for_currentbehavior = true;
 	           					
 	           		EffectWindow effectWindow = new EffectWindow();

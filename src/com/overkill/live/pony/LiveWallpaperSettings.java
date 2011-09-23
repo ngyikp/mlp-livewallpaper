@@ -66,12 +66,14 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
         addPreferencesFromResource(R.xml.preferences);
         
-        if(isSDMounted())
+        if(isSDMounted() && getPreferenceManager().getSharedPreferences().getBoolean("force_local_storage", false) == false)
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
 		else
 			localFolder = new File(getFilesDir(), "ponies");
         
-			//String[] ponyFolders  = assets.list("ponies");
+        if(localFolder.exists() == false)
+        	localFolder.mkdir();
+
 		File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
 			@Override
 			public boolean accept(File pathname) {
@@ -84,7 +86,6 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		for(int i = 0; i < ponyFolders.length; i++){
 			String line = "";
 		    File iniFile = new File(ponyFolders[i], "pony.ini");
-		    Log.i("Pony", "loading file " + iniFile.getPath() + " " + iniFile.exists());
 		    BufferedReader content;
 			try {
 				content = new BufferedReader(new FileReader(iniFile));
@@ -141,6 +142,16 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
+		((CheckBoxPreference)findPreference("force_local_storage")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+			@Override
+			public boolean onPreferenceChange(Preference preference, Object newValue) {
+				boolean value = (Boolean) newValue;
+				if(value == false && isSDMounted() == false) return false; // want to save on sd but has no sd card
+				// TODO move already installed ponies
+				return true;
+			}
+		});
+		
 		((Preference)findPreference("more_donate_paypal")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
@@ -155,6 +166,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			public boolean onPreferenceClick(Preference preference) {
 				if(poniesName.length == 0){
 					// we have no ponies, open PonyMananger
+					Toast.makeText(LiveWallpaperSettings.this, R.string.no_ponies_installed, Toast.LENGTH_LONG).show();
 					Intent i = new Intent(getBaseContext(), PonyManager.class);
 					startActivity(i);
 					return false;
@@ -324,5 +336,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	        if (outChannel != null)
 	            outChannel.close();
 	    }
+	}
+	
+	public void movePonies(File from, File to){
+		
 	}
 }

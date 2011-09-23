@@ -38,16 +38,16 @@ public class Sprite {
 	 * Decodes the GIF File and stores data
 	 */
 	public void initialize(){
-		long t0 = System.currentTimeMillis();
+		// long t0 = System.currentTimeMillis();
 		try {
 			GifDecoder decoder = new GifDecoder();
-			Log.i("GifDecoder.read", this.fileName);
+			// Log.i("GifDecoder.read", this.fileName);
 			decoder.read(new FileInputStream(this.fileName));
 			this.spriteWidth = decoder.width;
 			this.spriteHeight = decoder.height;		
 			this.gif = decoder;
 			this.initialized = true;
-			Log.i("Sprite[" + fileName + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load");
+			// Log.i("Sprite[" + fileName + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		

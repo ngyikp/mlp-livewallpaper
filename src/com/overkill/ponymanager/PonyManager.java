@@ -7,12 +7,15 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
 import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
 import com.overkill.ponymanager.AsynImageLoader.onImageListener;
 
 import android.app.ListActivity;
 import android.app.WallpaperManager;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -161,6 +164,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
 		currentContextSelection = info.position;
 		DownloadPony p = adapter.getItem(currentContextSelection);
+		menu.setHeaderTitle(p.getName());
 		if(p.getState() == R.string.pony_state_installed)
 			menu.add(0, ACTION_DELETE, 0, "Delete");
 
@@ -190,6 +194,11 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			Bundle extras = new Bundle();
 			extras.putString("pony", p.getName());
 			wm.sendWallpaperCommand(getListView().getWindowToken(), ACTION_REMOVE_PONY, 0, 0, 0, extras);
+			// Remove to pony from the settings, this should trigger the Engine to remove to pony from activePony list
+			SharedPreferences preferneces = getSharedPreferences(MyLittleWallpaperService.TAG, MODE_PRIVATE);
+			SharedPreferences.Editor editor = preferneces.edit();
+			editor.remove(p.getName());
+			editor.commit();
 			adapter.notifyDataSetChanged();
 			break;
 		case ACTION_STOP:

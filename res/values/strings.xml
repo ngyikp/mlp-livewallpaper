@@ -33,5 +33,12 @@
     <string name="pony_state_not_installed">•</string>
     <string name="pony_state_loading">•</string>
     <string name="pony_info_loading">Files: %1$d / %2$d</string>
-    <string name="pony_info">Files: %1$d Size: %2$s</string>   
+    <string name="pony_info">Files: %1$d Size: %2$s</string>
+    <string name="info_hint_title">Info</string>
+    <string name="info_hint_text_summary">If the wallpaper crashes try to use less ponies.\nIf the wallpaper drains to much battery or slows down your phone, try to lower to framerate and turn off effects.</string>
+    <string name="show_effects_title">Show effects</string>
+    <string name="show_effects_summary">Adds extra effects to some animations</string>
+    <string name="no_ponies_installed">You seem to have no ponies installed. We have to change that...</string>
+    <string name="force_local_storage_title">Store ponies intern</string>
+    <string name="force_local_storage_summary">Turn on to store ponies intern instead of the sd-card</string>   
 </resources>

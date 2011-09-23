@@ -18,10 +18,13 @@ import android.view.SurfaceHolder;
 
 public class RenderEngine {
 	public static boolean CONFIG_DEBUG_TEXT = true;
+	public static boolean CONFIG_SHOW_EFFECTS = false;
 	public static int CONFIG_FPS = 20;
 	public static int CONFIG_FRAME_DELAY = 1000 / CONFIG_FPS;
 	public static float CONFIG_SCALE = 1.0f;
 	public static int OFFSET;
+	
+	public static int TOP_PADDING = 50;
 	
     private RenderThread renderThread;
     private SurfaceHolder surfaceHolder;
@@ -53,7 +56,7 @@ public class RenderEngine {
     	this.context = context;
     	this.renderThread = new RenderThread(this);
     	WallpaperManager wm  = WallpaperManager.getInstance(this.context);
-    	this.setWallpaperSize(wm.getDesiredMinimumWidth(), wm.getDesiredMinimumHeight());
+   		this.setWallpaperSize(wm.getDesiredMinimumWidth(), wm.getDesiredMinimumHeight());
     	this.lastTimeDrawn = 0;
     	this.visible = true;
 	}
@@ -103,8 +106,8 @@ public class RenderEngine {
 
     	if(CONFIG_DEBUG_TEXT){
     		backgroundTextPaint.setTextAlign(Align.LEFT);    		
-        	c.drawText(this.context.getString(R.string.debug_text, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, 50, backgroundTextPaint);
-        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, 65, backgroundTextPaint);
+        	c.drawText(this.context.getString(R.string.debug_text, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, TOP_PADDING, backgroundTextPaint);
+        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, TOP_PADDING + 15, backgroundTextPaint);
     	}
     	
     	if(activePonies.size() == 0){
@@ -196,6 +199,15 @@ public class RenderEngine {
     
     public void setVisibility(boolean visible){
     	this.visible = visible;
+    }
+    
+    public void setShowEffects(boolean show){
+    	RenderEngine.CONFIG_SHOW_EFFECTS = show;
+    }
+    
+    public void setPreviewMode(boolean isPreview){
+    	if(isPreview)
+    		setWallpaperSize(-1, -1);
     }
     
     public void pause(){
