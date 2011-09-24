@@ -451,8 +451,11 @@ public class Pony{
 	public void selectBehavior(Behavior specified_Behavior, long globalTime) {
 		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
 		long startTime = SystemClock.elapsedRealtime();
-		Behavior previous_behavior;				
-		previous_behavior = current_behavior;
+//		Behavior previous_behavior;				
+//		previous_behavior = current_behavior;
+		Behavior newBehavior = null;
+		
+//		if(current_behavior != null) current_behavior.destroy();
 		
 		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Picking from " + behaviors.size());
 
@@ -472,7 +475,7 @@ public class Pony{
 				selection = MyLittleWallpaperService.rand.nextInt(behaviors.size());
 				if (dice <= behaviors.get(selection).chance && behaviors.get(selection).Skip == false) {		
 	                //destination = behaviors.get(selection).getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());	
-					current_behavior = behaviors.get(selection);
+					newBehavior = behaviors.get(selection);
 					break;
 				}
 				loop_total++;
@@ -480,55 +483,55 @@ public class Pony{
 			
 			if (loop_total > 200) {
 				// If the Random number generator is being goofy, select the default behavior (usually standing)
-				current_behavior = behaviors.get(0);
+				newBehavior = behaviors.get(0);
 				if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "forced to 0");
 			}		
 		} else { // Set the forced behavior that was specified
 			// destination = Specified_Behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
-			current_behavior = specified_Behavior;
+			newBehavior = specified_Behavior;
 		}
 		
 		
-		for (Effect effect : current_behavior.effects) {
+		for (Effect effect : newBehavior.effects) {
 			effect.already_played_for_currentbehavior = false;
 		}
 		
 		// Set the time this behavior will last
-        current_behavior.endTime = (globalTime + Math.round(MyLittleWallpaperService.rand.nextDouble() * (current_behavior.maxDuration - current_behavior.minDuration) * 1000 + (current_behavior.minDuration * 1000)));
+		newBehavior.endTime = (globalTime + Math.round(MyLittleWallpaperService.rand.nextDouble() * (newBehavior.maxDuration - newBehavior.minDuration) * 1000 + (newBehavior.minDuration * 1000)));
 	    
 		// Select facing (left or right)
 		dice = MyLittleWallpaperService.rand.nextDouble();
 		if (dice >= 0.5)
-			current_behavior.right = true;
+			newBehavior.right = true;
 		else
-			current_behavior.right = false;
+			newBehavior.right = false;
 			
 	    // If we aren't moving anywhere, stop here
-	    if ((current_behavior.Allowed_Movement == AllowedMoves.None) || (current_behavior.Allowed_Movement == AllowedMoves.MouseOver) ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Sleep) {
-	        current_behavior.horizontal = false;
-	        current_behavior.vertical = false;
+	    if ((newBehavior.Allowed_Movement == AllowedMoves.None) || (newBehavior.Allowed_Movement == AllowedMoves.MouseOver) ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Sleep) {
+	    	newBehavior.horizontal = false;
+	    	newBehavior.vertical = false;
 	        return;
 	    }
 	    
 	    // Otherwise, randomly select the movement direction based on where we're allowed to move
 	    List<AllowedMoves> modes = new LinkedList<AllowedMoves>();
-	    if (current_behavior.Allowed_Movement == AllowedMoves.All ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Vertical_Only) {
+	    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Vertical_Only) {
 	    	modes.add(AllowedMoves.Vertical_Only);
 	    }
-	    if (current_behavior.Allowed_Movement == AllowedMoves.All ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Only) {
+	    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Only) {
 	    	modes.add(AllowedMoves.Diagonal_Only);
 	    }
-	    if (current_behavior.Allowed_Movement == AllowedMoves.All ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Horizontal_Only ||
-	    		current_behavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical) {
+	    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Only ||
+	    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical) {
 	    	modes.add(AllowedMoves.Horizontal_Only);
 	    }
 	    
@@ -542,42 +545,44 @@ public class Pony{
 	    
 	    switch(selected_mode) {
 	    	case Vertical_Only:
-	    		current_behavior.horizontal = false;
-	    		current_behavior.vertical = true;
+	    		newBehavior.horizontal = false;
+	    		newBehavior.vertical = true;
 	    		break;
 	    	case Diagonal_Only:
-	    		current_behavior.horizontal = true;
-	    		current_behavior.vertical = true;
+	    		newBehavior.horizontal = true;
+	    		newBehavior.vertical = true;
 	    		break;
 	    	case Horizontal_Only:
-	    		current_behavior.horizontal = true;
-	    		current_behavior.vertical = false;
+	    		newBehavior.horizontal = true;
+	    		newBehavior.vertical = false;
 	    		break;
 	    }
 	    
 	    dice = MyLittleWallpaperService.rand.nextDouble();
 	    
 	    if (dice >= 0.5)
-	    	current_behavior.up = true;
+	    	newBehavior.up = true;
 	    else
-	    	current_behavior.up = false;
+	    	newBehavior.up = false;
 	    
 	    dice = MyLittleWallpaperService.rand.nextDouble();
 	    
 	    if (dice >= 0.5)
-	    	current_behavior.right = true;
+	    	newBehavior.right = true;
 	    else
-	    	current_behavior.right = false;
+	    	newBehavior.right = false;
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
 	    
 	    // TODO Tell the GC to pick up the old behavior
-		if(current_behavior != null && previous_behavior != null && (previous_behavior.equals(current_behavior) == false)){
-			Log.i("Pony[" + name + "]", "swaping from " + previous_behavior.name + " to " + current_behavior.name);
-			previous_behavior.destroy();
-			previous_behavior = null;
+		if(current_behavior != null && newBehavior != null && (newBehavior.equals(current_behavior) == false)){
+			Log.i("Pony[" + name + "]", "swaping from " + current_behavior.name + " to " + newBehavior.name);
+			current_behavior.destroy();
+			current_behavior = null;
 			//System.gc();
 		}
+		
+		current_behavior = newBehavior;
 	    
 		Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 	}

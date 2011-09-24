@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.util.Log;
 
 public class Sprite {
 	
@@ -37,7 +38,7 @@ public class Sprite {
 	 * Decodes the GIF File and stores data
 	 */
 	public void initialize(){
-		// long t0 = System.currentTimeMillis();
+		long t0 = System.currentTimeMillis();
 		try {
 			GifDecoder decoder = new GifDecoder();
 			// Log.i("GifDecoder.read", this.fileName);
@@ -46,7 +47,7 @@ public class Sprite {
 			this.spriteHeight = decoder.height;		
 			this.gif = decoder;
 			this.initialized = true;
-			// Log.i("Sprite[" + fileName + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load");
+			Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
