@@ -32,8 +32,6 @@ public class Pony{
 	
 	private boolean hasSpawned = false;
 
-	private Behavior previous_behavior;
-
 	private List<EffectWindow> activeEffects;
 
 	//private float largestSizeX;
@@ -453,7 +451,7 @@ public class Pony{
 	public void selectBehavior(Behavior specified_Behavior, long globalTime) {
 		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
 		long startTime = SystemClock.elapsedRealtime();
-						
+		Behavior previous_behavior;				
 		previous_behavior = current_behavior;
 		
 		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Picking from " + behaviors.size());
@@ -702,5 +700,9 @@ public class Pony{
 	public void cleanUp(){
 		for(Behavior b : behaviors)
 			b.destroy();
+	}
+	
+	public boolean equals(Pony p){
+		return this.name.equals(p.name);
 	}
 }

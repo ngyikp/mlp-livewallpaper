@@ -38,7 +38,6 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.provider.MediaStore;
 import android.text.method.DigitsKeyListener;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -161,7 +160,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		        poniesState = new boolean[poniesName.length];
 		        
 		        for(int i = 0; i < poniesName.length; i++){
-		        	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean(poniesName[i], false);
+		        	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean("usepony_" + poniesName[i], false);
 		        }       
 				
 				if(poniesName.length == 0){
@@ -171,21 +170,25 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					startActivity(i);
 					return false;
 				}
+				final Editor editor = getPreferenceManager().getSharedPreferences().edit();
 				AlertDialog.Builder builder = new AlertDialog.Builder(LiveWallpaperSettings.this);
 		        builder.setTitle(R.string.pony_select_title);
 		        builder.setMultiChoiceItems(poniesName, poniesState, new DialogInterface.OnMultiChoiceClickListener() {			
 					@Override
-					public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+					public void onClick(DialogInterface dialog, int which, boolean isChecked) {						
 						poniesState[which] = isChecked;
+						if(isChecked){
+							editor.putBoolean("added_pony", true);
+						}
+						editor.putBoolean("changed_pony", true);					
 					}
 				});
 		        AlertDialog alert = builder.create();
 		        alert.setOnDismissListener(new OnDismissListener() {			
 					@Override
 					public void onDismiss(DialogInterface dialog) {	
-						Editor editor = getPreferenceManager().getSharedPreferences().edit();
 						for(int i = 0; i < poniesName.length; i++){
-							editor.putBoolean(poniesName[i], poniesState[i]);
+							editor.putBoolean("usepony_" + poniesName[i], poniesState[i]);
 						}
 						editor.commit();
 					}

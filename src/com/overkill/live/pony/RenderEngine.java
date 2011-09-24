@@ -3,7 +3,6 @@ package com.overkill.live.pony;
 import java.io.File;
 import java.util.ArrayList;
 
-import android.app.WallpaperManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +13,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Paint.Align;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 public class RenderEngine {
@@ -55,8 +55,8 @@ public class RenderEngine {
     	this.surfaceHolder = surfaceHolder;
     	this.context = context;
     	this.renderThread = new RenderThread(this);
-    	WallpaperManager wm  = WallpaperManager.getInstance(this.context);
-   		this.setWallpaperSize(wm.getDesiredMinimumWidth(), wm.getDesiredMinimumHeight());
+    	/*WallpaperManager wm  = WallpaperManager.getInstance(this.context);
+   		this.setWallpaperSize(wm.getDesiredMinimumWidth(), wm.getDesiredMinimumHeight());*/
     	this.lastTimeDrawn = 0;
     	this.visible = true;
 	}
@@ -145,6 +145,7 @@ public class RenderEngine {
     public void setWallpaperSize(int w, int h){
         RenderEngine.screenBounds = new Rect(0, 0, w, h);
     	this.wallpaperCenter = new Point(w / 2, h / 2);
+    	Log.i("setWallpaperSize", "w="+w+" h="+h);
     }
     
     public void setBackground(int color){

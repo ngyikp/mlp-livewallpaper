@@ -12,6 +12,7 @@ import com.overkill.live.pony.Pony.Directions;
 import com.overkill.ponymanager.PonyManager;
 
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
@@ -222,6 +223,8 @@ public class MyLittleWallpaperService extends WallpaperService {
         	this.engine = new RenderEngine(getBaseContext(), getSurfaceHolder());            	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
+            loadSelectablePonies();
+            selectPonies(preferences);
             onSharedPreferenceChanged(preferences, null);
         }
 
@@ -229,12 +232,16 @@ public class MyLittleWallpaperService extends WallpaperService {
         public void onCreate(SurfaceHolder surfaceHolder) {
         	super.onCreate(surfaceHolder);
         	previewMode = isPreview();
-        	this.engine.setPreviewMode(previewMode);
+        	Log.i("Engine", "onCreate " + previewMode);
+        	//this.engine.setPreviewMode(previewMode);
+        	if(previewMode)
+        		this.engine.setWallpaperSize(-1, -1);
+        	else
+        		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
         }
         
-		@Override
-		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-			selectablePonies.clear();
+        public void loadSelectablePonies(){
+        	selectablePonies.clear();
 			if(localFolder.exists()){
 				try {
 					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
@@ -251,6 +258,38 @@ public class MyLittleWallpaperService extends WallpaperService {
 					e.printStackTrace();
 				}
 	        }
+        }
+        
+        public void selectPonies(SharedPreferences sharedPreferences){
+        	for(Pony p : this.engine.getPonies()){
+	        	p.cleanUp();
+	        }
+	        
+	        this.engine.clearPonies();
+	        
+	        for(Pony p : selectablePonies){
+	        	Log.i(TAG, "do we want \"" + p.name + "\"? " + sharedPreferences.getBoolean("usepony_" + p.name, false));
+	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == false)
+	        		continue;
+	        	 this.engine.addPony(p);
+	        }
+        }
+        
+		@Override
+		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+			if(sharedPreferences.getBoolean("added_pony", false) == true){
+				loadSelectablePonies();
+				Editor editor = sharedPreferences.edit();
+				editor.putBoolean("added_pony", false);
+				editor.commit();
+			}		
+			
+			if(sharedPreferences.getBoolean("changed_pony", false) == true){
+				selectPonies(sharedPreferences);
+		        Editor editor = sharedPreferences.edit();
+				editor.putBoolean("changed_pony", false);
+				editor.commit();
+			}
 			
 			engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
 			engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
@@ -269,18 +308,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 	        	this.engine.setBackground(filePath);
 	        }
 	        	
-	        for(Pony p : this.engine.getPonies()){
-	        	p.cleanUp();
-	        }
 	        
-	        this.engine.clearPonies();
-	        
-	        for(Pony p : selectablePonies){
-	        	Log.i(TAG, "do we want \"" + p.name + "\"?");
-	        	if(sharedPreferences.getBoolean(p.name, false) == false)
-	        		continue;
-	        	 this.engine.addPony(p);
-	        }
 		}  
                         
         @Override
