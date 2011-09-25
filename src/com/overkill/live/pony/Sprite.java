@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.Log;
@@ -19,6 +20,7 @@ public class Sprite {
 	private int currentFrame = 0;	
 	
 	private boolean initialized = false;
+	private Paint renderPaint = new Paint();
 	
 	/**
 	 * Sets the file and initializes the GifDecoder
@@ -97,7 +99,7 @@ public class Sprite {
 		if(!this.initialized) this.initialize();
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);
-		canvas.drawBitmap(this.gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
+		canvas.drawBitmap(this.gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), renderPaint );
 	}
 	
 	public void destroy(){

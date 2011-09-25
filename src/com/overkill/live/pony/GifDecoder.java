@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 
 public class GifDecoder {
+	private static final Config BITMAP_CONFIG = Config.ARGB_4444;
 	/**
 	 * File read status: No errors.
 	 */
@@ -193,7 +194,7 @@ public class GifDecoder {
 				}
 			}
 		}
-		image = Bitmap.createBitmap(dest, width, height, Config.ARGB_4444);
+		image = Bitmap.createBitmap(dest, width, height, BITMAP_CONFIG );
 	}
 
 	/**
@@ -563,7 +564,7 @@ public class GifDecoder {
 		}
 		frameCount++;
 		// create new image to receive frame data
-		image = Bitmap.createBitmap(width, height, Config.ARGB_4444);
+		image = Bitmap.createBitmap(width, height, BITMAP_CONFIG);
 		setPixels(); // transfer pixel data to image
 		frames.addElement(new GifFrame(image, delay)); // add image to frame
 		// list
