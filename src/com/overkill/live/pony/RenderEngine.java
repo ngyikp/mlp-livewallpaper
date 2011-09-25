@@ -106,7 +106,7 @@ public class RenderEngine {
 
     	if(CONFIG_DEBUG_TEXT){
     		backgroundTextPaint.setTextAlign(Align.LEFT);    		
-        	c.drawText(this.context.getString(R.string.debug_text, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, TOP_PADDING, backgroundTextPaint);
+        	c.drawText(this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, TOP_PADDING, backgroundTextPaint);
         	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, TOP_PADDING + 15, backgroundTextPaint);
     	}
     	

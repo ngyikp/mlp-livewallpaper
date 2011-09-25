@@ -451,11 +451,7 @@ public class Pony{
 	public void selectBehavior(Behavior specified_Behavior, long globalTime) {
 		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
 		long startTime = SystemClock.elapsedRealtime();
-//		Behavior previous_behavior;				
-//		previous_behavior = current_behavior;
-		Behavior newBehavior = null;
-		
-//		if(current_behavior != null) current_behavior.destroy();
+		Behavior newBehavior = null;		
 		
 		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Picking from " + behaviors.size());
 
@@ -470,11 +466,9 @@ public class Pony{
 			
 			// Randomly select a non-skip behavior
 			while(loop_total <= 200) {
-				dice = MyLittleWallpaperService.rand.nextDouble();
-				
+				dice = MyLittleWallpaperService.rand.nextDouble();				
 				selection = MyLittleWallpaperService.rand.nextInt(behaviors.size());
 				if (dice <= behaviors.get(selection).chance && behaviors.get(selection).Skip == false) {		
-	                //destination = behaviors.get(selection).getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());	
 					newBehavior = behaviors.get(selection);
 					break;
 				}
@@ -487,7 +481,6 @@ public class Pony{
 				if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "forced to 0");
 			}		
 		} else { // Set the forced behavior that was specified
-			// destination = Specified_Behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
 			newBehavior = specified_Behavior;
 		}
 		
@@ -507,70 +500,69 @@ public class Pony{
 			newBehavior.right = false;
 			
 	    // If we aren't moving anywhere, stop here
-	    if ((newBehavior.Allowed_Movement == AllowedMoves.None) || (newBehavior.Allowed_Movement == AllowedMoves.MouseOver) ||
+	    if (newBehavior.Allowed_Movement == AllowedMoves.None || 
+	    		newBehavior.Allowed_Movement == AllowedMoves.MouseOver ||
 	    		newBehavior.Allowed_Movement == AllowedMoves.Sleep) {
 	    	newBehavior.horizontal = false;
 	    	newBehavior.vertical = false;
-	        return;
-	    }
-	    
-	    // Otherwise, randomly select the movement direction based on where we're allowed to move
-	    List<AllowedMoves> modes = new LinkedList<AllowedMoves>();
-	    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Vertical_Only) {
-	    	modes.add(AllowedMoves.Vertical_Only);
-	    }
-	    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Only) {
-	    	modes.add(AllowedMoves.Diagonal_Only);
-	    }
-	    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Only ||
-	    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical) {
-	    	modes.add(AllowedMoves.Horizontal_Only);
-	    }
-	    
-	    if (modes.size() == 0) {
-	    	System.out.println("Unhandled movement type in SelectBehavior()");
-	    	return;
-	    }
-	    
-	    selection = MyLittleWallpaperService.rand.nextInt(modes.size());
-	    AllowedMoves selected_mode = modes.get(selection);
-	    
-	    switch(selected_mode) {
-	    	case Vertical_Only:
-	    		newBehavior.horizontal = false;
-	    		newBehavior.vertical = true;
-	    		break;
-	    	case Diagonal_Only:
-	    		newBehavior.horizontal = true;
-	    		newBehavior.vertical = true;
-	    		break;
-	    	case Horizontal_Only:
-	    		newBehavior.horizontal = true;
-	    		newBehavior.vertical = false;
-	    		break;
-	    }
-	    
-	    dice = MyLittleWallpaperService.rand.nextDouble();
-	    
-	    if (dice >= 0.5)
-	    	newBehavior.up = true;
-	    else
-	    	newBehavior.up = false;
-	    
-	    dice = MyLittleWallpaperService.rand.nextDouble();
-	    
-	    if (dice >= 0.5)
-	    	newBehavior.right = true;
-	    else
-	    	newBehavior.right = false;
+	    } else { // Otherwise, randomly select the movement direction based on where we're allowed to move    
+		    List<AllowedMoves> modes = new LinkedList<AllowedMoves>();
+		    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Vertical_Only) {
+		    	modes.add(AllowedMoves.Vertical_Only);
+		    }
+		    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Only) {
+		    	modes.add(AllowedMoves.Diagonal_Only);
+		    }
+		    if (newBehavior.Allowed_Movement == AllowedMoves.All ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Only ||
+		    		newBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical) {
+		    	modes.add(AllowedMoves.Horizontal_Only);
+		    }
+		    
+		    if (modes.size() == 0) {
+		    	System.out.println("Unhandled movement type in SelectBehavior()");
+		    	return;
+		    }
+		    
+		    selection = MyLittleWallpaperService.rand.nextInt(modes.size());
+		    AllowedMoves selected_mode = modes.get(selection);
+		    
+		    switch(selected_mode) {
+		    	case Vertical_Only:
+		    		newBehavior.horizontal = false;
+		    		newBehavior.vertical = true;
+		    		break;
+		    	case Diagonal_Only:
+		    		newBehavior.horizontal = true;
+		    		newBehavior.vertical = true;
+		    		break;
+		    	case Horizontal_Only:
+		    		newBehavior.horizontal = true;
+		    		newBehavior.vertical = false;
+		    		break;
+		    }
+		    
+		    dice = MyLittleWallpaperService.rand.nextDouble();
+		    
+		    if (dice >= 0.5)
+		    	newBehavior.up = true;
+		    else
+		    	newBehavior.up = false;
+		    
+		    dice = MyLittleWallpaperService.rand.nextDouble();
+		    
+		    if (dice >= 0.5)
+		    	newBehavior.right = true;
+		    else
+		    	newBehavior.right = false;
+	    } // End if moving
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
 	    

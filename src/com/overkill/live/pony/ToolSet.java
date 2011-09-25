@@ -78,4 +78,16 @@ public class ToolSet {
 		// If not a valid direction, throw excepion
 		throw new Exception("Invalid placement direction or centering for effect.");
 	}
+    
+    public static String formatBytes(float bytes) {
+	    String units[] = {"B", "KB", "MB", "GB", "TB"};
+	  
+	    bytes = Math.max(bytes, 0);
+	    int pow = (int) Math.floor(((bytes != 0) ? Math.log(bytes) : 0) / Math.log(1024));
+	    pow = Math.min(pow, units.length - 1);
+	  
+	    bytes /= Math.pow(1024, pow);
+	  
+	    return  String.format("%.2f", bytes) + ' ' + units[pow];
+	}
 }

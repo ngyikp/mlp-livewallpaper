@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
@@ -25,6 +26,7 @@ import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 
@@ -44,6 +46,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	@Override
 	public void onDownloadStart(int position) {	
+		if(position > adapter.getCount()) return;
 		adapter.getItem(position).setState(R.string.pony_state_loading);
 		adapter.getItem(position).setDoneFileCount(0);
 		runOnUiThread(new Runnable() {			
@@ -54,6 +57,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 
 	@Override
 	public void onDownloadChanged(int position, int filesDone) {
+		if(position > adapter.getCount()) return;
 		adapter.getItem(position).setDoneFileCount(filesDone);
 		runOnUiThread(new Runnable() {			
 			@Override
@@ -63,6 +67,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 
 	@Override
 	public void onDownloadDone(int position) {
+		if(position > adapter.getCount()) return;
 		adapter.getItem(position).setState(R.string.pony_state_installed);
 		runOnUiThread(new Runnable() {			
 			@Override
@@ -72,12 +77,18 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 
 	@Override
 	public void onDownloadError(String error) {
-		Log.i("PonyManager", "Download error " + error);			
+		Toast.makeText(this, error, Toast.LENGTH_LONG).show();			
 	}
 	
 	@Override
-	public void imageComplete(int posititon, Bitmap image) {
-		adapter.getItem(posititon).setImage(image);
+	public void imageError(int position, String error) {
+		Toast.makeText(this, error, Toast.LENGTH_LONG).show();		
+	}
+	
+	@Override
+	public void imageComplete(int position, Bitmap image) {
+		if(position > adapter.getCount()) return;
+		adapter.getItem(position).setImage(image);
 		runOnUiThread(new Runnable() {			
 			@Override
 			public void run() {	adapter.notifyDataSetChanged();	}
@@ -88,6 +99,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	protected void onCreate(Bundle savedInstanceState) {
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.pony_manager);
 		
 		if(isSDMounted())
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
@@ -104,6 +116,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			}
 		}
 		adapter = new PonyAdapter(this, R.layout.item_pony);
+		setListAdapter(adapter);
 		adapter.setNotifyOnChange(false);
 		registerForContextMenu(getListView());
 		getListView().setOnItemClickListener(new OnItemClickListener() {
@@ -112,7 +125,6 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				getListView().showContextMenuForChild(arg1);				
 			}			
 		});
-		setListAdapter(adapter);
 		new Thread(new Runnable() {			
 			@Override
 			public void run() {
@@ -138,26 +150,27 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	private void loadPonies(){
 		try {
 			URL listFile = new URL(REMOTE_BASE_URL + "ponies.lst");
-			BufferedReader br = new BufferedReader(new InputStreamReader(listFile.openStream()));
+			URLConnection urlCon = listFile.openConnection();
+			urlCon.setConnectTimeout(5000);
+			urlCon.setReadTimeout(5000);
+			BufferedReader br = new BufferedReader(new InputStreamReader(urlCon.getInputStream()));
 			String line = "";
+			int count = 0;
 			while ((line = br.readLine()) != null) {		 
 				line = line.trim();
 				if(line.startsWith("'"))
 					continue;
-				String data[] = line.split(",");
+				final String data[] = line.split(",");
 				File local = new File(localFolder, data[1]);
 				int state = R.string.pony_state_not_installed;
 				if(local.exists())
 					state = R.string.pony_state_installed;
 				final DownloadPony p = new DownloadPony(data[0], data[1], Integer.valueOf(data[2]), Integer.valueOf(data[3]), state);
 				p.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.ponytemp));
-				new AsynImageLoader(REMOTE_BASE_URL + data[1] + "/preview.gif", adapter.getCount(), this).start();
-				runOnUiThread(new Runnable() {					
-					@Override
-					public void run() {
-						adapter.add(p);
-					}
-				});
+				AsynImageLoader ail = new AsynImageLoader(REMOTE_BASE_URL + data[1] + "/preview.gif", count, this);
+				adapter.add(p);
+				ail.start();
+				count++;
 			}
 		} catch (MalformedURLException e) {
 			e.printStackTrace();

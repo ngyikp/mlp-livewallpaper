@@ -10,7 +10,8 @@ import android.graphics.BitmapFactory;
 public class AsynImageLoader extends Thread{
 	
 	public interface onImageListener{
-		public void imageComplete(int posititon, Bitmap image);
+		public void imageComplete(int position, Bitmap image);
+		public void imageError(int position, String error);
 	}
 	
 	private String path;
@@ -29,10 +30,10 @@ public class AsynImageLoader extends Thread{
 			Bitmap b = BitmapFactory.decodeStream(new URL(this.path).openStream());
 			this.listener.imageComplete(this.position, b);
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
+			this.listener.imageError(this.position, e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			this.listener.imageError(this.position, e.getMessage());
 			e.printStackTrace();
 		}
 		

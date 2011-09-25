@@ -26,10 +26,12 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -271,28 +273,25 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	        Bundle extras = data.getExtras();	
 	        if (extras != null) {
 	        	
-	            File newfile = new File(getFilesDir(), "background.jpg");
+	            File newFile = new File(getFilesDir(), "background_" + SystemClock.elapsedRealtime() + ".jpg");
 	            File temp = new File(getFilesDir(), "temp_background.jpg");
 	            try {
-					copyFile(temp, newfile);
+					copyFile(temp, newFile);
 		            temp.delete();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-	            if(newfile.exists() == false){
+	            if(newFile.exists() == false){
 	            	Toast.makeText(this, R.string.error_custom_image, Toast.LENGTH_LONG).show();
 	            	return;
 	            }
-	            Editor editor = getPreferenceManager().getSharedPreferences().edit();
-	            editor.putString("background_image", newfile.getPath());
-	            editor.commit();
+	            setNewBackgroundImage(newFile.getPath());
 	        }	
 	        break;
 	    }
 	}
 	
 	private void doCrop() throws IOException {
-    	
     	Intent intent = new Intent("com.android.camera.action.CROP");
         intent.setType("image/*");
         
@@ -300,8 +299,12 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         
         int size = list.size();
         
-        if (size == 0) {	        
-        	Toast.makeText(this, R.string.no_crop_app, Toast.LENGTH_SHORT).show();        	
+        if (size == 0) {
+        	File newFile = new File(getFilesDir(), "background_" + SystemClock.elapsedRealtime() + ".jpg");
+        	File srcFile = new File(getRealPathFromURI(selectedImageUri));   
+        	copyFile(srcFile, newFile);
+        	setNewBackgroundImage(newFile.getPath());
+        	Toast.makeText(this, R.string.no_crop_app, Toast.LENGTH_SHORT).show();     
             return;
         } else {
         	intent.setData(selectedImageUri);
@@ -343,5 +346,25 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	
 	public void movePonies(File from, File to){
 		
+	}
+	
+	public String getRealPathFromURI(Uri contentUri) {
+        String[] proj = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(contentUri, proj, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
+	
+	public void setNewBackgroundImage(String path){
+		String oldFilePath = getPreferenceManager().getSharedPreferences().getString("background_image", null);
+		if(oldFilePath != null){
+			File oldFile = new File(oldFilePath);
+			if(oldFile.exists())
+				oldFile.delete();
+		}
+		Editor editor = getPreferenceManager().getSharedPreferences().edit();
+        editor.putString("background_image", path);
+        editor.commit();
 	}
 }

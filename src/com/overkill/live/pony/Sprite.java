@@ -14,7 +14,7 @@ public class Sprite {
 	private GifDecoder gif;
 	private int spriteWidth;
 	private int spriteHeight;
-	
+	private int frameCount = 0;
 	private long lastFrameTime = 0;
 	private int currentFrame = 0;	
 	
@@ -45,9 +45,10 @@ public class Sprite {
 			decoder.read(new FileInputStream(this.fileName));
 			this.spriteWidth = decoder.width;
 			this.spriteHeight = decoder.height;		
+			this.frameCount = decoder.getFrameCount();
 			this.gif = decoder;
 			this.initialized = true;
-			Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName);
+			Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*4));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
@@ -76,12 +77,12 @@ public class Sprite {
 	 * @param globalTime The time to find the frame for
 	 */
 	public void update(long globalTime) {
-		if(!initialized) this.initialize();
-		if (globalTime > lastFrameTime + gif.getDelay(currentFrame)) {
-			lastFrameTime = globalTime;
-			currentFrame++;
-			if (currentFrame >= gif.getFrameCount()) {
-				currentFrame = 0;
+		if(!this.initialized) this.initialize();
+		if (globalTime > this.lastFrameTime + this.gif.getDelay(currentFrame)) {
+			this.lastFrameTime = globalTime;
+			this.currentFrame++;
+			if (this.currentFrame >= this.frameCount) {
+				this.currentFrame = 0;
 			}
 		}
 	}
@@ -93,10 +94,10 @@ public class Sprite {
 	 */
 	public void draw(Canvas canvas, Point position) {
 		if(canvas == null || position == null) return;
-		if(!initialized) this.initialize();
+		if(!this.initialized) this.initialize();
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);
-		canvas.drawBitmap(gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
+		canvas.drawBitmap(this.gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
 	}
 	
 	public void destroy(){

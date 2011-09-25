@@ -1,5 +1,7 @@
 package com.overkill.ponymanager;
 
+import com.overkill.live.pony.ToolSet;
+
 import android.graphics.Bitmap;
 
 public class DownloadPony {	
@@ -61,7 +63,7 @@ public class DownloadPony {
 	}
 
 	public String getBytes(){
-		return formatBytes(size);
+		return ToolSet.formatBytes(size);
 	}
 	
 	public int getState() {
@@ -78,18 +80,5 @@ public class DownloadPony {
 
 	public void setImage(Bitmap image) {
 		this.image = image;
-	}
-
-	private String formatBytes(float bytes) {
-	    String units[] = {"B", "KB", "MB", "GB", "TB"};
-	  
-	    bytes = Math.max(bytes, 0);
-	    int pow = (int) Math.floor(((bytes != 0) ? Math.log(bytes) : 0) / Math.log(1024));
-	    pow = Math.min(pow, units.length - 1);
-	  
-	    bytes /= Math.pow(1024, pow);
-	  
-	    return  String.format("%.2f", bytes) + ' ' + units[pow];
-	}
-	
+	}	
 }

@@ -13,7 +13,8 @@ import com.overkill.ponymanager.PonyManager;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.graphics.Bitmap;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Environment;
 import android.service.wallpaper.WallpaperService;
@@ -22,6 +23,7 @@ import android.view.SurfaceHolder;
 
 public class MyLittleWallpaperService extends WallpaperService {
 	public static final String TAG = "mlpWallpaper";	
+	public static String VERSION = "";
 	// Settings
 	public static final boolean DEBUG_RENDERTIME = false;
 	private boolean RENDER_ON_SWIPE = true;	
@@ -76,6 +78,12 @@ public class MyLittleWallpaperService extends WallpaperService {
     public void onCreate() {    	
         super.onCreate();       
                 
+        try {
+			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);
+	        VERSION = pinfo.versionName;
+		} catch (NameNotFoundException e) {
+		}
+        
         SharedPreferences preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);    
         
         rand = new Random();      
@@ -277,6 +285,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+			Log.i("onSharedPreferenceChanged", "key = " + key);
 			if(sharedPreferences.getBoolean("added_pony", false) == true){
 				loadSelectablePonies();
 				Editor editor = sharedPreferences.edit();
@@ -298,12 +307,10 @@ public class MyLittleWallpaperService extends WallpaperService {
 
 			RENDER_ON_SWIPE = sharedPreferences.getBoolean("render_on_swipe", true);
 			
-			// get Background image if we want one
-			this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
-			
+			// get Background image if we want one			
 			String filePath = sharedPreferences.getString("background_image", null);
-	        if(sharedPreferences.getBoolean("background_global", false) == false){
-	        	this.engine.setBackground((Bitmap) null);
+	        if(sharedPreferences.getBoolean("background_global", false) == false || filePath == null){
+				this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
 	        }else{
 	        	this.engine.setBackground(filePath);
 	        }
