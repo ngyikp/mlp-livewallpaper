@@ -12,6 +12,7 @@ public class DownloadPony {
 	private int size;
 	private int totalFileCount;
 	private int doneFileCount;
+	private long lastUpdate = 0;
 		
 	public DownloadPony(String name, String folder, int totalFileCount, int size, int state) {
 		this.name = name;
@@ -80,5 +81,13 @@ public class DownloadPony {
 
 	public void setImage(Bitmap image) {
 		this.image = image;
+	}
+
+	public long getLastUpdate() {
+		return lastUpdate;
+	}
+
+	public void setLastUpdate(long lastUpdate) {
+		this.lastUpdate = lastUpdate;
 	}	
 }

@@ -75,6 +75,11 @@ public class Pony{
 		this.position = new Point(0, 0);
 	}
 
+	@Override
+	public boolean equals(Object p) {
+		return this.name.equals(((Pony)p).name);
+	}
+	
 	public void update(final long globalTime) {
 		if (current_behavior == null) { // If we have no behavior, select a random one
 			selectBehavior(null, globalTime);
@@ -697,9 +702,5 @@ public class Pony{
 	public void cleanUp(){
 		for(Behavior b : behaviors)
 			b.destroy();
-	}
-	
-	public boolean equals(Pony p){
-		return this.name.equals(p.name);
 	}
 }

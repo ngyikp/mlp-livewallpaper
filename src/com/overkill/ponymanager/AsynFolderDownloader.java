@@ -17,7 +17,7 @@ public class AsynFolderDownloader extends Thread {
 		void onDownloadStart(int position);
 		void onDownloadChanged(int position, int filesDone);
 		void onDownloadDone(int position);
-		void onDownloadError(String error);
+		void onDownloadError(int position, String error);
 	}
 	
 	private String remotePath;
@@ -75,9 +75,9 @@ public class AsynFolderDownloader extends Thread {
 			}
 			this.listener.onDownloadDone(this.position);
 		} catch (MalformedURLException e) {
-			this.listener.onDownloadError(e.getMessage());
+			this.listener.onDownloadError(this.position, e.getMessage());
 		} catch (IOException e) {
-			this.listener.onDownloadError(e.getMessage());
+			this.listener.onDownloadError(this.position, e.getMessage());
 		}
 	}
 	

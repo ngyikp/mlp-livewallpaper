@@ -88,7 +88,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         
         rand = new Random();      
         
-        if(isSDMounted() && preferences.getBoolean("force_local_storage", false) == false)
+        if(isSDMounted())
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
 		else
 			localFolder = new File(getFilesDir(), "ponies");    
@@ -99,7 +99,12 @@ public class MyLittleWallpaperService extends WallpaperService {
 		return state.equals(Environment.MEDIA_MOUNTED);
 	}
     
+    
     public Pony createPonyFromFile(File localFolder){
+    	return createPonyFromFile(localFolder, false);
+    }
+    
+    public Pony createPonyFromFile(File localFolder, boolean onlyName){
     	Pony newPony = new Pony("Derp");
     	try{
 		    String line = "";
@@ -107,7 +112,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 		    BufferedReader br = new BufferedReader(new FileReader(iniFile));
 		    while ((line = br.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
-			           if(line.toLowerCase().startsWith("name")){ newPony = new Pony(line.substring(5)); continue;}
+			           if(line.toLowerCase().startsWith("name")){ newPony = new Pony(line.substring(5)); if(onlyName) { return newPony; } continue;}
 			           if(line.toLowerCase().startsWith("behavior")){
 				           	String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");
 				           	
@@ -239,17 +244,9 @@ public class MyLittleWallpaperService extends WallpaperService {
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
         	super.onCreate(surfaceHolder);
-        	previewMode = isPreview();
-        	Log.i("Engine", "onCreate " + previewMode);
-        	//this.engine.setPreviewMode(previewMode);
-        	if(previewMode)
-        		this.engine.setWallpaperSize(-1, -1);
-        	else
-        		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
         }
         
         public void loadSelectablePonies(){
-        	selectablePonies.clear();
 			if(localFolder.exists()){
 				try {
 					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
@@ -260,7 +257,9 @@ public class MyLittleWallpaperService extends WallpaperService {
 					});
 					
 				    for(File pony : ponyFolders){
-				        selectablePonies.add(createPonyFromFile(pony));
+				    	Pony tmp = createPonyFromFile(pony, true);
+				    	if(selectablePonies.contains(tmp) == false)
+				    		selectablePonies.add(createPonyFromFile(pony));
 				    }
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -277,33 +276,29 @@ public class MyLittleWallpaperService extends WallpaperService {
 	        
 	        for(Pony p : selectablePonies){
 	        	Log.i(TAG, "do we want \"" + p.name + "\"? " + sharedPreferences.getBoolean("usepony_" + p.name, false));
-	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == false)
-	        		continue;
-	        	 this.engine.addPony(p);
+	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == true)
+	        		this.engine.addPony(p);
 	        }
         }
         
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-			Log.i("onSharedPreferenceChanged", "key = " + key);
+			Log.i("onSharedPreferenceChanged", "key=" + key);
+			Editor editor = sharedPreferences.edit();
 			if(sharedPreferences.getBoolean("added_pony", false) == true){
 				loadSelectablePonies();
-				Editor editor = sharedPreferences.edit();
 				editor.putBoolean("added_pony", false);
-				editor.commit();
-			}		
-			
+			}					
 			if(sharedPreferences.getBoolean("changed_pony", false) == true){
 				selectPonies(sharedPreferences);
-		        Editor editor = sharedPreferences.edit();
 				editor.putBoolean("changed_pony", false);
-				editor.commit();
 			}
+			editor.commit();
 			
-			engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
-			engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
-			engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
-			engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));
+			this.engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
+			this.engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
+			this.engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
+			this.engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));
 
 			RENDER_ON_SWIPE = sharedPreferences.getBoolean("render_on_swipe", true);
 			
@@ -313,9 +308,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 				this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
 	        }else{
 	        	this.engine.setBackground(filePath);
-	        }
-	        	
-	        
+	        }        
 		}  
                         
         @Override
@@ -331,6 +324,14 @@ public class MyLittleWallpaperService extends WallpaperService {
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
+            /*previewMode = isPreview();
+            Log.i("onSurfaceChanged", "previewMode:" + previewMode);
+        	if(previewMode)
+        		this.engine.setWallpaperSize(-1, -1);
+        	else
+        		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());*/
+
+    		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
             this.engine.setFrameSize(width, height);
             this.engine.render();
         }
@@ -349,9 +350,9 @@ public class MyLittleWallpaperService extends WallpaperService {
 
         @Override
         public void onOffsetsChanged(float xOffset, float yOffset, float xStep, float yStep, int xPixels, int yPixels) {
-        	if(previewMode)
+        	/*if(previewMode)
                 engine.setOffset(0);     
-        	else
+        	else*/
         		engine.setOffset(xPixels);     
             if(RENDER_ON_SWIPE) engine.render();
         }

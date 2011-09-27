@@ -41,6 +41,8 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.GREEN);
         	if(p.getState() == R.string.pony_state_not_installed)
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.RED);
+        	if(p.getState() == R.string.pony_state_update)
+        		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.BLUE);
         	
         	if(p.getState() == R.string.pony_state_loading){
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.rgb(255, 126, 0));
@@ -50,5 +52,13 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
         	}      
         }
         return v;
+	}
+	
+	public boolean hasUpdate(){
+		for(int i = 0; i < getCount(); i++){
+			if(getItem(i).getState() == R.string.pony_state_update)
+				return true;
+		}
+		return false;
 	}
 }

@@ -29,6 +29,7 @@
     <string name="error_custom_image">There was an error saving your custom image</string>
     <string name="no_ponies_selected">No ponies selected. Go to settings</string>
     <string name="debug_text">v%1$s / %2$d ponies active / Scale %3$.2f / %4$d FPS (max %5$d)</string>
+    <string name="pony_state_update">•</string>
     <string name="pony_state_installed">•</string>
     <string name="pony_state_not_installed">•</string>
     <string name="pony_state_loading">•</string>
@@ -41,4 +42,6 @@
     <string name="no_ponies_installed">You seem to have no ponies installed. We have to change that...</string>
     <string name="force_local_storage_title">Store ponies intern</string>
     <string name="force_local_storage_summary">Turn on to store ponies intern instead of the sd-card</string>   
+    <string name="manager_help">Help</string>
+    <string name="manager_update_all">Update All</string>
 </resources>

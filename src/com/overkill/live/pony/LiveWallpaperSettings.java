@@ -67,7 +67,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
         addPreferencesFromResource(R.xml.preferences);
         
-        if(isSDMounted() && getPreferenceManager().getSharedPreferences().getBoolean("force_local_storage", false) == false)
+        if(isSDMounted())
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
 		else
 			localFolder = new File(getFilesDir(), "ponies");
@@ -139,6 +139,14 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					}
 				});
 				
+				if(ponyFolders.length == 0){
+					// we have no ponies, open PonyMananger
+					Toast.makeText(LiveWallpaperSettings.this, R.string.no_ponies_installed, Toast.LENGTH_LONG).show();
+					Intent i = new Intent(getBaseContext(), PonyManager.class);
+					startActivity(i);
+					return false;
+				}
+				
 				poniesName = new String[ponyFolders.length];
 				
 				for(int i = 0; i < ponyFolders.length; i++){
@@ -165,13 +173,6 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		        	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean("usepony_" + poniesName[i], false);
 		        }       
 				
-				if(poniesName.length == 0){
-					// we have no ponies, open PonyMananger
-					Toast.makeText(LiveWallpaperSettings.this, R.string.no_ponies_installed, Toast.LENGTH_LONG).show();
-					Intent i = new Intent(getBaseContext(), PonyManager.class);
-					startActivity(i);
-					return false;
-				}
 				final Editor editor = getPreferenceManager().getSharedPreferences().edit();
 				AlertDialog.Builder builder = new AlertDialog.Builder(LiveWallpaperSettings.this);
 		        builder.setTitle(R.string.pony_select_title);
