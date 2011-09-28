@@ -5,14 +5,13 @@ import java.util.List;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
-import android.graphics.Rect;
 
 import com.overkill.live.pony.Pony.AllowedMoves;
 
 public class Behavior {
 	public String name;
 	public String pony_name;
-	public double chance;
+	public double chance_of_occurance;
 	public double maxDuration;
 	public double minDuration; 
 	public double speed;
@@ -47,6 +46,7 @@ public class Behavior {
     public Pony follow_object;
 	
 	public List<Effect> effects = new LinkedList<Effect>();
+	public boolean blocked;
 	
 	/**
 	 * Default Constructor
@@ -75,7 +75,7 @@ public class Behavior {
 	 * Set the current image if it is null or we need to change direction
 	 * @return
 	 */
-	public Sprite getCurrentImage(){		
+	public Sprite getCurrentImage(){	
 		if(current_image == null){
 			 this.selectCurrentImage();
 		}
@@ -116,7 +116,7 @@ public class Behavior {
 //    	return new Point();
 //    }
 	
-	public Point getDestination(int screenWidth, int screenHeight, Pony pony) {
+	public Point getDestination(Pony pony) {
     	// If we aren't following anything yet
     	if ((follow_object_name.length() > 0 && follow_object == null) || (follow_object != null && !follow_object.isVisible())) {
     		if (pony.isInteracting && follow_object_name.trim().equalsIgnoreCase(pony.currentInteraction.Trigger.name.trim())) {
@@ -188,7 +188,6 @@ public class Behavior {
 	 * @param y_movement
 	 */
 	public void bounce(Pony pony, Point current_location, Point new_location, int x_movement, int y_movement) {
-		
     	if (x_movement == 0 && y_movement == 0)
     		return;
     	

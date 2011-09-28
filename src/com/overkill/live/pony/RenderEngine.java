@@ -19,7 +19,8 @@ import android.view.SurfaceHolder;
 public class RenderEngine {
 	public static boolean CONFIG_DEBUG_TEXT = true;
 	public static boolean CONFIG_SHOW_EFFECTS = false;
-	public static int CONFIG_FPS = 20;
+	public static boolean CONFIG_INTERACT = false;
+	static int CONFIG_FPS = 20;
 	public static int CONFIG_FRAME_DELAY = 1000 / CONFIG_FPS;
 	public static float CONFIG_SCALE = 1.0f;
 	public static int OFFSET;

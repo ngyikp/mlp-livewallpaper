@@ -33,9 +33,16 @@ public class Pony{
 	private boolean hasSpawned = false;
 
 	public List<EffectWindow> activeEffects;
+	public List<Interaction> interactions = new LinkedList<Interaction>();
 
+	
 	public Interaction currentInteraction;
 	public boolean isInteracting = false;
+	public boolean interactionActive = false;
+	private boolean isInteractionInitiator = false;
+	private long interactionDelayUntil = 0;
+
+	private boolean atDestination;
 
 
 	//private float largestSizeX;
@@ -86,6 +93,7 @@ public class Pony{
 	
 	public void update(final long globalTime) {
 		if (current_behavior == null) { // If we have no behavior, select a random one
+			cancelInteraction(globalTime);
 			selectBehavior(null, globalTime);
 		} else if ((current_behavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
 			if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
@@ -100,6 +108,7 @@ public class Pony{
 			hasSpawned = true;
 		}
 	    move(globalTime);
+	    
 	    current_behavior.update(globalTime);
 	    for (EffectWindow effect : this.activeEffects) {
 			effect.update(globalTime);
@@ -124,56 +133,179 @@ public class Pony{
 			return;
 		
 		lastTimeMoved = globalTime;
+
+		current_behavior.blocked = false;
 		
 		double speed = current_behavior.speed;
 				
 		// Get the destination for following (will be blank(0,0) if not following)
-		destination = current_behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height(), this);
-		
-		// Calculate the movement speed
+		destination = current_behavior.getDestination(this);
+	    
+	    // Calculate the movement speed normally
 		int x_movement = 0;
 		int y_movement = 0;
 		
-	    if (!current_behavior.right) {
-	    	speed = -speed;
-	    }
+		// If following something...
+	    if (destination.x != 0 || destination.y != 0) {
+	    	Log.i("Pony[" + name + "]", "following");
+	    	// Calculate the distance to this point
+	    	double distance = Math.sqrt(Math.pow(this.getLocation().x - destination.x, 2) + Math.pow(this.getLocation().y - destination.y, 2));
+	    	
+	    	List<Pony.Directions> direction = Get_Destination_Direction(destination);
+	    	
+            try {
+            	// Calculate the horizontal and vertical movement speeds
+                if (direction.get(0) == Pony.Directions.left) {
+                    x_movement = (int)((this.getLocation().x - destination.x) / (distance) * -speed);
+                    current_behavior.right = false;
+                } else {
+                    x_movement = (int)((destination.x - this.getLocation().x) / (distance) * speed);
+                    current_behavior.right = true;
+                }
+                
+                y_movement = (int)((this.getLocation().y - destination.y) / (distance) * -speed);
+            } catch(Exception ex) {
+                //overflow due to distance being 0
+                x_movement = 0;
+                y_movement = 0;
+            }
+	    	
+	    	// Determine if we are close enough to it
+	        if (distance <= (current_behavior.getCurrentImage().getSpriteWidth() / 2)) {
+	        	// If so, don't move anymore
+	            x_movement = 0;
+	            y_movement = 0;
+	
+	            atDestination = true;
+	
+	            //reached destination.
+	            if (current_behavior.linkedBehavior != null && current_behavior.speed != 0) {
+	                current_behavior.endTime = globalTime;
+	                destination = new Point();
+	            }
+	        } else { // Otherwise, we need to move towards it
+	            if (atDestination == true) {
+	                current_behavior.delay = 10;
+	            }
+	
+	            if (current_behavior.delay > 0) {
+	                atDestination = false;
+	                current_behavior.delay--;
+	                return;
+	            }
+	
+	            atDestination = false;
+	        }
+	    } else { // If we aren't following anything
+	        if (!current_behavior.right) {
+	            speed = -speed;
+	        }
 	    
-	    // Calculate the movement speed normally
-		x_movement = (int) (current_behavior.horizontal ? speed : 0);
-		y_movement = (int) (current_behavior.vertical ? speed : 0);
+	        // Calculate the movement speed normally
+			x_movement = (int) (current_behavior.horizontal ? speed : 0);
+			y_movement = (int) (current_behavior.vertical ? speed : 0);
 		
-		if (current_behavior.up) {
-			if (y_movement > 0) {
-				y_movement = -y_movement;
+			if (current_behavior.up) {
+				if (y_movement > 0) {
+					y_movement = -y_movement;
+				}
+			} else {
+				if (y_movement < 0) {
+					y_movement = -y_movement;
+				}
 			}
-		} else {
-			if (y_movement < 0) {
-				y_movement = -y_movement;
-			}
-		}
-	    		
-		// Point to determine where we would end up at this speed
-		Point new_location = new Point(position.x + x_movement, position.y + y_movement);
-		
+	    }
 
+		// Point to determine where we would end up at this speed
+		Point new_location = new Point(position.x + x_movement, position.y + y_movement);	
 	    
 	    if (isPonyOnWallpaper(new_location)) {
-	        position = new_location;      
-	    }else {		
-		    //Nothing to worry about, we are on screen, but our current behavior would take us 
-		    // off-screen in the next move.  Just do something else.
-		    // if we are moving to a destination, our path is blocked, and we need to abort the behavior
-		    // if we are just moving normally, just "bounce" off of the barrier.
-		
-		    if (destination.x == 0 && destination.y == 0) {
-		    	current_behavior.bounce(this, position, new_location, x_movement, y_movement);
-		    }
+	        this.position = new_location;
+	        paint(globalTime);
+	        
+	        // Do we want interaction?
+	        if(RenderEngine.CONFIG_INTERACT && !isInteracting){
+		        Interaction Interact = isInInteractionRange(globalTime);
+		        	
+		        if (Interact != null) {
+		        	startInteraction(Interact, globalTime);
+		        }
+	        }
+	        return;
 	    }
-	    if(RenderEngine.CONFIG_SHOW_EFFECTS)
-	    	loadEffects(globalTime); 
+	
+	    //Nothing to worry about, we are on screen, but our current behavior would take us 
+	    // off-screen in the next move.  Just do something else.
+	    // if we are moving to a destination, our path is blocked, and we need to abort the behavior
+	    // if we are just moving normally, just "bounce" off of the barrier.
+	
+	    if (destination.x == 0 && destination.y == 0) {
+	    	current_behavior.bounce(this, position, new_location, x_movement, y_movement);
+	    } else {
+	    	if (current_behavior.follow_object == null) {
+	    		current_behavior = null;
+	    	} else {
+	    		//do nothing but stare longenly in the direction of the object we want to follow...
+	    		current_behavior.blocked = true;
+		        paint(globalTime);
+	    	}
+	    }
+
 	    
 	}
 		
+	public void paint(long globalTime){
+		
+		// Verify if we are following something
+		if (destination.x != 0 || destination.y != 0) {
+			// Calculate the horizontal and vertical distance 
+	        double horizonal = Math.abs(destination.x - this.getLocation().x);
+	        double vertical = Math.abs(destination.y - this.getLocation().y);
+	        Behavior appropriate_behavior = null;
+	        Pony.AllowedMoves allowed_movement = Pony.AllowedMoves.All;
+	
+	        // Calculate the real distance
+	        double distance = Math.sqrt(Math.pow(this.getLocation().x - destination.x, 2) + Math.pow(this.getLocation().y - destination.y, 2));
+	
+	        // Determine if we want to move horizontally, diagonaly or vertically
+	        if (distance >= current_behavior.getCurrentImage().getSpriteWidth() * 2) {
+	            if (horizonal * 0.75 > vertical && allowed_movement == Pony.AllowedMoves.Horizontal_Only) {
+	            	
+	            } else {
+	            	switch (allowed_movement) {
+	            		case All:
+	            		case Diagonal_Vertical:
+	            		case Horizontal_Vertical:
+	            		case Vertical_Only:
+	    	                allowed_movement = Pony.AllowedMoves.Vertical_Only;
+	    	                break;
+	    	            default:
+	    	            	allowed_movement = Pony.AllowedMoves.None;
+	    	            	break;
+	            	}
+	            }
+	        }
+	     
+	        // If we are already at destination or blocked
+	        if (atDestination || current_behavior.blocked || current_behavior.speed == 0)
+	            allowed_movement = Pony.AllowedMoves.None; // We are not allowed to move
+	
+	        // Find the animation best suited for where we are going
+	        if (isInteracting)
+	        	appropriate_behavior = getAppropriateBehavior(allowed_movement, true, current_behavior);
+	        else
+	        	appropriate_behavior = getAppropriateBehavior(allowed_movement, true, null);
+	
+	        // Get this animation's left and right images
+	        this.current_behavior.image_left_path = appropriate_behavior.image_left_path;
+	        this.current_behavior.image_right_path = appropriate_behavior.image_right_path;
+		}
+			    
+	    // Verify if we can create effects		
+		if(RenderEngine.CONFIG_SHOW_EFFECTS)
+	    	loadEffects(globalTime); 
+	}
+	
 	public void loadEffects(long globalTime){
 		List<EffectWindow> effectsToRemove = new LinkedList<EffectWindow>();
 		
@@ -256,6 +388,62 @@ public class Pony{
         }
 	}
 	
+	public Interaction isInInteractionRange(long globalTime) {
+		if (globalTime <= interactionDelayUntil) return null;
+		
+		for (Interaction Interact : interactions) {
+			for (Pony target : Interact.Interacts_With) {
+                // don't start an interaction if we or the target haven't finished loading yet
+				double distance = Math.sqrt(Math.pow(this.getLocation().x + this.current_behavior.getCurrentImage().getSpriteWidth() - target.getLocation().x + target.current_behavior.getCurrentImage().getSpriteWidth(), 2) + Math.pow(this.getLocation().y + this.current_behavior.getCurrentImage().getSpriteHeight() - target.getLocation().y + target.current_behavior.getCurrentImage().getSpriteHeight(),2));;
+					
+				if (distance <= Interact.Proximity_Activation_Distance) {
+					double dice = MyLittleWallpaperService.rand.nextDouble();						
+					if (dice <= Interact.Probability) {
+						Interact.Trigger = target;
+						return Interact;
+					}
+				}
+			}
+		}		
+		return null;
+	}
+	
+	public void startInteraction(Interaction interaction, long globalTime) {
+		isInteractionInitiator = true;
+		currentInteraction = interaction;
+		this.selectBehavior(interaction.Behavior_List.get(MyLittleWallpaperService.rand.nextInt(interaction.Behavior_List.size())), globalTime);
+		for (Effect effect : current_behavior.effects) {
+			effect.already_played_for_currentbehavior = false;
+		}
+		
+		if (interaction.Select_All_Targets) {
+			for (Pony pony : interaction.Interacts_With) {
+				pony.startInteractionAsTarget(current_behavior.name, this, interaction, globalTime);
+			}
+		} else {
+			interaction.Trigger.startInteractionAsTarget(current_behavior.name, this, interaction, globalTime);
+		}
+		
+		isInteracting = true;
+	}
+	
+	public void startInteractionAsTarget(String BehaviorName, Pony initiator, Interaction interaction, long globalTime) {
+		for (Behavior behavior : behaviors) {
+			if (BehaviorName.trim().equalsIgnoreCase(behavior.name.trim())) {
+				this.selectBehavior(behavior, globalTime);
+				for (Effect effect : current_behavior.effects) {
+					effect.already_played_for_currentbehavior = false;
+				}
+				break;
+			}
+		}
+		
+		interaction.initiator = initiator;
+		isInteractionInitiator = false;
+		currentInteraction = interaction;
+		isInteracting = true;
+	}
+	
 	public void touch() {
 		current_behavior = behaviors.get(0);
 		for (Behavior behavior : behaviors) {
@@ -320,7 +508,7 @@ public class Pony{
 		return false;
 	}
 	
-	public void addBehavior(String name, double chance, double max_duration,  double min_duration,  double speed,
+	public void addBehavior(String name, double chance_of_occurance, double max_duration,  double min_duration,  double speed,
             String right_image_path, String left_image_path, AllowedMoves Allowed_Moves,
             String _Linked_Behavior, boolean _skip,
             int _xcoord, int _ycoord, String _object_to_follow) throws IOException {
@@ -331,7 +519,7 @@ public class Pony{
 		// Set its values
        new_behavior.name = name.trim();
        new_behavior.pony_name = this.name;
-       new_behavior.chance = chance;
+       new_behavior.chance_of_occurance = chance_of_occurance;
        new_behavior.maxDuration = max_duration;
        new_behavior.minDuration = min_duration;
        new_behavior.speed = speed;
@@ -457,8 +645,8 @@ public class Pony{
 		return direction;
 	}
 	
-	public void selectBehavior(Behavior specified_Behavior, long globalTime) {
-		//if (Is_Interacting && Specified_Behavior == null) Cancel_Interaction();
+	public void selectBehavior(Behavior specifiedBehavior, long globalTime) {
+		if (isInteracting && specifiedBehavior == null) cancelInteraction(globalTime);
 		long startTime = SystemClock.elapsedRealtime();
 		Behavior newBehavior = null;		
 		
@@ -467,17 +655,23 @@ public class Pony{
 		int selection = 0;
 		
 		// Are we being forced into a specific behavior or not?
-		if (specified_Behavior == null) {
-				
+		if (specifiedBehavior == null) {
 			int loop_total = 0;
 			
 			// Randomly select a non-skip behavior
 			while(loop_total <= 200) {
-				dice = MyLittleWallpaperService.rand.nextDouble();				
+				dice = MyLittleWallpaperService.rand.nextDouble();
+				
 				selection = MyLittleWallpaperService.rand.nextInt(behaviors.size());
-				if (dice <= behaviors.get(selection).chance && behaviors.get(selection).Skip == false) {		
-					newBehavior = behaviors.get(selection);
-					break;
+				if (dice <= behaviors.get(selection).chance_of_occurance && behaviors.get(selection).Skip == false) {
+					behaviors.get(selection).follow_object = null;
+		
+	                destination = behaviors.get(selection).getDestination(this);
+	
+	                if (!(destination.x == 0 && destination.y == 0 && behaviors.get(selection).follow_object_name.length() > 0)) {
+	                	newBehavior = behaviors.get(selection);
+						break;
+	                }
 				}
 				loop_total++;
 			}
@@ -485,9 +679,16 @@ public class Pony{
 			if (loop_total > 200) {
 				// If the Random number generator is being goofy, select the default behavior (usually standing)
 				newBehavior = behaviors.get(0);
-			}		
+			}				
 		} else { // Set the forced behavior that was specified
-			newBehavior = specified_Behavior;
+			destination = specifiedBehavior.getDestination(this);
+
+			if (destination.x == 0 && destination.y == 0 && specifiedBehavior.follow_object_name.length() > 0) {
+				selectBehavior(null, globalTime);
+				return;
+			}
+			newBehavior = specifiedBehavior;
+			newBehavior.follow_object = null;
 		}
 		
 		
@@ -561,13 +762,6 @@ public class Pony{
 		    	newBehavior.up = true;
 		    else
 		    	newBehavior.up = false;
-		    
-		    dice = MyLittleWallpaperService.rand.nextDouble();
-		    
-		    if (dice >= 0.5)
-		    	newBehavior.right = true;
-		    else
-		    	newBehavior.right = false;
 	    } // End if moving
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
@@ -588,6 +782,23 @@ public class Pony{
 	public void setDestination(int x, int y){
 		this.destination = new Point(x, y);
 		getAppropriateBehavior(AllowedMoves.All, true, null);
+	}
+	
+	public void cancelInteraction(long globalTime) {
+		isInteracting = false;
+		
+		if (currentInteraction != null) {
+			if (this.isInteractionInitiator) {
+				for(Pony pony : currentInteraction.Interacts_With) {
+					pony.cancelInteraction(globalTime);
+				}
+			}
+		
+			interactionDelayUntil = globalTime + (currentInteraction.Reactivation_Delay * 1000);
+			
+			currentInteraction = null;
+			isInteractionInitiator = false;
+		}
 	}
 	
 	private Point getEffectLocation(int width, int height, Pony.Directions direction, Pony.Directions centering) {

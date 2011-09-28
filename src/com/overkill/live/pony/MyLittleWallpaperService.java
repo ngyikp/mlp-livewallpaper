@@ -25,7 +25,8 @@ public class MyLittleWallpaperService extends WallpaperService {
 	public static final String TAG = "mlpWallpaper";	
 	public static String VERSION = "";
 	// Settings
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
+	public static final boolean SHOWPONYBOX = false;
 	private boolean RENDER_ON_SWIPE = true;	
 	
     public ArrayList<Pony> selectablePonies = new ArrayList<Pony>();
