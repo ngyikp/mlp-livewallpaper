@@ -38,7 +38,7 @@ public class RenderEngine {
     
 	private long lastTimeDrawn;
 	
-    private ArrayList<Pony> activePonies = new ArrayList<Pony>();
+    public static ArrayList<Pony> activePonies = new ArrayList<Pony>();
 	private long realFPS;
 	
 	private Point screenCenter;

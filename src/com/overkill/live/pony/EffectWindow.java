@@ -12,6 +12,7 @@ public class EffectWindow{
 	public String effectName;
 	public boolean Close_On_New_Behavior;
 	public String behaviorName;
+	public String ponyName;
 	
 	public Point position;
 	

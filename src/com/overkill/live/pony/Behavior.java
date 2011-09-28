@@ -43,6 +43,9 @@ public class Behavior {
 	public boolean up;
 	public int delay;
 
+	public String follow_object_name = "";
+    public Pony follow_object;
+	
 	public List<Effect> effects = new LinkedList<Effect>();
 	
 	/**
@@ -100,13 +103,76 @@ public class Behavior {
 	    }
 	}
 		
-	public Point getDestination(int screenWidth, int screenHeight) {
+//	public Point getDestination(int screenWidth, int screenHeight) {
+//	    // If we have a coordinate to go to
+//	    if (destination_xcoord != 0 && destination_ycoord != 0) {
+//	    	// Return its position on the screen
+//	    	Rect screenBounds = new Rect(0, 0, screenWidth, screenHeight);
+//	        return new Point((int)(((destination_xcoord * screenBounds.right) / 100) + screenBounds.left),
+//	                         (int)(((destination_ycoord * screenBounds.bottom) / 100) + screenBounds.top));
+//	    }
+//
+//	    // Otherwise return a blank Point
+//    	return new Point();
+//    }
+	
+	public Point getDestination(int screenWidth, int screenHeight, Pony pony) {
+    	// If we aren't following anything yet
+    	if ((follow_object_name.length() > 0 && follow_object == null) || (follow_object != null && !follow_object.isVisible())) {
+    		if (pony.isInteracting && follow_object_name.trim().equalsIgnoreCase(pony.currentInteraction.Trigger.name.trim())) {
+    			follow_object = pony.currentInteraction.Trigger;
+    			return new Point(follow_object.getLocation().x + destination_xcoord, follow_object.getLocation().y + destination_ycoord);
+    		}
+    		if (pony.isInteracting && pony.currentInteraction.initiator != null && follow_object_name.trim().equalsIgnoreCase(pony.currentInteraction.initiator.name.trim())) {
+    			follow_object = pony.currentInteraction.initiator;
+    			return new Point(follow_object.getLocation().x + destination_xcoord, follow_object.getLocation().y + destination_ycoord);
+    		}
+    		
+    		List<Pony> ponies_to_follow = new LinkedList<Pony>();
+    		// Look for a Pony to follow
+            for (Pony ipony : RenderEngine.activePonies) {
+                if (ipony.name.trim().equalsIgnoreCase(follow_object_name.trim()))
+                    ponies_to_follow.add(ipony);
+            }
+
+            // If one or more ponies found
+            if (ponies_to_follow.size() > 0) {
+            	// Select one at random to follow
+                int dice = MyLittleWallpaperService.rand.nextInt(ponies_to_follow.size());
+                follow_object = ponies_to_follow.get(dice);
+                return new Point(follow_object.getLocation().x + destination_xcoord, follow_object.getLocation().y + destination_ycoord);
+            }
+
+            // TODO follow a effect
+//            List<EffectWindow> effects_to_follow = new LinkedList<EffectWindow>();
+//            // Look for an object (effect) to follow
+//            for(EffectWindow effect : pony.activeEffects) {
+//                if (effect.effectName.trim().equalsIgnoreCase(follow_object_name.trim())) {
+//                    effects_to_follow.add(effect);
+//                }
+//            }
+//
+//            // If one or more objects found
+//            if (effects_to_follow.size() > 0) {
+//            	// Select one at random to follow
+//                int dice = MyLittleWallpaperService.rand.nextInt(effects_to_follow.size());
+//                follow_object = effects_to_follow.get(dice);
+//                return new Point(follow_object.getLocation().x + destination_xcoord, follow_object.getLocation().y + destination_ycoord);
+//            }
+            
+            // Return blank point if nothing found
+        	return new Point();
+    	}
+    	
+    	// If we are following an object
+	    if (follow_object != null)
+	        return new Point(follow_object.getLocation().x + destination_xcoord, follow_object.getLocation().y + destination_ycoord); // Return its current screen position
+
 	    // If we have a coordinate to go to
 	    if (destination_xcoord != 0 && destination_ycoord != 0) {
 	    	// Return its position on the screen
-	    	Rect screenBounds = new Rect(0, 0, screenWidth, screenHeight);
-	        return new Point((int)(((destination_xcoord * screenBounds.right) / 100) + screenBounds.left),
-	                         (int)(((destination_ycoord * screenBounds.bottom) / 100) + screenBounds.top));
+	        return new Point((int)(((destination_xcoord * RenderEngine.screenBounds.width()) / 100) + RenderEngine.screenBounds.left),
+	                         (int)(((destination_ycoord * RenderEngine.screenBounds.height()) / 100) + RenderEngine.screenBounds.bottom));
 	    }
 
 	    // Otherwise return a blank Point
@@ -177,12 +243,11 @@ public class Behavior {
 	
 	
 	public boolean equals(Behavior b){
-		// Compare the name since they should be unique
+		// Compare the names since they should be unique
 		return this.name.endsWith(b.name);
 	}
 	
 	public void destroy(){
-		//Log.i("Behavior[" + name + "]", "destroy()");
 		if(this.current_image != null) this.current_image.destroy();
 		this.current_image = null;
 		if(this.image_left != null) this.image_left.destroy();
@@ -200,7 +265,7 @@ public class Behavior {
         new_effect.right_image_path = right_image;
         new_effect.left_image_path = left_image;
         new_effect.duration = duration;
-        new_effect.repeat_delay = 0; //repeat_delay;
+        new_effect.repeat_delay = repeat_delay;
         new_effect.placement_direction_right = direction_right;
         new_effect.centering_right = centering_right;
         new_effect.placement_direction_left = direction_left;

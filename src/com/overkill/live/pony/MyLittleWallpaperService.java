@@ -25,7 +25,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 	public static final String TAG = "mlpWallpaper";	
 	public static String VERSION = "";
 	// Settings
-	public static final boolean DEBUG_RENDERTIME = false;
+	public static final boolean DEBUG = false;
 	private boolean RENDER_ON_SWIPE = true;	
 	
     public ArrayList<Pony> selectablePonies = new ArrayList<Pony>();
@@ -120,7 +120,9 @@ public class MyLittleWallpaperService extends WallpaperService {
 				           	String linked_behavior = "";
 							int xcoord = 0;
 							int ycoord = 0;
+							String follow = "";
 							boolean skip = false;
+							
 				           	
 							if (columns[BO_movement_type].trim().equalsIgnoreCase("none")) {
 								movement = AllowedMoves.None;
@@ -152,6 +154,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 								skip = Boolean.parseBoolean(columns[BO_skip].trim());
 								xcoord = Integer.parseInt(columns[BO_xcoord].trim());
 								ycoord = Integer.parseInt(columns[BO_ycoord].trim());
+								follow = columns[BO_object_to_follow].trim();
 							}
 							
 				            newPony.addBehavior(
@@ -166,7 +169,8 @@ public class MyLittleWallpaperService extends WallpaperService {
 				            		linked_behavior, 
 				            		skip, 
 				            		xcoord, 
-				            		ycoord);
+				            		ycoord,
+				            		follow);
 				            newPony.linkBehaviors();
 				            continue;
 			           } // Behavior
@@ -233,16 +237,17 @@ public class MyLittleWallpaperService extends WallpaperService {
         private boolean previewMode = false;
         
         SpriteEngine() {
+        	this.previewMode = false;
+        }
+
+        @Override
+        public void onCreate(SurfaceHolder surfaceHolder) {
         	this.engine = new RenderEngine(getBaseContext(), getSurfaceHolder());            	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
             loadSelectablePonies();
             selectPonies(preferences);
             onSharedPreferenceChanged(preferences, null);
-        }
-
-        @Override
-        public void onCreate(SurfaceHolder surfaceHolder) {
         	super.onCreate(surfaceHolder);
         }
         
@@ -255,10 +260,10 @@ public class MyLittleWallpaperService extends WallpaperService {
 							return pathname.isDirectory();
 						}
 					});
-					
+					selectablePonies.clear();
 				    for(File pony : ponyFolders){
-				    	Pony tmp = createPonyFromFile(pony, true);
-				    	if(selectablePonies.contains(tmp) == false)
+				    	//Pony tmp = createPonyFromFile(pony, true);
+				    	//if(selectablePonies.contains(tmp) == false)
 				    		selectablePonies.add(createPonyFromFile(pony));
 				    }
 				} catch (Exception e) {
@@ -350,10 +355,10 @@ public class MyLittleWallpaperService extends WallpaperService {
 
         @Override
         public void onOffsetsChanged(float xOffset, float yOffset, float xStep, float yStep, int xPixels, int yPixels) {
+        	engine.setOffset(xPixels);   
         	/*if(previewMode)
                 engine.setOffset(0);     
-        	else*/
-        		engine.setOffset(xPixels);     
+        	else*/  
             if(RENDER_ON_SWIPE) engine.render();
         }
         

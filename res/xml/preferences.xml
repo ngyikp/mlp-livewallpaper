@@ -17,7 +17,7 @@
     <Preference android:key="pony_select" android:title="@string/pony_select_title" android:summary="@string/pony_select_summary"></Preference>
     <ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference>
     <EditTextPreference android:key="pony_scale" android:defaultValue="1" android:inputType="numberDecimal" android:title="@string/pony_scale_title" android:summary="@string/pony_scale_summary"></EditTextPreference>
-    <CheckBoxPreference android:key="show_effects" android:title="@string/show_effects_title" android:defaultValue="false" android:summary="@string/show_effects_summary" android:enabled="false"></CheckBoxPreference>
+    <CheckBoxPreference android:key="show_effects" android:title="@string/show_effects_title" android:defaultValue="false" android:summary="@string/show_effects_summary" android:enabled="true"></CheckBoxPreference>
     <CheckBoxPreference android:key="force_local_storage" android:defaultValue="false" android:title="@string/force_local_storage_title" android:summary="@string/force_local_storage_summary" android:enabled="false"></CheckBoxPreference>
     
     

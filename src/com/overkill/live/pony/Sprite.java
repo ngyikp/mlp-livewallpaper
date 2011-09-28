@@ -50,9 +50,11 @@ public class Sprite {
 			this.frameCount = decoder.getFrameCount();
 			this.gif = decoder;
 			this.initialized = true;
-			Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*4));
-		} catch (Exception e) {
-			e.printStackTrace();
+			if(MyLittleWallpaperService.DEBUG) Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*4));
+		} catch (OutOfMemoryError e) {
+			this.initialized = false;
+		} catch (FileNotFoundException e) {
+			this.initialized = false;
 		}		
 	}
 	
@@ -99,9 +101,12 @@ public class Sprite {
 		if(!this.initialized) this.initialize();
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);
-		canvas.drawBitmap(this.gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), renderPaint );
+		canvas.drawBitmap(this.gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), renderPaint);
 	}
 	
+	/**
+	 * releases and cleans up objects
+	 */
 	public void destroy(){
 		//Log.i("Sprite.destroy", this.fileName);
 		if(this.gif != null) this.gif.destroy();

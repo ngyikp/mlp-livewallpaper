@@ -32,7 +32,11 @@ public class Pony{
 	
 	private boolean hasSpawned = false;
 
-	private List<EffectWindow> activeEffects;
+	public List<EffectWindow> activeEffects;
+
+	public Interaction currentInteraction;
+	public boolean isInteracting = false;
+
 
 	//private float largestSizeX;
 
@@ -84,7 +88,6 @@ public class Pony{
 		if (current_behavior == null) { // If we have no behavior, select a random one
 			selectBehavior(null, globalTime);
 		} else if ((current_behavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
-			if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Current Behavior ended");
 			if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
 				selectBehavior(current_behavior.linkedBehavior, globalTime);
 			} else { // Otherwise select a random one
@@ -125,7 +128,7 @@ public class Pony{
 		double speed = current_behavior.speed;
 				
 		// Get the destination for following (will be blank(0,0) if not following)
-		destination = current_behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height());
+		destination = current_behavior.getDestination(RenderEngine.screenBounds.width(), RenderEngine.screenBounds.height(), this);
 		
 		// Calculate the movement speed
 		int x_movement = 0;
@@ -236,7 +239,8 @@ public class Pony{
 		            effectWindow.follows = effect.follow;
 		            effectWindow.effectName = effect.name;
 		            effectWindow.behaviorName = current_behavior.name;
-		
+		            effectWindow.ponyName = this.name;
+		            
 		            // Position the effect's initial location and size
 		            if (current_behavior.right) {
 		            	effect.setLocation(getEffectLocation(effect.getRightImage().getSpriteWidth(), effect.getRightImage().getSpriteHeight(), effectWindow.direction, effectWindow.centering));
@@ -319,7 +323,7 @@ public class Pony{
 	public void addBehavior(String name, double chance, double max_duration,  double min_duration,  double speed,
             String right_image_path, String left_image_path, AllowedMoves Allowed_Moves,
             String _Linked_Behavior, boolean _skip,
-            int _xcoord, int _ycoord) throws IOException {
+            int _xcoord, int _ycoord, String _object_to_follow) throws IOException {
 		
 		// Create a new behavior structure
 		Behavior new_behavior = new Behavior();
@@ -337,7 +341,7 @@ public class Pony{
        
        new_behavior.destination_xcoord = _xcoord;
        new_behavior.destination_ycoord = _ycoord; 
-       
+       new_behavior.follow_object_name = _object_to_follow;
        
        if (_Linked_Behavior != null && _Linked_Behavior.length() > 0) {
     	   new_behavior.linkedBehaviorName = _Linked_Behavior;
@@ -458,8 +462,6 @@ public class Pony{
 		long startTime = SystemClock.elapsedRealtime();
 		Behavior newBehavior = null;		
 		
-		if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "Picking from " + behaviors.size());
-
 		double dice;
 		
 		int selection = 0;
@@ -483,7 +485,6 @@ public class Pony{
 			if (loop_total > 200) {
 				// If the Random number generator is being goofy, select the default behavior (usually standing)
 				newBehavior = behaviors.get(0);
-				if(MyLittleWallpaperService.DEBUG_RENDERTIME) Log.i("Pony[" + name + "]", "forced to 0");
 			}		
 		} else { // Set the forced behavior that was specified
 			newBehavior = specified_Behavior;
@@ -573,7 +574,7 @@ public class Pony{
 	    
 	    // TODO Tell the GC to pick up the old behavior
 		if(current_behavior != null && newBehavior != null && (newBehavior.equals(current_behavior) == false)){
-			Log.i("Pony[" + name + "]", "swaping from " + current_behavior.name + " to " + newBehavior.name);
+			if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + current_behavior.name + " to " + newBehavior.name);
 			current_behavior.destroy();
 			current_behavior = null;
 			//System.gc();
@@ -581,7 +582,7 @@ public class Pony{
 		
 		current_behavior = newBehavior;
 	    
-		Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+		if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 	}
 	
 	public void setDestination(int x, int y){
@@ -702,5 +703,13 @@ public class Pony{
 	public void cleanUp(){
 		for(Behavior b : behaviors)
 			b.destroy();
+	}
+
+	public boolean isVisible() {
+		return true;
+	}
+
+	public Point getLocation() {
+		return this.position;
 	}
 }

@@ -18,7 +18,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -194,6 +193,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				if(line.startsWith("'"))
 					continue;
 				final String data[] = line.split(",");
+				if(data.length < 5)
+					continue;
 				File local = new File(localFolder, data[1]);
 				int state = R.string.pony_state_not_installed;
 				if(local.exists())
@@ -217,9 +218,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			DownloadPony p = adapter.getItem(i);
 			long lastUpdateLocal = preferences.getLong("lastupdate_" + p.getFolder(), 0);
 			long lastUpdateRemote = p.getLastUpdate();
-			Log.i("cmp " + p.getName(), "remote: " + lastUpdateRemote + "\n" + 
-						 "local : " + lastUpdateLocal);
-			if(lastUpdateRemote > lastUpdateLocal)
+			if((lastUpdateRemote > lastUpdateLocal) && p.getState() != R.string.pony_state_not_installed)
 				adapter.getItem(i).setState(R.string.pony_state_update);
 				
 		}
