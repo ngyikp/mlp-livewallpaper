@@ -4,30 +4,30 @@ import java.util.List;
 import java.util.LinkedList;
 
 public class Interaction {
-	public String Name;
-	public String PonyName;
-	public double Probability;
-	public double Proximity_Activation_Distance = 125;
-	public List<String> Targets = new LinkedList<String>();
-	public String Targets_String = "";
+	public String name;
+	public String ponyName;
+	public double probability;
+	public double proximityActivationDistance = 125;
+	public List<String> targets = new LinkedList<String>();
+	public String targetsString = "";
 	
-	public boolean Select_All_Targets;
-	public List<Behavior> Behavior_List = new LinkedList<Behavior>();
+	public boolean selectAllTargets;
+	public List<Behavior> behaviorList = new LinkedList<Behavior>();
 	
-	public List<Pony> Interacts_With = new LinkedList<Pony>();
-	public List<String> Interacts_With_Names = new LinkedList<String>();
+	public List<Pony> interactsWith = new LinkedList<Pony>();
+	public List<String> interactsWithNames = new LinkedList<String>();
 	
-	public Pony Trigger = null;
+	public Pony trigger = null;
 	public Pony initiator = null;
 	
 	// seconds
 	public int Reactivation_Delay = 60;
 	
 	public String getBehaviors() {
-		if (Behavior_List.size() > 0) {
+		if (behaviorList.size() > 0) {
 			String behaviors_list = "";
 			
-			for (Behavior behavior : Behavior_List) {
+			for (Behavior behavior : behaviorList) {
 				behaviors_list = behaviors_list + behavior.name + ",";
 			}
 			

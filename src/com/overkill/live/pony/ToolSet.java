@@ -90,4 +90,34 @@ public class ToolSet {
 	  
 	    return  String.format("%.2f", bytes) + ' ' + units[pow];
 	}
+    
+    public static Pony.Directions getRandomDirection(boolean IncludeCentered) {
+		int dice;
+		if (IncludeCentered)
+			dice = MyLittleWallpaperService.rand.nextInt(9);
+		else
+			dice = MyLittleWallpaperService.rand.nextInt(8);
+		
+		switch(dice) {
+			case 0:
+				return Pony.Directions.bottom;
+			case 1:
+				return Pony.Directions.bottom_left;
+			case 2:
+				return Pony.Directions.bottom_right;
+			case 3:
+				return Pony.Directions.left;
+			case 4:
+				return Pony.Directions.right;
+			case 5:
+				return Pony.Directions.top;
+			case 6:
+				return Pony.Directions.top_left;
+			case 7:
+				return Pony.Directions.top_right;
+			case 8:
+			default:
+				return Pony.Directions.center;
+		}
+	}
 }

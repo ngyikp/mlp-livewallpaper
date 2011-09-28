@@ -11,14 +11,17 @@ import com.overkill.live.pony.Pony.AllowedMoves;
 import com.overkill.live.pony.Pony.Directions;
 import com.overkill.ponymanager.PonyManager;
 
+import android.app.WallpaperManager;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 public class MyLittleWallpaperService extends WallpaperService {
@@ -363,49 +366,34 @@ public class MyLittleWallpaperService extends WallpaperService {
             if(RENDER_ON_SWIPE) engine.render();
         }
         
-        @Override
-        public Bundle onCommand(String action, int x, int y, int z,	Bundle extras, boolean resultRequested) {
-        	Log.i("onCommand", action);
-        	if(action.equals(PonyManager.ACTION_REMOVE_PONY)){
-        		Log.i("onCommand", action + " " + extras.getString("pony"));
-        		String removedPonyName = extras.getString("pony");
-        		for(Pony p : this.engine.getPonies()){
-        			if(p.name.equals(removedPonyName)){
-        				this.engine.getPonies().remove(p);
-        				break;
-        			}
-        		}
-        	}
-        	return super.onCommand(action, x, y, z, extras, resultRequested);
-        }
-        
 //        @Override
-//        public void onTouchEvent(MotionEvent event) {
-//            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-//            	if(keyLook==false){
-//	                touchX = event.getX();
-//	                touchY = event.getY();
-//	                for(Pony p : activePonies){
-//	                	Log.i("Pony[" + p.name + "]", "trigger Touchevent");
-//	                	p.setDestination(touchX, touchY);
-//	                		/*p.touch();
-//	                		drawFrame();
-//	                		break;*/
-//	                }	              
-//            	}else{
-//	            	touchX = -1;
-//	                touchY = -1;	            		
-//            	}
-//            } else if (event.getAction() == MotionEvent.ACTION_UP) {
-//            	touchX = -1;
-//                touchY = -1;
-//                keyLook = false;
-//            } else {
-//            	touchX = -1;
-//                touchY = -1;
-//            }
-//            super.onTouchEvent(event);
+//        public Bundle onCommand(String action, int x, int y, int z,	Bundle extras, boolean resultRequested) {
+//        	Log.i("onCommand", action);
+//        	if(action.equals(WallpaperManager.COMMAND_TAP)){
+//        		long currentTime = SystemClock.elapsedRealtime();
+//        		for(Pony p : this.engine.getPonies()){
+//	            	if(p.isPonyOnLocation(x, y)){
+//	            		p.touch(currentTime);
+//	            	}
+//	            }	
+//        	}
+//        	return super.onCommand(action, x, y, z, extras, resultRequested);
 //        }
+        
+        @Override
+        public void onTouchEvent(MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            	long currentTime = SystemClock.elapsedRealtime();
+            	int touchX = (int) event.getX();
+            	int touchY = (int) event.getY();
+	            for(Pony p : this.engine.getPonies()){
+	            	if(p.isPonyOnLocation(touchX, touchY)){
+	            		p.touch(currentTime);
+	            	}
+	            }	              
+            }
+            super.onTouchEvent(event);
+        }
 
            
     } // End of SpriteEngine

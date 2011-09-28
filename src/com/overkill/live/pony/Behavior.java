@@ -119,8 +119,8 @@ public class Behavior {
 	public Point getDestination(Pony pony) {
     	// If we aren't following anything yet
     	if ((follow_object_name.length() > 0 && follow_object == null) || (follow_object != null && !follow_object.isVisible())) {
-    		if (pony.isInteracting && follow_object_name.trim().equalsIgnoreCase(pony.currentInteraction.Trigger.name.trim())) {
-    			follow_object = pony.currentInteraction.Trigger;
+    		if (pony.isInteracting && follow_object_name.trim().equalsIgnoreCase(pony.currentInteraction.trigger.name.trim())) {
+    			follow_object = pony.currentInteraction.trigger;
     			return new Point(follow_object.getLocation().x + destination_xcoord, follow_object.getLocation().y + destination_ycoord);
     		}
     		if (pony.isInteracting && pony.currentInteraction.initiator != null && follow_object_name.trim().equalsIgnoreCase(pony.currentInteraction.initiator.name.trim())) {

@@ -35,6 +35,7 @@ public class Pony{
 	public List<EffectWindow> activeEffects;
 	public List<Interaction> interactions = new LinkedList<Interaction>();
 
+	public boolean shouldBeSleeping = false;
 	
 	public Interaction currentInteraction;
 	public boolean isInteracting = false;
@@ -43,6 +44,8 @@ public class Pony{
 	private long interactionDelayUntil = 0;
 
 	private boolean atDestination;
+
+	private boolean sleeping;
 
 
 	//private float largestSizeX;
@@ -92,6 +95,18 @@ public class Pony{
 	}
 	
 	public void update(final long globalTime) {
+		if (this.shouldBeSleeping) {
+			if (sleeping){
+			    updateSprites(globalTime);
+				return;
+			}else{
+				sleep(globalTime);
+			}
+		} else {
+			if (sleeping)
+				wakeUp();
+		}
+		
 		if (current_behavior == null) { // If we have no behavior, select a random one
 			cancelInteraction(globalTime);
 			selectBehavior(null, globalTime);
@@ -108,8 +123,13 @@ public class Pony{
 			hasSpawned = true;
 		}
 	    move(globalTime);
+	    updateSprites(globalTime);
 	    
-	    current_behavior.update(globalTime);
+	}
+	
+	public void updateSprites(long globalTime){
+		//Log.i("Pony[" + name + "]", "updateSprites");
+		current_behavior.update(globalTime);
 	    for (EffectWindow effect : this.activeEffects) {
 			effect.update(globalTime);
 		}
@@ -127,6 +147,23 @@ public class Pony{
 	    this.position = teleport_location;
 	}
 
+	public void sleep(long globalTime) {
+		Behavior sleep_behavior = getAppropriateBehavior(Pony.AllowedMoves.Sleep, false, null);
+		if (sleep_behavior.Allowed_Movement != Pony.AllowedMoves.Sleep) {
+			sleep_behavior = getAppropriateBehavior(Pony.AllowedMoves.MouseOver, false, null);
+			if (sleep_behavior.Allowed_Movement != Pony.AllowedMoves.MouseOver) {
+				sleep_behavior = getAppropriateBehavior(Pony.AllowedMoves.None, false, null);
+			}
+		}
+		selectBehavior(sleep_behavior, globalTime);
+		//current_behavior.endTime = globalTime;
+		paint(globalTime);
+		sleeping = true;
+	}
+	
+	public void wakeUp() {
+		sleeping = false;
+	}
 	
 	public void move(long globalTime) {		
 		if(globalTime - lastTimeMoved < MOVEMENT_DELAY_MS) // we want to move again to quickly
@@ -147,11 +184,10 @@ public class Pony{
 		
 		// If following something...
 	    if (destination.x != 0 || destination.y != 0) {
-	    	Log.i("Pony[" + name + "]", "following");
 	    	// Calculate the distance to this point
 	    	double distance = Math.sqrt(Math.pow(this.getLocation().x - destination.x, 2) + Math.pow(this.getLocation().y - destination.y, 2));
 	    	
-	    	List<Pony.Directions> direction = Get_Destination_Direction(destination);
+	    	List<Pony.Directions> direction = getDestinationDirection(destination);
 	    	
             try {
             	// Calculate the horizontal and vertical movement speeds
@@ -225,7 +261,7 @@ public class Pony{
 	        
 	        // Do we want interaction?
 	        if(RenderEngine.CONFIG_INTERACT && !isInteracting){
-		        Interaction Interact = isInInteractionRange(globalTime);
+		        Interaction Interact = findInteraction(globalTime);
 		        	
 		        if (Interact != null) {
 		        	startInteraction(Interact, globalTime);
@@ -359,13 +395,13 @@ public class Pony{
 		            }
 		               	            
 		            if (effectWindow.direction == Pony.Directions.random)
-		            	effectWindow.direction = GetRandomDirection(true);
+		            	effectWindow.direction = ToolSet.getRandomDirection(true);
 		            if (effectWindow.centering == Pony.Directions.random)
-		            	effectWindow.centering = GetRandomDirection(true);
+		            	effectWindow.centering = ToolSet.getRandomDirection(true);
 		            if (effectWindow.direction == Pony.Directions.random_not_center)
-		            	effectWindow.direction = GetRandomDirection(false);
+		            	effectWindow.direction = ToolSet.getRandomDirection(false);
 		            if (effectWindow.centering == Pony.Directions.random_not_center)
-		            	effectWindow.centering = GetRandomDirection(false);
+		            	effectWindow.centering = ToolSet.getRandomDirection(false);
 		
 		            // Initialize the effect values
 		            effectWindow.follows = effect.follow;
@@ -388,19 +424,19 @@ public class Pony{
         }
 	}
 	
-	public Interaction isInInteractionRange(long globalTime) {
+	public Interaction findInteraction(long globalTime) {
 		if (globalTime <= interactionDelayUntil) return null;
 		
-		for (Interaction Interact : interactions) {
-			for (Pony target : Interact.Interacts_With) {
+		for (Interaction interact : interactions) {
+			for (Pony target : interact.interactsWith) {
                 // don't start an interaction if we or the target haven't finished loading yet
 				double distance = Math.sqrt(Math.pow(this.getLocation().x + this.current_behavior.getCurrentImage().getSpriteWidth() - target.getLocation().x + target.current_behavior.getCurrentImage().getSpriteWidth(), 2) + Math.pow(this.getLocation().y + this.current_behavior.getCurrentImage().getSpriteHeight() - target.getLocation().y + target.current_behavior.getCurrentImage().getSpriteHeight(),2));;
 					
-				if (distance <= Interact.Proximity_Activation_Distance) {
+				if (distance <= interact.proximityActivationDistance) {
 					double dice = MyLittleWallpaperService.rand.nextDouble();						
-					if (dice <= Interact.Probability) {
-						Interact.Trigger = target;
-						return Interact;
+					if (dice <= interact.probability) {
+						interact.trigger = target;
+						return interact;
 					}
 				}
 			}
@@ -411,17 +447,17 @@ public class Pony{
 	public void startInteraction(Interaction interaction, long globalTime) {
 		isInteractionInitiator = true;
 		currentInteraction = interaction;
-		this.selectBehavior(interaction.Behavior_List.get(MyLittleWallpaperService.rand.nextInt(interaction.Behavior_List.size())), globalTime);
+		this.selectBehavior(interaction.behaviorList.get(MyLittleWallpaperService.rand.nextInt(interaction.behaviorList.size())), globalTime);
 		for (Effect effect : current_behavior.effects) {
 			effect.already_played_for_currentbehavior = false;
 		}
 		
-		if (interaction.Select_All_Targets) {
-			for (Pony pony : interaction.Interacts_With) {
+		if (interaction.selectAllTargets) {
+			for (Pony pony : interaction.interactsWith) {
 				pony.startInteractionAsTarget(current_behavior.name, this, interaction, globalTime);
 			}
 		} else {
-			interaction.Trigger.startInteractionAsTarget(current_behavior.name, this, interaction, globalTime);
+			interaction.trigger.startInteractionAsTarget(current_behavior.name, this, interaction, globalTime);
 		}
 		
 		isInteracting = true;
@@ -436,22 +472,16 @@ public class Pony{
 				}
 				break;
 			}
-		}
-		
+		}		
 		interaction.initiator = initiator;
 		isInteractionInitiator = false;
 		currentInteraction = interaction;
 		isInteracting = true;
 	}
 	
-	public void touch() {
-		current_behavior = behaviors.get(0);
-		for (Behavior behavior : behaviors) {
-			if (behavior.Allowed_Movement == AllowedMoves.MouseOver) {
-				current_behavior = behavior;
-				break;
-			}
-		}
+	public void touch(long globalTime) {
+		shouldBeSleeping = !shouldBeSleeping;
+		Log.i("Pony[" + name + "]", "touch. we are sleeing now: " + shouldBeSleeping);
 	}
 	
 	public void draw(Canvas canvas) {
@@ -595,7 +625,7 @@ public class Pony{
 									else
 										specified_behavior.right = false;
 								} else {
-									if (Get_Destination_Direction(destination).get(0) == Directions.right)
+									if (getDestinationDirection(destination).get(0) == Directions.right)
 										specified_behavior.right = true;
 									else
 										specified_behavior.right = false;
@@ -627,7 +657,7 @@ public class Pony{
 		return selected_behavior;
 	}
 	
-	private List<Directions> Get_Destination_Direction(Point destination) {
+	private List<Directions> getDestinationDirection(Point destination) {
 		List<Directions> direction = new LinkedList<Directions>();
 		
 		// Do we need to go left or right?
@@ -789,7 +819,7 @@ public class Pony{
 		
 		if (currentInteraction != null) {
 			if (this.isInteractionInitiator) {
-				for(Pony pony : currentInteraction.Interacts_With) {
+				for(Pony pony : currentInteraction.interactsWith) {
 					pony.cancelInteraction(globalTime);
 				}
 			}
@@ -866,37 +896,7 @@ public class Pony{
 		
 		return point;
 	}
-	
-	private Pony.Directions GetRandomDirection(boolean IncludeCentered) {
-		int dice;
-		if (IncludeCentered)
-			dice = MyLittleWallpaperService.rand.nextInt(9);
-		else
-			dice = MyLittleWallpaperService.rand.nextInt(8);
 		
-		switch(dice) {
-			case 0:
-				return Pony.Directions.bottom;
-			case 1:
-				return Pony.Directions.bottom_left;
-			case 2:
-				return Pony.Directions.bottom_right;
-			case 3:
-				return Pony.Directions.left;
-			case 4:
-				return Pony.Directions.right;
-			case 5:
-				return Pony.Directions.top;
-			case 6:
-				return Pony.Directions.top_left;
-			case 7:
-				return Pony.Directions.top_right;
-			case 8:
-			default:
-				return Pony.Directions.center;
-		}
-	}
-	
 	public void linkBehaviors(){
 		for(Behavior b : behaviors){
 			if(b.linkedBehaviorName == null)
