@@ -104,7 +104,7 @@ public class Pony{
 			}
 		} else {
 			if (sleeping)
-				wakeUp();
+				wakeUp(globalTime);
 		}
 		
 		if (current_behavior == null) { // If we have no behavior, select a random one
@@ -161,7 +161,8 @@ public class Pony{
 		sleeping = true;
 	}
 	
-	public void wakeUp() {
+	public void wakeUp(long globalTime) {
+		current_behavior.endTime = globalTime;
 		sleeping = false;
 	}
 	
@@ -260,7 +261,7 @@ public class Pony{
 	        paint(globalTime);
 	        
 	        // Do we want interaction?
-	        if(RenderEngine.CONFIG_INTERACT && !isInteracting){
+	        if(RenderEngine.CONFIG_INTERACT_PONY && !isInteracting){
 		        Interaction Interact = findInteraction(globalTime);
 		        	
 		        if (Interact != null) {

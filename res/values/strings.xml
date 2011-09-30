@@ -8,7 +8,7 @@
     <string name="background_global_title">Use custom Background</string>
     <string name="background_image_title">Select Background Image</string>
     <string name="interact_user_title">User Interaction</string>
-    <string name="interact_user_summary">Interact when user touches pony</string>
+    <string name="interact_user_summary">Touch pony to lock in place</string>
     <string name="interact_pony_title">Pony Interaction</string>
     <string name="interact_pony_summary">Ponies interact with each other</string>
     <string name="pony_settings_title">Ponies</string>

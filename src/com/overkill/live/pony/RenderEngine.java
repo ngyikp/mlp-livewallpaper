@@ -19,7 +19,8 @@ import android.view.SurfaceHolder;
 public class RenderEngine {
 	public static boolean CONFIG_DEBUG_TEXT = true;
 	public static boolean CONFIG_SHOW_EFFECTS = false;
-	public static boolean CONFIG_INTERACT = false;
+	public static boolean CONFIG_INTERACT_PONY = false;
+	public static boolean CONFIG_INTERACT_TOUCH = true;
 	static int CONFIG_FPS = 20;
 	public static int CONFIG_FRAME_DELAY = 1000 / CONFIG_FPS;
 	public static float CONFIG_SCALE = 1.0f;
@@ -188,15 +189,15 @@ public class RenderEngine {
     }
     
     public void addPony(Pony pony){
-    	this.activePonies.add(pony);
+    	RenderEngine.activePonies.add(pony);
     }
     
     public void clearPonies(){
-    	this.activePonies.clear();
+    	RenderEngine.activePonies.clear();
     }
     
     public ArrayList<Pony> getPonies(){
-    	return this.activePonies;
+    	return RenderEngine.activePonies;
     }
     
     public void setVisibility(boolean visible){
@@ -205,6 +206,11 @@ public class RenderEngine {
     
     public void setShowEffects(boolean show){
     	RenderEngine.CONFIG_SHOW_EFFECTS = show;
+    }
+    
+    public void setInteraction(boolean pony, boolean touch){
+    	RenderEngine.CONFIG_INTERACT_PONY = pony;
+    	RenderEngine.CONFIG_INTERACT_TOUCH = touch;
     }
     
     public void setPreviewMode(boolean isPreview){

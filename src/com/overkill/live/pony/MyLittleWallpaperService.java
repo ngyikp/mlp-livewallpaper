@@ -92,7 +92,11 @@ public class MyLittleWallpaperService extends WallpaperService {
         
         rand = new Random();      
         
-        if(isSDMounted())
+        selectLocalFolder();
+    }
+    
+    public void selectLocalFolder(){
+    	if(isSDMounted())
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
 		else
 			localFolder = new File(getFilesDir(), "ponies");    
@@ -256,6 +260,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         }
         
         public void loadSelectablePonies(){
+        	selectLocalFolder();
 			if(localFolder.exists()){
 				try {
 					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
@@ -307,7 +312,11 @@ public class MyLittleWallpaperService extends WallpaperService {
 			this.engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
 			this.engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
 			this.engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
-			this.engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));
+			this.engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));			
+
+			this.engine.setInteraction(
+					sharedPreferences.getBoolean("interact_pony", false),
+					sharedPreferences.getBoolean("interact_user", false));
 
 			RENDER_ON_SWIPE = sharedPreferences.getBoolean("render_on_swipe", true);
 			
@@ -383,14 +392,16 @@ public class MyLittleWallpaperService extends WallpaperService {
         @Override
         public void onTouchEvent(MotionEvent event) {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            	long currentTime = SystemClock.elapsedRealtime();
-            	int touchX = (int) event.getX();
-            	int touchY = (int) event.getY();
-	            for(Pony p : this.engine.getPonies()){
-	            	if(p.isPonyOnLocation(touchX, touchY)){
-	            		p.touch(currentTime);
-	            	}
-	            }	              
+            	if(RenderEngine.CONFIG_INTERACT_TOUCH){
+	            	long currentTime = SystemClock.elapsedRealtime();
+	            	int touchX = (int) event.getX();
+	            	int touchY = (int) event.getY();
+		            for(Pony p : this.engine.getPonies()){
+		            	if(p.isPonyOnLocation(touchX, touchY)){
+		            		p.touch(currentTime);
+		            	}
+		            }
+            	}
             }
             super.onTouchEvent(event);
         }

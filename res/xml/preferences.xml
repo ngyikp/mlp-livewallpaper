@@ -9,10 +9,10 @@
     
     
 </PreferenceCategory>
-<!-- <PreferenceCategory android:key="interaction_settings" android:title="Interaction">
-    <CheckBoxPreference android:key="interact_user" android:enabled="false" android:summary="@string/interact_user_summary" android:title="@string/interact_user_title"></CheckBoxPreference>
-    <CheckBoxPreference android:key="interact_pony" android:enabled="false" android:summary="@string/interact_pony_summary" android:title="@string/interact_pony_title"></CheckBoxPreference>
-</PreferenceCategory>-->
+<PreferenceCategory android:key="interaction_settings" android:title="Interaction">
+    <CheckBoxPreference android:key="interact_user" android:enabled="true" android:summary="@string/interact_user_summary" android:title="@string/interact_user_title"></CheckBoxPreference>
+    <CheckBoxPreference android:key="interact_pony" android:enabled="true" android:summary="@string/interact_pony_summary" android:title="@string/interact_pony_title"></CheckBoxPreference>
+</PreferenceCategory>
 <PreferenceCategory android:key="pony_settings" android:title="@string/pony_settings_title">
     <Preference android:key="pony_select" android:title="@string/pony_select_title" android:summary="@string/pony_select_summary"></Preference>
     <ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference>

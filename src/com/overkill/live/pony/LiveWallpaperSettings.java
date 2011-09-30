@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -47,6 +48,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	private static final String URL = "http://android.ov3rk1ll.com";
 	private static final String PAYPAL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4E99YZ7MYNAEE";
 	
+	private SharedPreferences sharedPreferences;
+	private Editor editor;
+	
 	String poniesName[];
     boolean poniesState[];
     
@@ -62,10 +66,20 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	}
 	
 	@Override
+	protected void onDestroy() {
+		editor.commit();
+		super.onDestroy();
+	}
+	
+	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
         addPreferencesFromResource(R.xml.preferences);
+        
+        sharedPreferences = getPreferenceManager().getSharedPreferences();
+        editor = sharedPreferences.edit();
+        
         
         if(isSDMounted())
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
@@ -99,7 +113,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				if(value == false){
 					return true;
 				}else{
-					if(getPreferenceManager().getSharedPreferences().getString("background_image", null) == null){
+					if(sharedPreferences.getString("background_image", null) == null){
 						Intent intent = new Intent();
 		                intent.setType("image/*");
 		                intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -170,10 +184,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		        poniesState = new boolean[poniesName.length];
 		        
 		        for(int i = 0; i < poniesName.length; i++){
-		        	poniesState[i] = getPreferenceManager().getSharedPreferences().getBoolean("usepony_" + poniesName[i], false);
+		        	poniesState[i] = sharedPreferences.getBoolean("usepony_" + poniesName[i], false);
 		        }       
 				
-				final Editor editor = getPreferenceManager().getSharedPreferences().edit();
 				AlertDialog.Builder builder = new AlertDialog.Builder(LiveWallpaperSettings.this);
 		        builder.setTitle(R.string.pony_select_title);
 		        builder.setMultiChoiceItems(poniesName, poniesState, new DialogInterface.OnMultiChoiceClickListener() {			
@@ -193,7 +206,6 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 						for(int i = 0; i < poniesName.length; i++){
 							editor.putBoolean("usepony_" + poniesName[i], poniesState[i]);
 						}
-						editor.commit();
 					}
 				});
 		        alert.show();
@@ -225,20 +237,16 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				
 	}
 	
-	public void colorpicker(){
-	    
-		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LiveWallpaperSettings.this, getPreferenceManager().getSharedPreferences().getInt("background_color", 0xff000000), new OnAmbilWarnaListener(){
+	public void colorpicker(){	    
+		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LiveWallpaperSettings.this, sharedPreferences.getInt("background_color", 0xff000000), new OnAmbilWarnaListener(){
 			@Override
 			public void onCancel(AmbilWarnaDialog dialog) { }
 
 			@Override
 			public void onOk(AmbilWarnaDialog dialog, int color) {
-				Editor editor = getPreferenceManager().getSharedPreferences().edit();
-				editor.putInt("background_color", color);
-				editor.commit();				
+				editor.putInt("background_color", color);			
 			}				
 		});
-
 	    dialog.show();
 	}
 	
@@ -358,14 +366,12 @@ public class LiveWallpaperSettings extends PreferenceActivity {
     }
 	
 	public void setNewBackgroundImage(String path){
-		String oldFilePath = getPreferenceManager().getSharedPreferences().getString("background_image", null);
+		String oldFilePath = sharedPreferences.getString("background_image", null);
 		if(oldFilePath != null){
 			File oldFile = new File(oldFilePath);
 			if(oldFile.exists())
 				oldFile.delete();
 		}
-		Editor editor = getPreferenceManager().getSharedPreferences().edit();
         editor.putString("background_image", path);
-        editor.commit();
 	}
 }
