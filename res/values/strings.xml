@@ -44,4 +44,5 @@
     <string name="force_local_storage_summary">Turn on to store ponies intern instead of the sd-card</string>   
     <string name="manager_help">Help</string>
     <string name="manager_update_all">Update All</string>
+    <string name="help_text">&quot;The colored dots indicate different states of a Pony&lt;br /&gt;The state can be:&lt;br /&gt;&lt;font color='#ff0000'&gt;&lt;b&gt;•&lt;/b&gt; Pony is not installed&lt;/font&gt; &lt;br /&gt;&lt;font color='#FF7E00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is currently downloaded&lt;/font&gt;&lt;br /&gt;&lt;font color='#00ff00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is installed&lt;/font&gt;&lt;br /&gt;&lt;font color='#0000ff'&gt;&lt;b&gt;•&lt;/b&gt; The is an update for this Pony&lt;/font&gt;&lt;br /&gt;&quot;</string>
 </resources>

@@ -322,6 +322,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 			
 			// get Background image if we want one			
 			String filePath = sharedPreferences.getString("background_image", null);
+			this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
 	        if(sharedPreferences.getBoolean("background_global", false) == false || filePath == null){
 				this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
 	        }else{
@@ -396,8 +397,9 @@ public class MyLittleWallpaperService extends WallpaperService {
 	            	long currentTime = SystemClock.elapsedRealtime();
 	            	int touchX = (int) event.getX();
 	            	int touchY = (int) event.getY();
+            		Log.i("touch", "x:" + touchX + " y:" + touchY);
 		            for(Pony p : this.engine.getPonies()){
-		            	if(p.isPonyOnLocation(touchX, touchY)){
+		            	if(p.isPonyAtLocation(touchX, touchY)){
 		            		p.touch(currentTime);
 		            	}
 		            }

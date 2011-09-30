@@ -15,6 +15,7 @@ import android.graphics.Paint.Align;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.widget.Toast;
 
 public class RenderEngine {
 	public static boolean CONFIG_DEBUG_TEXT = true;
@@ -162,10 +163,16 @@ public class RenderEngine {
     
     public void setBackground(String filePath){
     	if(filePath != null && new File(filePath).exists()){
-    		BitmapFactory.Options opts = new BitmapFactory.Options();
-    		opts.inPurgeable = true;
-    		opts.inInputShareable = true;
-    		this.setBackground(BitmapFactory.decodeFile(filePath, opts));
+    		try{
+	    		BitmapFactory.Options opts = new BitmapFactory.Options();
+	    		opts.inPurgeable = true;
+	    		opts.inInputShareable = true;
+	    		this.setBackground(BitmapFactory.decodeFile(filePath, opts));
+    		} catch(OutOfMemoryError e){
+    			Toast.makeText(context, "Error loading background image\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+    			// fallback to backgroundcolor
+    			this.setBackground((Bitmap) null);
+    		}
     	}else{
     		backgroundBitmap = null;
     	}

@@ -12,12 +12,16 @@ import com.overkill.live.pony.R;
 import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
 import com.overkill.ponymanager.AsynImageLoader.onImageListener;
 
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.Html;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -109,6 +113,24 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		return super.onPrepareOptionsMenu(menu);
 	}
 		
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.string.manager_help:		
+			Builder dialog = new AlertDialog.Builder(this);
+			dialog.setTitle(R.string.manager_help);
+			dialog.setIcon(android.R.drawable.ic_menu_help);
+			dialog.setMessage(Html.fromHtml(getString(R.string.help_text)));
+			dialog.setPositiveButton(android.R.string.ok, null);
+			dialog.show();
+			break;
+
+		default:
+			break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
 	@Override
 	public void imageError(int position, final String error) {
 		runOnUiThread(new Runnable() {			

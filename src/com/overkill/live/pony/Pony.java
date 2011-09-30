@@ -25,7 +25,7 @@ public class Pony{
 	private Point destination;
 	
 	public List<Behavior> behaviors;
-	private Behavior current_behavior = null;
+	private Behavior currentBehavior = null;
 	private boolean ponyDirection;
 
 	private long lastTimeMoved = 0;
@@ -107,12 +107,12 @@ public class Pony{
 				wakeUp(globalTime);
 		}
 		
-		if (current_behavior == null) { // If we have no behavior, select a random one
+		if (currentBehavior == null) { // If we have no behavior, select a random one
 			cancelInteraction(globalTime);
 			selectBehavior(null, globalTime);
-		} else if ((current_behavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
-			if (current_behavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
-				selectBehavior(current_behavior.linkedBehavior, globalTime);
+		} else if ((currentBehavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
+			if (currentBehavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
+				selectBehavior(currentBehavior.linkedBehavior, globalTime);
 			} else { // Otherwise select a random one
 				selectBehavior(null, globalTime);
 			}					
@@ -129,7 +129,7 @@ public class Pony{
 	
 	public void updateSprites(long globalTime){
 		//Log.i("Pony[" + name + "]", "updateSprites");
-		current_behavior.update(globalTime);
+		currentBehavior.update(globalTime);
 	    for (EffectWindow effect : this.activeEffects) {
 			effect.update(globalTime);
 		}
@@ -162,7 +162,7 @@ public class Pony{
 	}
 	
 	public void wakeUp(long globalTime) {
-		current_behavior.endTime = globalTime;
+		currentBehavior.endTime = globalTime;
 		sleeping = false;
 	}
 	
@@ -172,12 +172,12 @@ public class Pony{
 		
 		lastTimeMoved = globalTime;
 
-		current_behavior.blocked = false;
+		currentBehavior.blocked = false;
 		
-		double speed = current_behavior.speed;
+		double speed = currentBehavior.speed;
 				
 		// Get the destination for following (will be blank(0,0) if not following)
-		destination = current_behavior.getDestination(this);
+		destination = currentBehavior.getDestination(this);
 	    
 	    // Calculate the movement speed normally
 		int x_movement = 0;
@@ -194,10 +194,10 @@ public class Pony{
             	// Calculate the horizontal and vertical movement speeds
                 if (direction.get(0) == Pony.Directions.left) {
                     x_movement = (int)((this.getLocation().x - destination.x) / (distance) * -speed);
-                    current_behavior.right = false;
+                    currentBehavior.right = false;
                 } else {
                     x_movement = (int)((destination.x - this.getLocation().x) / (distance) * speed);
-                    current_behavior.right = true;
+                    currentBehavior.right = true;
                 }
                 
                 y_movement = (int)((this.getLocation().y - destination.y) / (distance) * -speed);
@@ -208,7 +208,7 @@ public class Pony{
             }
 	    	
 	    	// Determine if we are close enough to it
-	        if (distance <= (current_behavior.getCurrentImage().getSpriteWidth() / 2)) {
+	        if (distance <= (currentBehavior.getCurrentImage().getSpriteWidth() / 2)) {
 	        	// If so, don't move anymore
 	            x_movement = 0;
 	            y_movement = 0;
@@ -216,33 +216,33 @@ public class Pony{
 	            atDestination = true;
 	
 	            //reached destination.
-	            if (current_behavior.linkedBehavior != null && current_behavior.speed != 0) {
-	                current_behavior.endTime = globalTime;
+	            if (currentBehavior.linkedBehavior != null && currentBehavior.speed != 0) {
+	                currentBehavior.endTime = globalTime;
 	                destination = new Point();
 	            }
 	        } else { // Otherwise, we need to move towards it
 	            if (atDestination == true) {
-	                current_behavior.delay = 10;
+	                currentBehavior.delay = 10;
 	            }
 	
-	            if (current_behavior.delay > 0) {
+	            if (currentBehavior.delay > 0) {
 	                atDestination = false;
-	                current_behavior.delay--;
+	                currentBehavior.delay--;
 	                return;
 	            }
 	
 	            atDestination = false;
 	        }
 	    } else { // If we aren't following anything
-	        if (!current_behavior.right) {
+	        if (!currentBehavior.right) {
 	            speed = -speed;
 	        }
 	    
 	        // Calculate the movement speed normally
-			x_movement = (int) (current_behavior.horizontal ? speed : 0);
-			y_movement = (int) (current_behavior.vertical ? speed : 0);
+			x_movement = (int) (currentBehavior.horizontal ? speed : 0);
+			y_movement = (int) (currentBehavior.vertical ? speed : 0);
 		
-			if (current_behavior.up) {
+			if (currentBehavior.up) {
 				if (y_movement > 0) {
 					y_movement = -y_movement;
 				}
@@ -277,13 +277,13 @@ public class Pony{
 	    // if we are just moving normally, just "bounce" off of the barrier.
 	
 	    if (destination.x == 0 && destination.y == 0) {
-	    	current_behavior.bounce(this, position, new_location, x_movement, y_movement);
+	    	currentBehavior.bounce(this, position, new_location, x_movement, y_movement);
 	    } else {
-	    	if (current_behavior.follow_object == null) {
-	    		current_behavior = null;
+	    	if (currentBehavior.follow_object == null) {
+	    		currentBehavior = null;
 	    	} else {
 	    		//do nothing but stare longenly in the direction of the object we want to follow...
-	    		current_behavior.blocked = true;
+	    		currentBehavior.blocked = true;
 		        paint(globalTime);
 	    	}
 	    }
@@ -305,7 +305,7 @@ public class Pony{
 	        double distance = Math.sqrt(Math.pow(this.getLocation().x - destination.x, 2) + Math.pow(this.getLocation().y - destination.y, 2));
 	
 	        // Determine if we want to move horizontally, diagonaly or vertically
-	        if (distance >= current_behavior.getCurrentImage().getSpriteWidth() * 2) {
+	        if (distance >= currentBehavior.getCurrentImage().getSpriteWidth() * 2) {
 	            if (horizonal * 0.75 > vertical && allowed_movement == Pony.AllowedMoves.Horizontal_Only) {
 	            	
 	            } else {
@@ -324,18 +324,18 @@ public class Pony{
 	        }
 	     
 	        // If we are already at destination or blocked
-	        if (atDestination || current_behavior.blocked || current_behavior.speed == 0)
+	        if (atDestination || currentBehavior.blocked || currentBehavior.speed == 0)
 	            allowed_movement = Pony.AllowedMoves.None; // We are not allowed to move
 	
 	        // Find the animation best suited for where we are going
 	        if (isInteracting)
-	        	appropriate_behavior = getAppropriateBehavior(allowed_movement, true, current_behavior);
+	        	appropriate_behavior = getAppropriateBehavior(allowed_movement, true, currentBehavior);
 	        else
 	        	appropriate_behavior = getAppropriateBehavior(allowed_movement, true, null);
 	
 	        // Get this animation's left and right images
-	        this.current_behavior.image_left_path = appropriate_behavior.image_left_path;
-	        this.current_behavior.image_right_path = appropriate_behavior.image_right_path;
+	        this.currentBehavior.image_left_path = appropriate_behavior.image_left_path;
+	        this.currentBehavior.image_right_path = appropriate_behavior.image_right_path;
 		}
 			    
 	    // Verify if we can create effects		
@@ -348,7 +348,7 @@ public class Pony{
 		
         for (EffectWindow effect : this.activeEffects) {
         	if (effect.Close_On_New_Behavior) {
-        		if (!current_behavior.name.trim().equalsIgnoreCase(effect.behaviorName.trim())) {
+        		if (!currentBehavior.name.trim().equalsIgnoreCase(effect.behaviorName.trim())) {
         			effectsToRemove.add(effect);
         		}
         	}
@@ -366,7 +366,7 @@ public class Pony{
         }
         
     	// Loop through the effects for this behavior
-        for (Effect effect : current_behavior.effects) {
+        for (Effect effect : currentBehavior.effects) {
 	        // Determine if we should initialize or repeat the behavior
 	        if ((globalTime - effect.last_used) >= (effect.repeat_delay * 1000)) {
 	           	// If the effect has no repeat delay, only show once
@@ -380,12 +380,12 @@ public class Pony{
 		            	effectWindow.endTime = globalTime + Math.round(effect.duration * 1000);
 		            	effectWindow.Close_On_New_Behavior = false;
 		            } else {
-		            	effectWindow.endTime = current_behavior.endTime;		               	
+		            	effectWindow.endTime = currentBehavior.endTime;		               	
 		            	effectWindow.Close_On_New_Behavior = true;
 		            }
 			                
 		            // Load the effect animation
-		            if (current_behavior.right) {
+		            if (currentBehavior.right) {
 		            	effectWindow.setImage(effect.getRightImage(true));
 		            	effectWindow.direction = effect.placement_direction_right;
 		            	effectWindow.centering = effect.centering_right;			            
@@ -407,11 +407,11 @@ public class Pony{
 		            // Initialize the effect values
 		            effectWindow.follows = effect.follow;
 		            effectWindow.effectName = effect.name;
-		            effectWindow.behaviorName = current_behavior.name;
+		            effectWindow.behaviorName = currentBehavior.name;
 		            effectWindow.ponyName = this.name;
 		            
 		            // Position the effect's initial location and size
-		            if (current_behavior.right) {
+		            if (currentBehavior.right) {
 		            	effect.setLocation(getEffectLocation(effect.getRightImage().getSpriteWidth(), effect.getRightImage().getSpriteHeight(), effectWindow.direction, effectWindow.centering));
 		            } else {
 		              	effect.setLocation(getEffectLocation(effect.getLeftImage().getSpriteWidth(), effect.getLeftImage().getSpriteHeight(), effectWindow.direction, effectWindow.centering));
@@ -431,7 +431,7 @@ public class Pony{
 		for (Interaction interact : interactions) {
 			for (Pony target : interact.interactsWith) {
                 // don't start an interaction if we or the target haven't finished loading yet
-				double distance = Math.sqrt(Math.pow(this.getLocation().x + this.current_behavior.getCurrentImage().getSpriteWidth() - target.getLocation().x + target.current_behavior.getCurrentImage().getSpriteWidth(), 2) + Math.pow(this.getLocation().y + this.current_behavior.getCurrentImage().getSpriteHeight() - target.getLocation().y + target.current_behavior.getCurrentImage().getSpriteHeight(),2));;
+				double distance = Math.sqrt(Math.pow(this.getLocation().x + this.currentBehavior.getCurrentImage().getSpriteWidth() - target.getLocation().x + target.currentBehavior.getCurrentImage().getSpriteWidth(), 2) + Math.pow(this.getLocation().y + this.currentBehavior.getCurrentImage().getSpriteHeight() - target.getLocation().y + target.currentBehavior.getCurrentImage().getSpriteHeight(),2));;
 					
 				if (distance <= interact.proximityActivationDistance) {
 					double dice = MyLittleWallpaperService.rand.nextDouble();						
@@ -449,16 +449,16 @@ public class Pony{
 		isInteractionInitiator = true;
 		currentInteraction = interaction;
 		this.selectBehavior(interaction.behaviorList.get(MyLittleWallpaperService.rand.nextInt(interaction.behaviorList.size())), globalTime);
-		for (Effect effect : current_behavior.effects) {
+		for (Effect effect : currentBehavior.effects) {
 			effect.already_played_for_currentbehavior = false;
 		}
 		
 		if (interaction.selectAllTargets) {
 			for (Pony pony : interaction.interactsWith) {
-				pony.startInteractionAsTarget(current_behavior.name, this, interaction, globalTime);
+				pony.startInteractionAsTarget(currentBehavior.name, this, interaction, globalTime);
 			}
 		} else {
-			interaction.trigger.startInteractionAsTarget(current_behavior.name, this, interaction, globalTime);
+			interaction.trigger.startInteractionAsTarget(currentBehavior.name, this, interaction, globalTime);
 		}
 		
 		isInteracting = true;
@@ -468,7 +468,7 @@ public class Pony{
 		for (Behavior behavior : behaviors) {
 			if (BehaviorName.trim().equalsIgnoreCase(behavior.name.trim())) {
 				this.selectBehavior(behavior, globalTime);
-				for (Effect effect : current_behavior.effects) {
+				for (Effect effect : currentBehavior.effects) {
 					effect.already_played_for_currentbehavior = false;
 				}
 				break;
@@ -490,12 +490,13 @@ public class Pony{
 			effect.draw(canvas);
 		}
 		if(isPonyOnScreen(position)){
-			this.current_behavior.draw(canvas, position);
+			this.currentBehavior.draw(canvas, position);
 		}		
 	}
 	
-	public boolean isPonyOnLocation(int x, int y){
-		Rect ponyBox = new Rect(position.x, position.y, position.x + current_behavior.getCurrentImage().getSpriteWidth(), position.y + current_behavior.getCurrentImage().getSpriteHeight());
+	public boolean isPonyAtLocation(int x, int y){
+		x = x - RenderEngine.OFFSET;
+		Rect ponyBox = new Rect(position.x, position.y, position.x + currentBehavior.getCurrentImage().getSpriteWidth(), position.y + currentBehavior.getCurrentImage().getSpriteHeight());
 		return ponyBox.contains(x, y);
 	}
 	
@@ -507,9 +508,9 @@ public class Pony{
 	public boolean isPonyOnWallpaper(Point location) {
 		List<Point> points = new LinkedList<Point>();
 		points.add(location);
-		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth(), location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
-		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth(), location.y));
-		points.add(new Point(location.x, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
+		points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
+		points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), location.y));
+		points.add(new Point(location.x, location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
 
 		for (Point point : points) {				
 			if (RenderEngine.screenBounds.contains(point.x, point.y) == false) {
@@ -527,9 +528,9 @@ public class Pony{
 	public boolean isPonyOnScreen(Point location){
 		List<Point> points = new LinkedList<Point>();
 		points.add(new Point(location.x + RenderEngine.OFFSET, location.y));
-		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
-		points.add(new Point(location.x + this.current_behavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y));
-		points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.current_behavior.getCurrentImage().getSpriteHeight()));
+		points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
+		points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y));
+		points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
 
 		for (Point point : points) {
 			if (RenderEngine.visibleScreenArea.contains(point.x, point.y) == true) {
@@ -576,21 +577,21 @@ public class Pony{
 	
 	public Behavior getAppropriateBehavior(AllowedMoves movement, boolean speed, Behavior specified_behavior) {
 		int selected_behavior_speed = 0;
-		Behavior selected_behavior = current_behavior;
+		Behavior selected_behavior = currentBehavior;
 
 		//does the current behavior work?  /use current behavior images when following
-		if ((movement == AllowedMoves.None && (current_behavior.Allowed_Movement == AllowedMoves.None || current_behavior.Allowed_Movement == AllowedMoves.MouseOver)) ||
-				(movement == AllowedMoves.Diagonal_Only && (current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal || current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Only || current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical)) ||
-				(movement == AllowedMoves.Vertical_Only && (current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical || current_behavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical || current_behavior.Allowed_Movement == AllowedMoves.Vertical_Only)) ||
-				(movement == AllowedMoves.Horizontal_Only && (current_behavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal || current_behavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical || current_behavior.Allowed_Movement == AllowedMoves.Horizontal_Only)) ||
-				(movement == current_behavior.Allowed_Movement) ||
+		if ((movement == AllowedMoves.None && (currentBehavior.Allowed_Movement == AllowedMoves.None || currentBehavior.Allowed_Movement == AllowedMoves.MouseOver)) ||
+				(movement == AllowedMoves.Diagonal_Only && (currentBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal || currentBehavior.Allowed_Movement == AllowedMoves.Diagonal_Only || currentBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical)) ||
+				(movement == AllowedMoves.Vertical_Only && (currentBehavior.Allowed_Movement == AllowedMoves.Diagonal_Vertical || currentBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical || currentBehavior.Allowed_Movement == AllowedMoves.Vertical_Only)) ||
+				(movement == AllowedMoves.Horizontal_Only && (currentBehavior.Allowed_Movement == AllowedMoves.Diagonal_Horizontal || currentBehavior.Allowed_Movement == AllowedMoves.Horizontal_Vertical || currentBehavior.Allowed_Movement == AllowedMoves.Horizontal_Only)) ||
+				(movement == currentBehavior.Allowed_Movement) ||
 				(movement == AllowedMoves.All)
 				) {
-			if (current_behavior.speed == 0 && movement == AllowedMoves.None)
-				return current_behavior;
+			if (currentBehavior.speed == 0 && movement == AllowedMoves.None)
+				return currentBehavior;
 			
-			if (current_behavior.speed != 0 && movement == AllowedMoves.All)
-				return current_behavior;
+			if (currentBehavior.speed != 0 && movement == AllowedMoves.All)
+				return currentBehavior;
 		}
 		
 		// Loop through the list of behaviors
@@ -798,16 +799,16 @@ public class Pony{
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
 	    
 	    // TODO Tell the GC to pick up the old behavior
-		if(current_behavior != null && newBehavior != null && (newBehavior.equals(current_behavior) == false)){
-			if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + current_behavior.name + " to " + newBehavior.name);
-			current_behavior.destroy();
-			current_behavior = null;
+		if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
+			if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
+			currentBehavior.destroy();
+			currentBehavior = null;
 			//System.gc();
 		}
 		
-		current_behavior = newBehavior;
+		currentBehavior = newBehavior;
 	    
-		if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + current_behavior.name + "\" for " + Math.round((current_behavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+		if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 	}
 	
 	public void setDestination(int x, int y){
@@ -837,31 +838,31 @@ public class Pony{
 		
 		switch(direction) {
 			case bottom:
-				point = new Point(this.position.x + (this.current_behavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + this.current_behavior.getCurrentImage().getSpriteHeight());
+				point = new Point(this.position.x + (this.currentBehavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + this.currentBehavior.getCurrentImage().getSpriteHeight());
 				break;
 			case bottom_left:
-				point = new Point(this.position.x, this.position.y + this.current_behavior.getCurrentImage().getSpriteHeight());
+				point = new Point(this.position.x, this.position.y + this.currentBehavior.getCurrentImage().getSpriteHeight());
 				break;
 			case bottom_right:
-				point = new Point(this.position.x + this.current_behavior.getCurrentImage().getSpriteWidth(), this.position.y + this.current_behavior.getCurrentImage().getSpriteHeight());
+				point = new Point(this.position.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), this.position.y + this.currentBehavior.getCurrentImage().getSpriteHeight());
 				break;
 			case center:
-				point = new Point(this.position.x + (this.current_behavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + (this.current_behavior.getCurrentImage().getSpriteHeight() / 2));
+				point = new Point(this.position.x + (this.currentBehavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + (this.currentBehavior.getCurrentImage().getSpriteHeight() / 2));
 				break;
 			case left:
-				point = new Point(this.position.x, this.position.y + (this.current_behavior.getCurrentImage().getSpriteHeight() / 2));
+				point = new Point(this.position.x, this.position.y + (this.currentBehavior.getCurrentImage().getSpriteHeight() / 2));
 				break;
 			case right:
-				point = new Point(this.position.x + this.current_behavior.getCurrentImage().getSpriteWidth(), this.position.y + (this.current_behavior.getCurrentImage().getSpriteHeight() / 2));
+				point = new Point(this.position.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), this.position.y + (this.currentBehavior.getCurrentImage().getSpriteHeight() / 2));
 				break;
 			case top:
-				point = new Point(this.position.x + (this.current_behavior.getCurrentImage().getSpriteWidth() / 2), this.position.y);
+				point = new Point(this.position.x + (this.currentBehavior.getCurrentImage().getSpriteWidth() / 2), this.position.y);
 				break;
 			case top_left:
 				point = new Point(this.position.x, this.position.y);
 				break;
 			case top_right:
-				point = new Point(this.position.x + this.current_behavior.getCurrentImage().getSpriteWidth(), this.position.y);
+				point = new Point(this.position.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), this.position.y);
 				break;
 		}
 		
