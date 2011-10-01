@@ -2,26 +2,26 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <Preference android:key="info_hint_text" android:summary="@string/info_hint_text_summary" android:title="@string/info_hint_title"></Preference><PreferenceCategory android:key="background_settings" android:title="@string/background_settings">
+    <Preference android:key="info_hint_text" android:summary="@string/info_hint_text_summary" android:title="@string/info_hint_title"></Preference>
+
+<PreferenceCategory android:key="pony_settings" android:title="@string/pony_settings_title">
+    <Preference android:key="pony_select" android:title="@string/pony_select_title" android:summary="@string/pony_select_summary"></Preference><CheckBoxPreference android:key="interact_user" android:enabled="true" android:summary="@string/interact_user_summary" android:title="@string/interact_user_title"></CheckBoxPreference><CheckBoxPreference android:key="interact_pony" android:summary="@string/interact_pony_summary" android:title="@string/interact_pony_title" android:enabled="false" android:defaultValue="true"></CheckBoxPreference><CheckBoxPreference android:key="show_effects" android:title="@string/show_effects_title" android:defaultValue="false" android:summary="@string/show_effects_summary" android:enabled="false"></CheckBoxPreference>
+    
+    
+    
+    
+    
+    
+</PreferenceCategory><PreferenceCategory android:key="background_settings" android:title="@string/background_settings">
     <Preference android:key="background_color" android:title="@string/background_color_title"></Preference>
     <CheckBoxPreference android:key="background_global" android:title="@string/background_global_title"></CheckBoxPreference>
     <Preference android:key="background_image" android:dependency="background_global" android:title="@string/background_image_title"></Preference>
     
     
-</PreferenceCategory>
-<PreferenceCategory android:key="interaction_settings" android:title="Interaction">
-    <CheckBoxPreference android:key="interact_user" android:enabled="true" android:summary="@string/interact_user_summary" android:title="@string/interact_user_title"></CheckBoxPreference>
-    <CheckBoxPreference android:key="interact_pony" android:enabled="true" android:summary="@string/interact_pony_summary" android:title="@string/interact_pony_title"></CheckBoxPreference>
-</PreferenceCategory>
-<PreferenceCategory android:key="pony_settings" android:title="@string/pony_settings_title">
-    <Preference android:key="pony_select" android:title="@string/pony_select_title" android:summary="@string/pony_select_summary"></Preference>
-    <ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference>
-    <EditTextPreference android:key="pony_scale" android:defaultValue="1" android:inputType="numberDecimal" android:title="@string/pony_scale_title" android:summary="@string/pony_scale_summary"></EditTextPreference>
-    <CheckBoxPreference android:key="show_effects" android:title="@string/show_effects_title" android:defaultValue="false" android:summary="@string/show_effects_summary" android:enabled="true"></CheckBoxPreference>
-    <CheckBoxPreference android:key="force_local_storage" android:defaultValue="false" android:title="@string/force_local_storage_title" android:summary="@string/force_local_storage_summary" android:enabled="false"></CheckBoxPreference>
+</PreferenceCategory><PreferenceCategory android:key="display_settings" android:title="@string/display_settings_title"><ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference><EditTextPreference android:key="pony_scale" android:defaultValue="1" android:title="@string/pony_scale_title" android:summary="@string/pony_scale_summary" android:inputType="numberDecimal"></EditTextPreference>
     
     
-</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="@string/more_settings_title">
+</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="@string/more_settings_title"><CheckBoxPreference android:key="force_local_storage" android:defaultValue="false" android:title="@string/force_local_storage_title" android:summary="@string/force_local_storage_summary" android:enabled="false"></CheckBoxPreference>
     <Preference android:key="more_about" android:title="@string/app_name" android:summary="© 2011 ov3rk1ll"></Preference>
     <Preference android:title="Version" android:key="more_version" android:summary="1.0"></Preference>
     <Preference android:key="more_link" android:summary="http://android.ov3rk1ll.com" android:title="@string/more_link_title"></Preference>

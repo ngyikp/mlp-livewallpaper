@@ -30,7 +30,7 @@ public class Pony{
 
 	private long lastTimeMoved = 0;
 	
-	private boolean hasSpawned = false;
+	public boolean hasSpawned = false;
 
 	public List<EffectWindow> activeEffects;
 	public List<Interaction> interactions = new LinkedList<Interaction>();
@@ -256,7 +256,7 @@ public class Pony{
 		// Point to determine where we would end up at this speed
 		Point new_location = new Point(position.x + x_movement, position.y + y_movement);	
 	    
-	    if (isPonyOnWallpaper(new_location)) {
+	    if (isPonyOnWallpaper(new_location) && !isPonyInAvoidanceArea(new_location)) {
 	        this.position = new_location;
 	        paint(globalTime);
 	        
@@ -537,6 +537,10 @@ public class Pony{
 				return true;
 			}
 		}
+		return false;
+	}
+	
+	public boolean isPonyInAvoidanceArea(Point location){
 		return false;
 	}
 	

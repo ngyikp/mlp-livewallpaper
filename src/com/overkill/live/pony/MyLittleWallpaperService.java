@@ -9,7 +9,6 @@ import java.util.Random;
 
 import com.overkill.live.pony.Pony.AllowedMoves;
 import com.overkill.live.pony.Pony.Directions;
-import com.overkill.ponymanager.PonyManager;
 
 import android.app.WallpaperManager;
 import android.content.SharedPreferences;
@@ -21,14 +20,13 @@ import android.os.Environment;
 import android.os.SystemClock;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 public class MyLittleWallpaperService extends WallpaperService {
 	public static final String TAG = "mlpWallpaper";	
 	public static String VERSION = "";
 	// Settings
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	public static final boolean SHOWPONYBOX = false;
 	private boolean RENDER_ON_SWIPE = true;	
 	
@@ -85,10 +83,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);
 	        VERSION = pinfo.versionName;
-		} catch (NameNotFoundException e) {
-		}
-        
-        SharedPreferences preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);    
+		} catch (NameNotFoundException e) { ; }
         
         rand = new Random();      
         
@@ -253,8 +248,12 @@ public class MyLittleWallpaperService extends WallpaperService {
         	this.engine = new RenderEngine(getBaseContext(), getSurfaceHolder());            	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
-            loadSelectablePonies();
-            selectPonies(preferences);
+            Editor editor = preferences.edit();
+            editor.putBoolean("added_pony", true);
+            editor.putBoolean("changed_pony", true);
+            editor.commit();
+//            loadSelectablePonies();
+//            selectPonies(preferences);
             onSharedPreferenceChanged(preferences, null);
         	super.onCreate(surfaceHolder);
         }
@@ -296,38 +295,46 @@ public class MyLittleWallpaperService extends WallpaperService {
         }
         
 		@Override
-		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-			Log.i("onSharedPreferenceChanged", "key=" + key);
-			Editor editor = sharedPreferences.edit();
-			if(sharedPreferences.getBoolean("added_pony", false) == true){
-				loadSelectablePonies();
-				editor.putBoolean("added_pony", false);
-			}					
-			if(sharedPreferences.getBoolean("changed_pony", false) == true){
-				selectPonies(sharedPreferences);
-				editor.putBoolean("changed_pony", false);
-			}
-			editor.commit();
-			
-			this.engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
-			this.engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
-			this.engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
-			this.engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1.0")));			
+		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+			RenderEngine.loading = true;
+//			Thread t = new Thread(new Runnable() {				
+//				@Override
+//				public void run() {
+					Log.i("onSharedPreferenceChanged", "key=" + key);
+					Editor editor = sharedPreferences.edit();
+					if(sharedPreferences.getBoolean("added_pony", false) == true){
+						loadSelectablePonies();
+						editor.putBoolean("added_pony", false);
+					}					
+					if(sharedPreferences.getBoolean("changed_pony", false) == true){
+						selectPonies(sharedPreferences);
+						editor.putBoolean("changed_pony", false);
+					}
+					editor.commit();
+					
+					engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
+					engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
+					engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
+					engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1")));			
 
-			this.engine.setInteraction(
-					sharedPreferences.getBoolean("interact_pony", false),
-					sharedPreferences.getBoolean("interact_user", false));
+					engine.setInteraction(
+							sharedPreferences.getBoolean("interact_pony", false),
+							sharedPreferences.getBoolean("interact_user", false));
 
-			RENDER_ON_SWIPE = sharedPreferences.getBoolean("render_on_swipe", true);
-			
-			// get Background image if we want one			
-			String filePath = sharedPreferences.getString("background_image", null);
-			this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
-	        if(sharedPreferences.getBoolean("background_global", false) == false || filePath == null){
-				this.engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
-	        }else{
-	        	this.engine.setBackground(filePath);
-	        }        
+					RENDER_ON_SWIPE = sharedPreferences.getBoolean("render_on_swipe", true);
+					
+					// get Background image if we want one			
+					String filePath = sharedPreferences.getString("background_image", null);
+					engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
+			        if(sharedPreferences.getBoolean("background_global", false) == false || filePath == null){
+						engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
+			        }else{
+			        	engine.setBackground(filePath);
+			        }       
+			        RenderEngine.loading = false;
+//				}
+//			});	
+//			t.start();
 		}  
                         
         @Override
@@ -376,37 +383,36 @@ public class MyLittleWallpaperService extends WallpaperService {
             if(RENDER_ON_SWIPE) engine.render();
         }
         
-//        @Override
-//        public Bundle onCommand(String action, int x, int y, int z,	Bundle extras, boolean resultRequested) {
-//        	Log.i("onCommand", action);
-//        	if(action.equals(WallpaperManager.COMMAND_TAP)){
-//        		long currentTime = SystemClock.elapsedRealtime();
-//        		for(Pony p : this.engine.getPonies()){
-//	            	if(p.isPonyOnLocation(x, y)){
-//	            		p.touch(currentTime);
-//	            	}
-//	            }	
-//        	}
-//        	return super.onCommand(action, x, y, z, extras, resultRequested);
-//        }
-        
         @Override
-        public void onTouchEvent(MotionEvent event) {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            	if(RenderEngine.CONFIG_INTERACT_TOUCH){
-	            	long currentTime = SystemClock.elapsedRealtime();
-	            	int touchX = (int) event.getX();
-	            	int touchY = (int) event.getY();
-            		Log.i("touch", "x:" + touchX + " y:" + touchY);
-		            for(Pony p : this.engine.getPonies()){
-		            	if(p.isPonyAtLocation(touchX, touchY)){
-		            		p.touch(currentTime);
-		            	}
-		            }
-            	}
-            }
-            super.onTouchEvent(event);
+        public Bundle onCommand(String action, int x, int y, int z,	Bundle extras, boolean resultRequested) {
+        	if(action.equals(WallpaperManager.COMMAND_TAP) && RenderEngine.CONFIG_INTERACT_TOUCH == true){
+            	Log.i("onCommand", action + " [" + x + "," + y + "]");
+        		long currentTime = SystemClock.elapsedRealtime();
+        		for(Pony p : this.engine.getPonies()){
+	            	if(p.isPonyAtLocation(x, y)){
+	            		p.touch(currentTime);
+	            	}
+	            }	
+        	}
+        	return super.onCommand(action, x, y, z, extras, resultRequested);
         }
+        
+//        @Override
+//        public void onTouchEvent(MotionEvent event) {
+//            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//            	if(RenderEngine.CONFIG_INTERACT_TOUCH){
+//	            	long currentTime = SystemClock.elapsedRealtime();
+//	            	int touchX = (int) event.getX();
+//	            	int touchY = (int) event.getY();
+//		            for(Pony p : this.engine.getPonies()){
+//		            	if(p.isPonyAtLocation(touchX, touchY)){
+//		            		p.touch(currentTime);
+//		            	}
+//		            }
+//            	}
+//            }
+//            super.onTouchEvent(event);
+//        }
 
            
     } // End of SpriteEngine

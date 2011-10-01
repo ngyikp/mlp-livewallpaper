@@ -13,7 +13,7 @@
     <string name="interact_pony_summary">Ponies interact with each other</string>
     <string name="pony_settings_title">Ponies</string>
     <string name="pony_select_title">Select Ponies</string>
-    <string name="pony_select_summary">Choose which ponies should be displayed\n(More ponies equals more CPU)</string>
+    <string name="pony_select_summary">Choose which ponies should be displayed\n(More ponies equals more CPU usage)</string>
     <string name="framerate_cap_title">Target Framerate</string>
     <string name="framerate_cap_summary">Higher Framerate means higher CPU usage</string>
     <string name="pony_scale_title">Scale</string>
@@ -44,5 +44,9 @@
     <string name="force_local_storage_summary">Turn on to store ponies intern instead of the sd-card</string>   
     <string name="manager_help">Help</string>
     <string name="manager_update_all">Update All</string>
+    <string name="manager_download_all">Download All</string>
     <string name="help_text">&quot;The colored dots indicate different states of a Pony&lt;br /&gt;The state can be:&lt;br /&gt;&lt;font color='#ff0000'&gt;&lt;b&gt;•&lt;/b&gt; Pony is not installed&lt;/font&gt; &lt;br /&gt;&lt;font color='#FF7E00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is currently downloaded&lt;/font&gt;&lt;br /&gt;&lt;font color='#00ff00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is installed&lt;/font&gt;&lt;br /&gt;&lt;font color='#0000ff'&gt;&lt;b&gt;•&lt;/b&gt; The is an update for this Pony&lt;/font&gt;&lt;br /&gt;&quot;</string>
+    <string name="display_settings_title">Display Settings</string>    
+    <string name="manager_delete_title">Delete %1$s?</string>   
+    <string name="manager_delete_message">Are you sure you want to delete %1$s?</string>
 </resources>

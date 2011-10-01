@@ -50,6 +50,8 @@ public class RenderEngine {
 	public static Rect screenBounds;
 	public static Rect visibleScreenArea;
 	
+	public static boolean loading = false;
+	
 	public RenderEngine(Context context, SurfaceHolder surfaceHolder){        
     	backgroundTextPaint.setColor(Color.WHITE);
     	backgroundTextPaint.setTextAlign(Align.LEFT);
@@ -88,6 +90,7 @@ public class RenderEngine {
     protected void drawFrame(Canvas canvas) {   	
         long currentTime = SystemClock.elapsedRealtime();
         try {
+        	if(RenderEngine.loading == true){ this.renderLoadingText(canvas); return; }
             this.renderBackground(canvas);
             if (canvas != null) {
 	               	for(int i=0; i < activePonies.size(); i++){
@@ -118,6 +121,11 @@ public class RenderEngine {
     		c.drawText(this.context.getString(R.string.no_ponies_selected), screenCenter.x, screenCenter.y, backgroundTextPaint);
     	}
     }   
+    
+    private void renderLoadingText(Canvas c){
+    	backgroundTextPaint.setTextAlign(Align.CENTER);
+		c.drawText("loading... Please wait", screenCenter.x, screenCenter.y, backgroundTextPaint);
+    }
     
     public void start(){
     	this.renderThread = new RenderThread(this);

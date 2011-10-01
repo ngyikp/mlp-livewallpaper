@@ -90,4 +90,9 @@ public class DownloadPony {
 	public void setLastUpdate(long lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}	
+	
+	@Override
+	public boolean equals(Object o) {
+		return this.getName().equals(((DownloadPony) o).getName());
+	}
 }

@@ -61,4 +61,12 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
 		}
 		return false;
 	}
+	
+	public boolean hasNotInstalled(){
+		for(int i = 0; i < getCount(); i++){
+			if(getItem(i).getState() == R.string.pony_state_not_installed)
+				return true;
+		}
+		return false;
+	}
 }

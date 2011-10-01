@@ -41,6 +41,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.provider.MediaStore;
 import android.text.method.DigitsKeyListener;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -215,6 +216,17 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		
 		EditText editText = (EditText)((EditTextPreference)findPreference("pony_scale")).getEditText();
         editText.setKeyListener(DigitsKeyListener.getInstance(false, true));
+        ((EditTextPreference)findPreference("pony_scale")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+			@Override
+			public boolean onPreferenceChange(Preference preference, Object newValue) {
+				String value = (String)newValue;
+				if(value.equals("") || value == null){
+					editor.putString("pony_scale", "1");
+					return false;
+				}
+				return true;
+			}
+		});
 		
 		((Preference)findPreference("background_image")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
