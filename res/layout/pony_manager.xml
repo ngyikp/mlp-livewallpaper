@@ -6,13 +6,13 @@
   android:layout_width="fill_parent"
   android:layout_height="fill_parent">
   
-  <!-- <com.google.ads.AdView android:id="@+id/adView"
+  <com.google.ads.AdView android:id="@+id/adView"
 		android:layout_width="fill_parent"
 		ads:adUnitId="a14e7f37b6ab80b"
 		ads:adSize="BANNER"
 		ads:loadAdOnCreate="true"
 		ads:keywords="my little pony, hasbro, mlp, friendship is magic, hub"
-		android:background="#fff" android:layout_height="wrap_content"/> -->
+		android:background="#fff" android:layout_height="wrap_content" />
   <ListView android:layout_width="fill_parent" android:layout_height="fill_parent" android:id="@+id/@android:id/list"></ListView>
   
     
