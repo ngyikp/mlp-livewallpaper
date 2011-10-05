@@ -12,16 +12,17 @@ import android.util.Log;
 
 public class Sprite {
 	
+	private boolean loading = false;
 	private String fileName;
-	private GifDecoder gif;
-	private int spriteWidth;
-	private int spriteHeight;
+	private GifDecoder gif = null;
+	private int spriteWidth = 0;
+	private int spriteHeight = 0;
 	private int frameCount = 0;
 	private long lastFrameTime = 0;
 	private int currentFrame = 0;	
 	
 	private boolean initialized = false;
-	private Paint renderPaint = new Paint();
+	public static Paint renderPaint = new Paint();
 	
 	/**
 	 * Sets the file and initializes the GifDecoder
@@ -29,7 +30,7 @@ public class Sprite {
 	 * @throws FileNotFoundException
 	 */
 	public Sprite(String fileName){
-		this(fileName, false);	
+		this(fileName, true);	
 	}
 	
 	public Sprite(String fileName, boolean initializeGIF){
@@ -41,24 +42,31 @@ public class Sprite {
 	 * Decodes the GIF File and stores data
 	 */
 	public void initialize(){
+//		if(this.loading) return;
+		this.loading = true;
 		long t0 = System.currentTimeMillis();
 		try {
 			GifDecoder decoder = new GifDecoder();
-			// Log.i("GifDecoder.read", this.fileName);
 			decoder.read(new FileInputStream(this.fileName));
 			this.spriteWidth = decoder.width;
 			this.spriteHeight = decoder.height;		
 			this.frameCount = decoder.getFrameCount();
 			this.gif = decoder;
-			this.initialized = true;
 			renderPaint.setStyle(Style.STROKE);
 			renderPaint.setColor(0xffffffff);
-			if(MyLittleWallpaperService.DEBUG) Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*4));
+			if(MyLittleWallpaperService.DEBUG)
+				Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*4));
+
+			this.initialized = true;
 		} catch (OutOfMemoryError e) {
+			Log.i("Sprite", e.getMessage());
 			this.initialized = false;
 		} catch (FileNotFoundException e) {
+			Log.i("Sprite", e.getMessage());
 			this.initialized = false;
-		}		
+		}finally{
+			this.loading = false;
+		}
 	}
 	
 	/**
@@ -78,6 +86,7 @@ public class Sprite {
 		if(!initialized) this.initialize();
 		return (int) (this.spriteWidth * RenderEngine.CONFIG_SCALE);
 	}
+	
 	
 	/**
 	 * Updates the current frame for the given time
@@ -101,6 +110,7 @@ public class Sprite {
 	 */
 	public void draw(Canvas canvas, Point position) {
 		if(canvas == null || position == null) return;
+		//while(loading);
 		if(!this.initialized) this.initialize();
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);

@@ -6,6 +6,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
@@ -15,14 +19,19 @@ import com.overkill.ponymanager.AsynImageLoader.onImageListener;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ListActivity;
+import android.app.WallpaperInfo;
+import android.app.WallpaperManager;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.Html;
+import android.text.Html.ImageGetter;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -31,6 +40,10 @@ import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
@@ -45,12 +58,55 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	public static final int ACTION_STOP = 3;
 	public static final int ACTION_UPDATE = 4;
 	
+	public static final int THEMES[] = {R.style.Theme_Pony_Applejack, R.style.Theme_Pony_Rainbowdash, R.style.Theme_Pony_Fluttershy, R.style.Theme_Pony_PinkiePie, R.style.Theme_Pony_Rarity, R.style.Theme_Pony_TwilightSparkle};
+	
 	File localFolder;
 	
 	PonyAdapter adapter;
 	
 	int currentContextSelection = -1;
 	
+	public void setProgressbarVisibility(boolean visible){
+		 int v = (visible) ? View.VISIBLE : View.GONE;
+		 ((ProgressBar)findViewById(R.id.progress_circular)).setVisibility(v);
+	 }
+	
+	public void setDownloadAllVisibility(boolean visible){
+		 int v = (visible) ? View.VISIBLE : View.GONE;
+		 ((ImageButton)findViewById(R.id.btn_title_download_all)).setVisibility(v);
+		 ((ImageView)findViewById(R.id.sep_title_download_all)).setVisibility(v);
+	}
+	
+	public void setUpdateAllVisibility(boolean visible){
+		 int v = (visible) ? View.VISIBLE : View.GONE;
+		 ((ImageButton)findViewById(R.id.btn_title_update_all)).setVisibility(v);
+		 ((ImageView)findViewById(R.id.sep_title_update_all)).setVisibility(v);
+	}
+	
+	public void setSetButtonVisibility(boolean visible){
+		 int v = (visible) ? View.VISIBLE : View.GONE;
+		 ((ImageButton)findViewById(R.id.btn_title_set)).setVisibility(v);
+		 ((ImageView)findViewById(R.id.sep_title_set)).setVisibility(v);
+	}
+	 
+	public void updateTitle(){
+		setDownloadAllVisibility(false);
+		setUpdateAllVisibility(false);
+		setSetButtonVisibility(false);
+		if(adapter.hasUpdate())
+			setUpdateAllVisibility(true);
+		if(adapter.hasNotInstalled())
+			setDownloadAllVisibility(true);
+		WallpaperInfo currentWallpaper = WallpaperManager.getInstance(this).getWallpaperInfo();
+		if(currentWallpaper == null){
+			setSetButtonVisibility(true);
+		}else{
+			if(currentWallpaper.getPackageName().equals("com.overkill.live.pony") == false){
+				setSetButtonVisibility(true);				
+			}
+		}
+	}
+	 
 	@Override
 	public void onDownloadStart(int position) {	
 		if(position >= adapter.getCount()) return;
@@ -82,7 +138,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		editor.commit();
 		runOnUiThread(new Runnable() {			
 			@Override
-			public void run() {	adapter.notifyDataSetChanged();	}
+			public void run() {	adapter.notifyDataSetChanged();	updateTitle();}
 		});			
 	}
 
@@ -106,27 +162,25 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			}
 		});
 	}
-	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-		menu.clear();
-		menu.add(0, R.string.manager_help, 0, R.string.manager_help).setIcon(android.R.drawable.ic_menu_help);
-		if(adapter.hasUpdate())
-			menu.add(0, R.string.manager_update_all, 0, R.string.manager_update_all).setIcon(R.drawable.arrowdown);
-		if(adapter.hasNotInstalled())
-			menu.add(0, R.string.manager_download_all, 0, R.string.manager_download_all).setIcon(R.drawable.arrowdown);
-		return super.onPrepareOptionsMenu(menu);
-	}
-		
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.string.manager_help:		
+	
+	public void onTitleClick(View view){
+		switch (view.getId()) {
+		case R.id.btn_title_help:	
 			Builder dialog = new AlertDialog.Builder(this);
 			dialog.setTitle(R.string.manager_help);
 			dialog.setIcon(android.R.drawable.ic_menu_help);
-			dialog.setMessage(Html.fromHtml(getString(R.string.help_text)));
+			dialog.setMessage(Html.fromHtml(getString(R.string.help_text), new ImageGetter() {				
+				@Override
+				public Drawable getDrawable(String source) {
+					int resId = getResources().getIdentifier("drawable/" + source, null, getPackageName());
+					Drawable d = getResources().getDrawable(resId);
+					d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+					Log.i("ImageGetter", source + " > " + resId);
+					return d;
+				}
+			}, null));
 			dialog.setPositiveButton(android.R.string.ok, null);
-			dialog.show();
+			dialog.show();			
 			break;
 		case R.string.manager_update_all:
 			for(int i = 0; i < adapter.getCount(); i++){
@@ -134,17 +188,31 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				if(p.getState() == R.string.pony_state_update)
 					actionUpdate(p);
 			}
+			updateTitle();
 			break;
-		case R.string.manager_download_all:
+		case R.id.btn_title_download_all:	
 			for(int i = 0; i < adapter.getCount(); i++){
 				DownloadPony p = adapter.getItem(i);
 				Log.i("manager_download_all", "download " + p.getName() + "? " +  (p.getState() == R.string.pony_state_not_installed));
 				if(p.getState() == R.string.pony_state_not_installed)
 					actionDownload(p);
 			}
+			updateTitle();
+			break;
+		case R.id.btn_title_set:
+			Intent intent = new Intent();
+			intent.setAction(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
+			startActivityForResult(intent, 0);
+			Toast.makeText(this, R.string.set_wallpaper, Toast.LENGTH_LONG).show();
 			break;
 		}
-		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.i("PonyManager", "onActivityResult");
+		updateTitle();
+		super.onActivityResult(requestCode, resultCode, data);
 	}
 	
 	@Override
@@ -157,7 +225,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	@Override
 	public void imageComplete(int position, Bitmap image) {
-		if(position > adapter.getCount()) return;
+		if(position >= adapter.getCount()) return;
 		adapter.getItem(position).setImage(image);
 		runOnUiThread(new Runnable() {			
 			@Override
@@ -167,10 +235,12 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.pony_manager);
-		
+		requestWindowFeature(Window.FEATURE_CUSTOM_TITLE); 
+	    Random r = new Random();
+	    setTheme(THEMES[r.nextInt(THEMES.length)]);
+		super.onCreate(savedInstanceState);      
+	    setContentView(R.layout.pony_manager);	
+	    getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.system_title);
 		if(isSDMounted())
 			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
 		else
@@ -185,9 +255,6 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				e.printStackTrace();
 			}
 		}
-		adapter = new PonyAdapter(this, R.layout.item_pony);
-		setListAdapter(adapter);
-		adapter.setNotifyOnChange(false);
 		registerForContextMenu(getListView());
 		getListView().setOnItemClickListener(new OnItemClickListener() {
 			@Override
@@ -198,26 +265,39 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		new Thread(new Runnable() {			
 			@Override
 			public void run() {
-				loadPonies();
+				final ArrayList<DownloadPony> ponies = loadPonies();
+				adapter = new PonyAdapter(PonyManager.this, R.layout.item_pony, ponies);
+				SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE);
+				for(int i = 0; i < adapter.getCount(); i++){
+                    DownloadPony p = adapter.getItem(i);
+					AsynImageLoader ail = new AsynImageLoader(REMOTE_BASE_URL + p.getFolder() + "/preview.gif", i, PonyManager.this);
+                    ail.start();
+        			long lastUpdateLocal = preferences.getLong("lastupdate_" + p.getFolder(), 0);
+        			long lastUpdateRemote = p.getLastUpdate();
+        			if((lastUpdateRemote > lastUpdateLocal) && p.getState() != R.string.pony_state_not_installed)
+        				adapter.getItem(i).setState(R.string.pony_state_update);
+				}
 				runOnUiThread(new Runnable() {					
 					@Override
-					public void run() {
-						adapter.notifyDataSetChanged();		
-						setProgressBarIndeterminateVisibility(false);				
+					public void run() {						
+						setListAdapter(adapter);	
+						updateTitle();
+						setProgressbarVisibility(false);				
 					}
 				});
 			}
 		}).start();
-		setProgressBarIndeterminateVisibility(true);
+		setProgressbarVisibility(true);
 		
 	}
 	
-	private boolean isSDMounted(){
+	public static boolean isSDMounted(){
 		String state = Environment.getExternalStorageState();
 		return state.equals(Environment.MEDIA_MOUNTED);
 	}
 	
-	private void loadPonies(){
+	private ArrayList<DownloadPony> loadPonies(){
+		ArrayList<DownloadPony> r = new ArrayList<DownloadPony>();
 		try {
 			URL listFile = new URL(REMOTE_BASE_URL + "ponies.lst");
 			URLConnection urlCon = listFile.openConnection();
@@ -237,12 +317,10 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				int state = R.string.pony_state_not_installed;
 				if(local.exists())
 					state = R.string.pony_state_installed;
-				final DownloadPony p = new DownloadPony(data[0], data[1], Integer.valueOf(data[2]), Integer.valueOf(data[3]), state);
+				DownloadPony p = new DownloadPony(data[0], data[1], Integer.valueOf(data[2]), Integer.valueOf(data[3]), state);
 				p.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.ponytemp));
 				p.setLastUpdate(Long.valueOf(data[4]));
-				AsynImageLoader ail = new AsynImageLoader(REMOTE_BASE_URL + data[1] + "/preview.gif", count, this);
-				adapter.add(p);
-				ail.start();
+				r.add(p);
 				count++;
 			}
 		} catch (final Exception e) {
@@ -251,15 +329,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				public void run() {	Toast.makeText(PonyManager.this, "Error loading Ponies\nPlease make sure you are connected to the internet", Toast.LENGTH_LONG).show(); }
 			});
 		}	
-		SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE);
-		for(int i = 0; i < adapter.getCount(); i++){
-			DownloadPony p = adapter.getItem(i);
-			long lastUpdateLocal = preferences.getLong("lastupdate_" + p.getFolder(), 0);
-			long lastUpdateRemote = p.getLastUpdate();
-			if((lastUpdateRemote > lastUpdateLocal) && p.getState() != R.string.pony_state_not_installed)
-				adapter.getItem(i).setState(R.string.pony_state_update);
-				
-		}
+		return r;
 	}
 	
 	@Override
@@ -328,6 +398,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	public void actionDownload(DownloadPony p){
 		int index = adapter.getPosition(p);
 		new AsynFolderDownloader(REMOTE_BASE_URL + p.getFolder(), new File(localFolder, p.getFolder()), index, this).start();
+		updateTitle();
 	}
 	
 	public void actionDelete(DownloadPony p){
@@ -345,5 +416,6 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		editor.commit();
 		p.setState(R.string.pony_state_not_installed);
 		adapter.notifyDataSetChanged();
+		updateTitle();
 	}
 }

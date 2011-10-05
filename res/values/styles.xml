@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>	
+	<color name="window_title_separator">#40000000</color>
+				
+	<style name="Theme" />
+	<style name="Theme.Pony" parent="@android:style/Theme.Light">	
+        <item name="android:windowTitleSize">42.0dip</item>
+        <item name="android:progressBarStyleSmallTitle">@style/WidgetProgressBarSmallTitle</item>
+        <item name="android:progressBarStyleSmallTitle">@style/WidgetProgressBarSmallTitle</item>
+	</style>	
+	<style name="WindowTitleBackground">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">?android:windowTitleSize</item>
+    </style>
+	<style name="TextAppearance" />
+    <style name="TextAppearance.WindowTitle" parent="@style/TextAppearance">
+    </style>    
+    <style name="WindowTitle">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">?android:windowTitleSize</item>
+        <item name="android:textSize">18.0sp</item>
+        <item name="android:textStyle">bold</item> 	
+        <item name="android:fadingEdge">horizontal</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_weight">1.0</item>
+        <item name="android:text">@string/pony_manager</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">2.0dip</item>
+        <item name="android:singleLine">true</item>
+    </style>
+    <!-- ************************************************************************************************************** -->
+    <style name="Theme.Pony.Rainbowdash" parent="@style/Theme.Pony">
+        <item name="android:windowTitleStyle">@style/WindowTitle.Rainbowdash</item>
+        <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackground.Rainbowdash</item>
+    </style>
+	<style name="WindowTitle.Rainbowdash" parent="@style/WindowTitle">
+        <item name="android:textAppearance">@style/TextAppearance.WindowTitle.Rainbowdash</item>
+    </style>
+    <style name="WindowTitleBackground.Rainbowdash">
+        <item name="android:background">#ff9ED9F7</item>
+    </style>
+    <style name="TextAppearance.WindowTitle.Rainbowdash" parent="@style/TextAppearance.WindowTitle">    	
+        <item name="android:textColor">#ffC6006F</item>
+    </style>
+    
+    <style name="Theme.Pony.Applejack" parent="@style/Theme.Pony">
+        <item name="android:windowTitleStyle">@style/WindowTitle.Applejack</item>
+        <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackground.Applejack</item>
+    </style>
+	<style name="WindowTitle.Applejack" parent="@style/WindowTitle">
+        <item name="android:textAppearance">@style/TextAppearance.WindowTitle.Applejack</item>
+    </style>
+    <style name="WindowTitleBackground.Applejack">
+        <item name="android:background">#ffFCBB5E</item>
+    </style>
+    <style name="TextAppearance.WindowTitle.Applejack" parent="@style/TextAppearance.WindowTitle">    	
+        <item name="android:textColor">#ff499E46</item>
+    </style>
+    
+    <style name="Theme.Pony.Fluttershy" parent="@style/Theme.Pony">
+        <item name="android:windowTitleStyle">@style/WindowTitle.Fluttershy</item>
+        <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackground.Fluttershy</item>
+    </style>
+	<style name="WindowTitle.Fluttershy" parent="@style/WindowTitle">
+        <item name="android:textAppearance">@style/TextAppearance.WindowTitle.Fluttershy</item>
+    </style>
+    <style name="WindowTitleBackground.Fluttershy">
+        <item name="android:background">#ffFFF7A6</item>
+    </style>
+    <style name="TextAppearance.WindowTitle.Fluttershy" parent="@style/TextAppearance.WindowTitle">    	
+        <item name="android:textColor">#ff17A8A1</item>
+    </style>
+    
+    <style name="Theme.Pony.PinkiePie" parent="@style/Theme.Pony">
+        <item name="android:windowTitleStyle">@style/WindowTitle.PinkiePie</item>
+        <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackground.PinkiePie</item>
+    </style>
+	<style name="WindowTitle.PinkiePie" parent="@style/WindowTitle">
+        <item name="android:textAppearance">@style/TextAppearance.WindowTitle.PinkiePie</item>
+    </style>
+    <style name="WindowTitleBackground.PinkiePie">
+        <item name="android:background">#ffFCC0E2</item>
+    </style>
+    <style name="TextAppearance.WindowTitle.PinkiePie" parent="@style/TextAppearance.WindowTitle">    	
+        <item name="android:textColor">#ff1C7097</item>
+    </style>
+    
+    <style name="Theme.Pony.Rarity" parent="@style/Theme.Pony">
+        <item name="android:windowTitleStyle">@style/WindowTitle.Rarity</item>
+        <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackground.Rarity</item>
+    </style>
+	<style name="WindowTitle.Rarity" parent="@style/WindowTitle">
+        <item name="android:textAppearance">@style/TextAppearance.WindowTitle.Rarity</item>
+    </style>
+    <style name="WindowTitleBackground.Rarity">
+        <item name="android:background">#ffEDF1F4</item>
+    </style>
+    <style name="TextAppearance.WindowTitle.Rarity" parent="@style/TextAppearance.WindowTitle">    	
+        <item name="android:textColor">#ff2E75B7</item>
+    </style>
+    
+    <style name="Theme.Pony.TwilightSparkle" parent="@style/Theme.Pony">
+        <item name="android:windowTitleStyle">@style/WindowTitle.TwilightSparkle</item>
+        <item name="android:windowTitleBackgroundStyle">@style/WindowTitleBackground.TwilightSparkle</item>
+    </style>
+	<style name="WindowTitle.TwilightSparkle" parent="@style/WindowTitle">
+        <item name="android:textAppearance">@style/TextAppearance.WindowTitle.TwilightSparkle</item>
+    </style>
+    <style name="WindowTitleBackground.TwilightSparkle">
+        <item name="android:background">#ffC9A9D0</item>
+    </style>
+    <style name="TextAppearance.WindowTitle.TwilightSparkle" parent="@style/TextAppearance.WindowTitle">    	
+        <item name="android:textColor">#ff5F2C84</item>
+    </style>
+    <!-- ************************************************************************************************************** -->
+    <style name="WidgetProgressBarSmallTitle" parent="@android:style/Widget.ProgressBar.Small">
+        <item name="android:paddingLeft">14.0dip</item>
+        <item name="android:paddingRight">15.0dip</item>
+        <item name="android:maxWidth">16.0dip</item>
+        <item name="android:maxHeight">16.0dip</item>
+        <item name="android:indeterminateOnly">true</item>
+        <item name="android:indeterminateDuration">3500</item>
+        <item name="android:indeterminateBehavior">repeat</item>
+        <item name="android:minWidth">16.0dip</item>
+        <item name="android:minHeight">16.0dip</item>
+    </style>
+    <style name="CustomWindowTitleAction">
+        <item name="android:background">@drawable/title_button</item>
+        <item name="android:layout_width">?android:windowTitleSize</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:onClick">onTitleClick</item>
+    </style>
+    <style name="CustomWindowTitleProgressCircular" parent="@style/WidgetProgressBarSmallTitle">
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:id">@id/progress_circular</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="CustomWindowTitleSeparator">
+        <item name="android:background">@color/window_title_separator</item>
+        <item name="android:layout_width">1.0px</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>	
+	<item type="id" name="progress_circular" />
+</resources>

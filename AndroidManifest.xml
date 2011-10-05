@@ -23,7 +23,7 @@
 	      android:name="android.service.wallpaper" 
 	      android:resource="@xml/wallpaper" />
 	</service>
-    <activity android:name="com.overkill.ponymanager.PonyManager" android:label="@string/pony_manager" android:icon="@drawable/ic_launcher" android:theme="@android:style/Theme.Light">
+    <activity android:name="com.overkill.ponymanager.PonyManager" android:label="@string/pony_manager" android:icon="@drawable/ic_launcher" android:theme="@style/Theme.Pony.Rainbowdash">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"></action>
             <category android:name="android.intent.category.LAUNCHER"></category>

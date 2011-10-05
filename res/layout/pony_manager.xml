@@ -1,20 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads" 
   android:orientation="vertical"
   android:layout_width="fill_parent"
   android:layout_height="fill_parent">
   
-  <com.google.ads.AdView android:id="@+id/adView"
+  <!-- <com.google.ads.AdView android:id="@+id/adView"
 		android:layout_width="fill_parent"
 		ads:adUnitId="a14e7f37b6ab80b"
 		ads:adSize="BANNER"
 		ads:loadAdOnCreate="true"
 		ads:keywords="my little pony, hasbro, mlp, friendship is magic, hub"
-		android:background="#fff" android:layout_height="wrap_content" />
-  <ListView android:layout_width="fill_parent" android:layout_height="fill_parent" android:id="@+id/@android:id/list"></ListView>
-  
+		android:background="#fff" android:layout_height="wrap_content"
+		 /> -->
+		 
+		 
+  <ListView android:layout_width="fill_parent" android:id="@+id/@android:id/list" android:layout_height="fill_parent" android:layout_above="@+id/adView"></ListView>
+  <com.google.ads.AdView android:id="@+id/adView" 
+  		ads:adUnitId="a14e7f37b6ab80b"
+		ads:adSize="BANNER"
+		ads:loadAdOnCreate="true"
+		ads:keywords="my little pony, hasbro, mlp, friendship is magic, hub"
+  		android:background="#fff" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_alignParentBottom="true" android:layout_alignParentLeft="true"></com.google.ads.AdView>
     
-    
-</LinearLayout>
+</RelativeLayout>

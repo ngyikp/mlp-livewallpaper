@@ -194,7 +194,7 @@ public class GifDecoder {
 				}
 			}
 		}
-		image = Bitmap.createBitmap(dest, width, height, BITMAP_CONFIG );
+		image.setPixels(dest, 0, width, 0, 0, width, height); // = Bitmap.createBitmap(dest, width, height, BITMAP_CONFIG );
 	}
 
 	/**

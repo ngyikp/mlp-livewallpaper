@@ -3,36 +3,37 @@ package com.overkill.live.pony;
 import android.os.SystemClock;
 import android.util.Log;
 
-public class RenderThread extends Thread {
+public class UpdateThread extends Thread {
 
     private RenderEngine engine;
     private boolean run;
     private boolean wait;
+    public boolean ready = false;
     
-    public RenderThread(RenderEngine engine) {
+    public UpdateThread(RenderEngine engine) {
         this.engine = engine;
     }
 
-    public void startRender(){
+    public void startUpdate(){
         this.run = true;
         this.start();
     }
 
-    public void pauseRender(){
+    public void pauseUpdate(){
         this.wait = true;
         synchronized(this){
             this.notify();
         }
     }
     
-    public void resumeRender(){
+    public void resumeUpdate(){
     	 this.wait = false;
          synchronized(this) {
              this.notify();
          }
     }
 
-    public void stopRender(){
+    public void stopUpdate(){
         this.run = false;
         synchronized(this){
             this.notify();
@@ -42,11 +43,12 @@ public class RenderThread extends Thread {
     @Override
     public void run() {
         while(this.run){
-        	long renderStartTime = SystemClock.elapsedRealtime();   
-            this.engine.render(renderStartTime);
-            long cycleTime = SystemClock.elapsedRealtime() - renderStartTime;
-            //Log.i("renderThread", "cycleTime: " + cycleTime);
-            long sleep = Math.max(0, RenderEngine.CONFIG_FRAME_DELAY - cycleTime);
+        	long cycleStartTime = SystemClock.elapsedRealtime();   
+            this.engine.update(cycleStartTime);
+            this.ready = true;
+            long cycleTime = SystemClock.elapsedRealtime() - cycleStartTime;
+            //Log.i("updateThread", "cycleTime: " + cycleTime);
+            long sleep = Math.max(0, 30 - cycleTime);
             try {
 				sleep(sleep);
 			} catch (InterruptedException e1) {

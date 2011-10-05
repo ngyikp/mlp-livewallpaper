@@ -1,5 +1,9 @@
 package com.overkill.ponymanager;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.overkill.live.pony.R;
 
 import android.content.Context;
@@ -16,13 +20,27 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
 
 	private Context context;
 	private int textViewResourceId;
-
+	private List<DownloadPony> allPonies;
+	private List<DownloadPony> filteredPonies;	
+	
 	public PonyAdapter(Context context, int textViewResourceId) {
 		super(context, textViewResourceId);
 		this.context = context;
 		this.textViewResourceId = textViewResourceId;
 	}
 	
+	
+
+	public PonyAdapter(Context context, int textViewResourceId,	List<DownloadPony> objects) {
+		super(context, textViewResourceId, objects);
+		this.context = context;
+		this.textViewResourceId = textViewResourceId;
+		this.allPonies = new LinkedList<DownloadPony>(objects);
+		this.resetFilter();
+	}
+
+
+
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;
@@ -68,5 +86,14 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
 				return true;
 		}
 		return false;
+	}
+	
+	public void resetFilter(){
+		this.filteredPonies = new LinkedList<DownloadPony>(this.allPonies);
+	}
+	
+	@Override
+	public int getCount() {
+		return this.filteredPonies.size();
 	}
 }

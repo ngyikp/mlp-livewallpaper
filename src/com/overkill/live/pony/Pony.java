@@ -1,6 +1,9 @@
 package com.overkill.live.pony;
 
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,10 +21,39 @@ import android.util.Log;
  */
 public class Pony{
 	private static final int MOVEMENT_DELAY_MS = 100;
+		
+	public static final int EF_effect_name = 1;
+    public static final int EF_behavior_name = 2;
+    public static final int EF_right_image = 3;
+    public static final int EF_left_image = 4;
+    public static final int EF_duration = 5;
+    public static final int EF_delay_before_next = 6;
+    public static final int EF_location_right = 7;
+    public static final int EF_center_right = 8;
+    public static final int EF_location_left = 9;
+    public static final int EF_center_left = 10;
+    public static final int EF_follow = 11;
+            
+	// Behavior options
+	public static final int BO_name = 1;
+	public static final int BO_probability = 2;
+	public static final int BO_max_duration = 3;
+	public static final int BO_min_duration = 4;
+	public static final int BO_speed = 5;
+	public static final int BO_right_image_path = 6;
+	public static final int BO_left_image_path = 7;
+	public static final int BO_movement_type = 8;
+	public static final int BO_linked_behavior = 9;
+	public static final int BO_speaking_start = 10;
+	public static final int BO_speaking_end = 11;
+	public static final int BO_skip = 12;
+	public static final int BO_xcoord = 13;
+	public static final int BO_ycoord = 14;
+	public static final int BO_object_to_follow = 15;
 	
 	public String name;
 	
-	private Point position;	
+	private Point position = new Point(0, 0);	
 	private Point destination;
 	
 	public List<Behavior> behaviors;
@@ -97,7 +129,6 @@ public class Pony{
 	public void update(final long globalTime) {
 		if (this.shouldBeSleeping) {
 			if (sleeping){
-			    updateSprites(globalTime);
 				return;
 			}else{
 				sleep(globalTime);
@@ -122,9 +153,7 @@ public class Pony{
 			this.teleport();
 			hasSpawned = true;
 		}
-	    move(globalTime);
-	    updateSprites(globalTime);
-	    
+	    move(globalTime);	    
 	}
 	
 	public void updateSprites(long globalTime){
@@ -136,10 +165,13 @@ public class Pony{
 	}
 	
 	public void teleport() {
-		Point teleport_location = new Point();		
+		Point teleport_location = new Point(0, 0);		
 		for (int i = 0; i < 300; i++) {
 			// Then select a random location to appear at		
-		    teleport_location = new Point(MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.width()) + (int)RenderEngine.screenBounds.left, MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.height()) + (int)RenderEngine.screenBounds.top);
+			if(RenderEngine.screenBounds != null && RenderEngine.screenBounds.width() > 0 && RenderEngine.screenBounds.height() > 0)
+				teleport_location = new Point(
+						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.width()) + (int)RenderEngine.screenBounds.left, 
+						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.height()) + (int)RenderEngine.screenBounds.top);
 		
 		    if(isPonyOnWallpaper(teleport_location) == true) break;
 		}	
@@ -162,7 +194,12 @@ public class Pony{
 	}
 	
 	public void wakeUp(long globalTime) {
-		currentBehavior.endTime = globalTime;
+		Behavior wake_behavior = getAppropriateBehavior(Pony.AllowedMoves.MouseOver, false, null);
+		if (wake_behavior.Allowed_Movement == Pony.AllowedMoves.MouseOver) {
+			selectBehavior(wake_behavior, globalTime);
+		}else{
+			currentBehavior.endTime = globalTime;
+		}
 		sleeping = false;
 	}
 	
@@ -492,6 +529,11 @@ public class Pony{
 		if(isPonyOnScreen(position)){
 			this.currentBehavior.draw(canvas, position);
 		}		
+		if(MyLittleWallpaperService.INTERACTIONLINES){
+			if(destination.x != 0 && destination.y != 0){
+				canvas.drawLine(position.x + RenderEngine.OFFSET, position.y, destination.x + RenderEngine.OFFSET, destination.y, Sprite.renderPaint);
+			}
+		}
 	}
 	
 	public boolean isPonyAtLocation(int x, int y){
@@ -526,18 +568,22 @@ public class Pony{
 	 * @return True if visible
 	 */
 	public boolean isPonyOnScreen(Point location){
-		List<Point> points = new LinkedList<Point>();
-		points.add(new Point(location.x + RenderEngine.OFFSET, location.y));
-		points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
-		points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y));
-		points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
-
-		for (Point point : points) {
-			if (RenderEngine.visibleScreenArea.contains(point.x, point.y) == true) {
-				return true;
+		try{
+			List<Point> points = new LinkedList<Point>();
+			points.add(new Point(location.x + RenderEngine.OFFSET, location.y));
+			points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
+			points.add(new Point(location.x + this.currentBehavior.getCurrentImage().getSpriteWidth() + RenderEngine.OFFSET, location.y));
+			points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.currentBehavior.getCurrentImage().getSpriteHeight()));
+	
+			for (Point point : points) {
+				if (RenderEngine.visibleScreenArea.contains(point.x, point.y) == true) {
+					return true;
+				}
 			}
+			return false;
+		}catch(Exception e){
+			return true;
 		}
-		return false;
 	}
 	
 	public boolean isPonyInAvoidanceArea(Point location){
@@ -929,4 +975,125 @@ public class Pony{
 	public Point getLocation() {
 		return this.position;
 	}
+	
+	public static Pony fromFile(File localFolder, boolean onlyName){
+    	Pony newPony = new Pony("Derp");
+    	try{
+		    String line = "";
+		    File iniFile = new File(localFolder, "pony.ini");
+		    BufferedReader br = new BufferedReader(new FileReader(iniFile));
+		    while ((line = br.readLine()) != null) {		    	
+			           if(line.startsWith("'")) continue; //skip comments
+			           if(line.toLowerCase().startsWith("name")){ newPony = new Pony(line.substring(5)); if(onlyName) { return newPony; } continue;}
+			           if(line.toLowerCase().startsWith("behavior")){
+				           	String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");
+				           	
+				           	AllowedMoves movement = AllowedMoves.None;
+				           	String linked_behavior = "";
+							int xcoord = 0;
+							int ycoord = 0;
+							String follow = "";
+							boolean skip = false;
+							
+				           	
+							if (columns[BO_movement_type].trim().equalsIgnoreCase("none")) {
+								movement = AllowedMoves.None;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("horizontal_only")) {
+								movement = AllowedMoves.Horizontal_Only;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("vertical_only")) {
+								movement = AllowedMoves.Vertical_Only;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("horizontal_vertical")) {
+								movement = AllowedMoves.Horizontal_Vertical;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_only")) {
+								movement = AllowedMoves.Diagonal_Only;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_horizontal")) {
+								movement = AllowedMoves.Diagonal_Horizontal;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_vertical")) {
+								movement = AllowedMoves.Diagonal_Vertical;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("all")) {
+								movement = AllowedMoves.All;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("mouseover")) {
+								movement = AllowedMoves.MouseOver;
+							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("sleep")) {
+								movement = AllowedMoves.Sleep;
+							}
+							
+							if(columns[BO_right_image_path].trim().endsWith(".gif") == false)
+								continue;
+							
+							if (columns.length > BO_linked_behavior) {
+								linked_behavior = columns[BO_linked_behavior].trim();
+								skip = Boolean.parseBoolean(columns[BO_skip].trim());
+								xcoord = Integer.parseInt(columns[BO_xcoord].trim());
+								ycoord = Integer.parseInt(columns[BO_ycoord].trim());
+								follow = columns[BO_object_to_follow].trim();
+							}
+							
+				            newPony.addBehavior(
+				            		columns[BO_name], 
+				            		Double.parseDouble(columns[BO_probability]), 
+				            		Double.parseDouble(columns[BO_max_duration]), 
+				            		Double.parseDouble(columns[BO_min_duration]),
+				            		Double.parseDouble(columns[BO_speed]),
+				            		localFolder.getPath() + "/" + columns[BO_right_image_path].trim(), 
+				            		localFolder.getPath() + "/" + columns[BO_left_image_path].trim(), 
+				            		movement, 
+				            		linked_behavior, 
+				            		skip, 
+				            		xcoord, 
+				            		ycoord,
+				            		follow);
+				            newPony.linkBehaviors();
+				            continue;
+			           } // Behavior
+			           if(line.toLowerCase().startsWith("effect")){
+							String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");							
+							boolean found_behavior = false;
+							
+							// Try to find the behavior to associate with
+							for (Behavior behavior : newPony.behaviors) {
+								if (behavior.name.equalsIgnoreCase(columns[EF_behavior_name].replace('"', ' ').trim())) {
+									Directions direction_right = Directions.center;
+									Directions centering_right = Directions.center;
+									Directions direction_left = Directions.center;
+									Directions centering_left = Directions.center;
+									
+									try {
+										direction_right = ToolSet.getDirection(columns[EF_location_right]);
+										centering_right = ToolSet.getDirection(columns[EF_center_right]);
+										direction_left = ToolSet.getDirection(columns[EF_location_left]);
+										centering_left = ToolSet.getDirection(columns[EF_center_left]);
+									} catch (Exception ex) {
+										// Debug output
+										System.out.println("Invalid placement direction or centering for effect " + columns[EF_effect_name] + " for pony " + newPony.name + ":\n" + line);
+									}
+																		
+							        // This is where we load the animation image
+									String rightimage = localFolder.getPath() + "/" + columns[EF_right_image].trim();
+									String leftimage = localFolder.getPath() + "/" + columns[EF_left_image].trim();									
+									// Add the effect to the behavior if the image loaded correctly
+									behavior.addEffect(columns[EF_effect_name].replace('"', ' ').trim(), rightimage, leftimage, Double.parseDouble(columns[EF_duration].trim()), Double.parseDouble(columns[EF_delay_before_next].trim()), direction_right, centering_right, direction_left, centering_left, Boolean.parseBoolean(columns[EF_follow].trim()));
+									found_behavior = true;
+									break;
+								}
+							}
+							if (!found_behavior) {
+								// Debug output
+								System.out.println("Could not find behavior for effect " + columns[1] + " for pony " + newPony.name + ":\n" + line);
+							}
+			           } // Effect
+		    		
+		    	}
+	        br.close();
+	        Log.i("loading", newPony.name + " with " + newPony.behaviors.size() + " Behaviors");
+		  	
+    	}catch (Exception e) {
+			e.printStackTrace();
+		}
+		return newPony;
+    }
+	
+    public static Pony fromFile(File localFolder){
+    	return Pony.fromFile(localFolder, false);
+    }
 }

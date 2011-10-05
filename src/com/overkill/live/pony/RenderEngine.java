@@ -29,7 +29,10 @@ public class RenderEngine {
 	
 	public static int TOP_PADDING = 50;
 	
+	//private UpdateThread updateThread;
     private RenderThread renderThread;
+    
+    
     private SurfaceHolder surfaceHolder;
     private Context context;
     private boolean visible = false;
@@ -42,6 +45,7 @@ public class RenderEngine {
 	private long lastTimeDrawn;
 	
     public static ArrayList<Pony> activePonies = new ArrayList<Pony>();
+    
 	private long realFPS;
 	
 	private Point screenCenter;
@@ -50,7 +54,7 @@ public class RenderEngine {
 	public static Rect screenBounds;
 	public static Rect visibleScreenArea;
 	
-	public static boolean loading = false;
+	//public static boolean loading = false;
 	
 	public RenderEngine(Context context, SurfaceHolder surfaceHolder){        
     	backgroundTextPaint.setColor(Color.WHITE);
@@ -59,45 +63,54 @@ public class RenderEngine {
     	RenderEngine.visibleScreenArea = new Rect(0, 0, 0, 0);
     	this.surfaceHolder = surfaceHolder;
     	this.context = context;
-    	this.renderThread = new RenderThread(this);
-    	/*WallpaperManager wm  = WallpaperManager.getInstance(this.context);
-   		this.setWallpaperSize(wm.getDesiredMinimumWidth(), wm.getDesiredMinimumHeight());*/
     	this.lastTimeDrawn = 0;
     	this.visible = true;
+    	
+    	//this.updateThread = new UpdateThread(this);
+    	this.renderThread = new RenderThread(this);
 	}
 	
-    public void render(){
-    	if(visible == false) return;
-    	long renderStartTime = SystemClock.elapsedRealtime();    	
+	public void render(){
+		this.render(SystemClock.elapsedRealtime());
+	}
+	
+    public void render(long globalTime){
+    	if(visible == false) return;   	
     	// Do only render if enough time elapsed since last time rendering 
-        if((renderStartTime - lastTimeDrawn) < RenderEngine.CONFIG_FRAME_DELAY) return;
-
+        // if((globalTime - lastTimeDrawn) < RenderEngine.CONFIG_FRAME_DELAY) return;
         Canvas canvas = null;
         try{
             canvas = this.surfaceHolder.lockCanvas(null);
             synchronized (this.surfaceHolder) {
-                this.drawFrame(canvas);
+                this.drawFrame(canvas, globalTime);
             }
         }finally{
             if(canvas != null){
                 this.surfaceHolder.unlockCanvasAndPost(canvas);
             }
         }
-    	realFPS = 1000 / Math.max(1, (renderStartTime - lastTimeDrawn));
-        lastTimeDrawn = renderStartTime;
+    	realFPS = 1000 / Math.max(1, (globalTime - lastTimeDrawn));
+        lastTimeDrawn = globalTime;
     }
 
-    protected void drawFrame(Canvas canvas) {   	
-        long currentTime = SystemClock.elapsedRealtime();
+    public void update(long globalTime){
+    	for(int i=0; i < activePonies.size(); i++){
+       		activePonies.get(i).update(globalTime);
+       		activePonies.get(i).updateSprites(globalTime);
+       	}
+    }
+    
+    protected void drawFrame(Canvas canvas, long globalTime) {   	
         try {
-        	if(RenderEngine.loading == true){ this.renderLoadingText(canvas); return; }
-            this.renderBackground(canvas);
-            if (canvas != null) {
-	               	for(int i=0; i < activePonies.size(); i++){
-	               		Pony p = activePonies.get(i);
-	               	    p.update(currentTime);
-	  	               	p.draw(canvas);
-	               	}
+        	if (canvas != null) {
+        		//if(RenderEngine.loading == true){ this.renderLoadingText(canvas); return; }
+        		this.renderBackground(canvas);
+//        		if(updateThread.ready == false) return;
+	            for(int i=0; i < activePonies.size(); i++){
+	           		activePonies.get(i).update(globalTime);
+	           		activePonies.get(i).updateSprites(globalTime);
+	            	activePonies.get(i).draw(canvas);
+	            }
            }
         } catch (Exception e) {
         	e.printStackTrace();
@@ -128,12 +141,13 @@ public class RenderEngine {
     }
     
     public void start(){
-    	this.renderThread = new RenderThread(this);
+//    	this.updateThread.startUpdate();
         this.renderThread.startRender();
     }
 
     public void stop(){
         boolean retry = true;
+//        this.updateThread.stopUpdate();
         this.renderThread.stopRender();
         while (retry) {
             try {
@@ -146,7 +160,7 @@ public class RenderEngine {
     }      
     
     public void setFrameSize(int w, int h){
-    	RenderEngine.visibleScreenArea = new Rect(0, 0, w, h);
+    	RenderEngine.visibleScreenArea = new Rect(0, TOP_PADDING, w, h);
     	if(RenderEngine.screenBounds.width() <= 0 || RenderEngine.screenBounds.height() <= 0){
         	this.setWallpaperSize(w, h);   		
     	}
@@ -154,7 +168,7 @@ public class RenderEngine {
     }
     
     public void setWallpaperSize(int w, int h){
-        RenderEngine.screenBounds = new Rect(0, 0, w, h);
+        RenderEngine.screenBounds = new Rect(0, TOP_PADDING, w, h);
     	this.wallpaperCenter = new Point(w / 2, h / 2);
     	Log.i("setWallpaperSize", "w="+w+" h="+h);
     }
@@ -234,10 +248,12 @@ public class RenderEngine {
     }
     
     public void pause(){
+//    	this.updateThread.pauseUpdate();
     	this.renderThread.pauseRender();
     }
     
     public void resume(){
-    	 this.renderThread.resumeRender();
+//    	this.updateThread.resumeUpdate();
+    	this.renderThread.resumeRender();
     }
 }

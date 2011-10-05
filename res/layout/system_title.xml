@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout style="?android:attr/windowTitleBackgroundStyle"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:id="@android:id/title" style="?android:attr/windowTitleStyle" />
+    <ProgressBar style="@style/CustomWindowTitleProgressCircular" /> 
+    <ImageView style="@style/CustomWindowTitleSeparator" android:visibility="gone" android:id="@+id/sep_title_download_all"  /> 
+    <ImageButton android:id="@+id/btn_title_download_all" 
+    			 android:src="@drawable/arrowdown_download" 
+    			 style="@style/CustomWindowTitleAction"
+    			 android:visibility="gone" /> 
+    <ImageView style="@style/CustomWindowTitleSeparator" android:visibility="gone" android:id="@+id/sep_title_update_all"  /> 
+    <ImageButton android:id="@+id/btn_title_update_all" 
+    			 android:src="@drawable/arrowdown_update" 
+    			 style="@style/CustomWindowTitleAction"
+    			 android:visibility="gone" /> 
+    <ImageView style="@style/CustomWindowTitleSeparator" android:visibility="gone" android:id="@+id/sep_title_set" />			 
+    <ImageButton android:id="@+id/btn_title_set" 
+    			 android:src="@drawable/ic_menu_set_as" 
+    			 style="@style/CustomWindowTitleAction"
+    			 android:visibility="gone" /> 
+<!--     <ImageView style="@style/CustomWindowTitleSeparator" />			  -->
+<!--     <ImageButton android:id="@+id/btn_title_search"  -->
+<!--     			 android:src="@android:drawable/ic_menu_search"  -->
+<!--     			 style="@style/CustomWindowTitleAction" />  -->
+    <ImageView style="@style/CustomWindowTitleSeparator" />			 
+    <ImageButton android:id="@+id/btn_title_help" 
+    			 android:src="@android:drawable/ic_menu_help" 
+    			 style="@style/CustomWindowTitleAction" /> 
+</LinearLayout>

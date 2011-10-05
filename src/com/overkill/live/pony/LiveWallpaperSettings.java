@@ -87,8 +87,15 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		else
 			localFolder = new File(getFilesDir(), "ponies");
         
-        if(localFolder.exists() == false)
-        	localFolder.mkdir();
+        if(localFolder.exists() == false || localFolder.isDirectory() == false){
+			localFolder.mkdir();
+			File nomedia = new File(localFolder, ".nomedia");
+			try {
+				nomedia.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
         
 		try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);
