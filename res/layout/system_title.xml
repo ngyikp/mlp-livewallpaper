@@ -22,6 +22,11 @@
 <!--     <ImageButton android:id="@+id/btn_title_search"  -->
 <!--     			 android:src="@android:drawable/ic_menu_search"  -->
 <!--     			 style="@style/CustomWindowTitleAction" />  -->
+	<ImageView style="@style/CustomWindowTitleSeparator" android:visibility="gone" android:id="@+id/sep_title_preferences" />			 		 
+    <ImageButton android:id="@+id/btn_title_preferences" 
+    			 android:src="@android:drawable/ic_menu_preferences"
+    			 style="@style/CustomWindowTitleAction"
+    			 android:visibility="gone" />
     <ImageView style="@style/CustomWindowTitleSeparator" />			 
     <ImageButton android:id="@+id/btn_title_help" 
     			 android:src="@android:drawable/ic_menu_help" 

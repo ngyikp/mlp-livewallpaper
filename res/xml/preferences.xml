@@ -21,10 +21,12 @@
 </PreferenceCategory><PreferenceCategory android:key="display_settings" android:title="@string/display_settings_title"><ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference><EditTextPreference android:key="pony_scale" android:defaultValue="1" android:title="@string/pony_scale_title" android:summary="@string/pony_scale_summary" android:inputType="numberDecimal"></EditTextPreference>
     
     
-</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="@string/more_settings_title"><CheckBoxPreference android:key="force_local_storage" android:defaultValue="false" android:title="@string/force_local_storage_title" android:summary="@string/force_local_storage_summary" android:enabled="false"></CheckBoxPreference>
+</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="@string/more_settings_title"><CheckBoxPreference android:defaultValue="false" android:title="@string/force_local_storage_title" android:summary="@string/force_local_storage_summary" android:enabled="true" android:key="force_internal_storage"></CheckBoxPreference>
     <Preference android:key="more_about" android:title="@string/app_name" android:summary="© 2011 ov3rk1ll"></Preference>
     <Preference android:title="Version" android:key="more_version" android:summary="1.0"></Preference>
-    <Preference android:key="more_link" android:summary="http://android.ov3rk1ll.com" android:title="@string/more_link_title"></Preference>
+    <!-- <Preference android:key="more_link_web" android:title="Visit http://android.ov3rk1ll.com"></Preference>  -->
+    <Preference android:key="more_link_twitter" android:title="Follow on Twitter"></Preference>
+    <Preference android:key="more_link_facebook" android:title="Like on Facebook"></Preference>
     <Preference android:title="@string/more_donate_paypal_title" android:key="more_donate_paypal" android:summary="@string/more_donate_paypal_summary"></Preference>
     
     <CheckBoxPreference android:key="debug_info" android:summary="@string/debug_info_summary" android:title="@string/debug_info_title"></CheckBoxPreference>

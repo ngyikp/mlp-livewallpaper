@@ -7,10 +7,9 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 
+import com.overkill.live.pony.LiveWallpaperSettings;
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
 import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
@@ -22,19 +21,24 @@ import android.app.ListActivity;
 import android.app.WallpaperInfo;
 import android.app.WallpaperManager;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.SharedPreferences.Editor;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.Html;
 import android.text.Html.ImageGetter;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -43,7 +47,6 @@ import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
@@ -88,22 +91,40 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		 ((ImageButton)findViewById(R.id.btn_title_set)).setVisibility(v);
 		 ((ImageView)findViewById(R.id.sep_title_set)).setVisibility(v);
 	}
+	
+	public void setPreferencesVisibility(boolean visible){
+		 int v = (visible) ? View.VISIBLE : View.GONE;
+		 ((ImageButton)findViewById(R.id.btn_title_preferences)).setVisibility(v);
+		 ((ImageView)findViewById(R.id.sep_title_preferences)).setVisibility(v);
+	}
 	 
 	public void updateTitle(){
 		setDownloadAllVisibility(false);
 		setUpdateAllVisibility(false);
 		setSetButtonVisibility(false);
-		if(adapter.hasUpdate())
-			setUpdateAllVisibility(true);
-		if(adapter.hasNotInstalled())
-			setDownloadAllVisibility(true);
+		setPreferencesVisibility(false);
+		
+		if(isWallpaperInUse() == false){
+			setSetButtonVisibility(true);
+		}
+		if(isWallpaperInUse()){
+			setPreferencesVisibility(true);
+		}
+		
+		if(adapter != null){
+			if(adapter.hasUpdate())
+				setUpdateAllVisibility(true);
+			if(adapter.hasNotInstalled())
+				setDownloadAllVisibility(true);
+		}		
+	}
+	
+	private boolean isWallpaperInUse(){
 		WallpaperInfo currentWallpaper = WallpaperManager.getInstance(this).getWallpaperInfo();
 		if(currentWallpaper == null){
-			setSetButtonVisibility(true);
+			return false;
 		}else{
-			if(currentWallpaper.getPackageName().equals("com.overkill.live.pony") == false){
-				setSetButtonVisibility(true);				
-			}
+			return currentWallpaper.getPackageName().equals("com.overkill.live.pony");
 		}
 	}
 	 
@@ -164,23 +185,13 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	}
 	
 	public void onTitleClick(View view){
+		Log.i("onTitleClick", "btn_title_preferences");
 		switch (view.getId()) {
+		case R.id.btn_title_preferences:
+			startActivity(new Intent(this, LiveWallpaperSettings.class));
+			break;
 		case R.id.btn_title_help:	
-			Builder dialog = new AlertDialog.Builder(this);
-			dialog.setTitle(R.string.manager_help);
-			dialog.setIcon(android.R.drawable.ic_menu_help);
-			dialog.setMessage(Html.fromHtml(getString(R.string.help_text), new ImageGetter() {				
-				@Override
-				public Drawable getDrawable(String source) {
-					int resId = getResources().getIdentifier("drawable/" + source, null, getPackageName());
-					Drawable d = getResources().getDrawable(resId);
-					d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-					Log.i("ImageGetter", source + " > " + resId);
-					return d;
-				}
-			}, null));
-			dialog.setPositiveButton(android.R.string.ok, null);
-			dialog.show();			
+			showHelpDialog();
 			break;
 		case R.string.manager_update_all:
 			for(int i = 0; i < adapter.getCount(); i++){
@@ -241,20 +252,9 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		super.onCreate(savedInstanceState);      
 	    setContentView(R.layout.pony_manager);	
 	    getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.system_title);
-		if(isSDMounted())
-			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
-		else
-			localFolder = new File(getFilesDir(), "ponies");
-		
-		if(localFolder.isDirectory() == false){
-			localFolder.mkdir();
-			File nomedia = new File(localFolder, ".nomedia");
-			try {
-				nomedia.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+	    updateTitle();
+		localFolder = PonyManager.selectFolder(this);
+
 		registerForContextMenu(getListView());
 		getListView().setOnItemClickListener(new OnItemClickListener() {
 			@Override
@@ -291,18 +291,13 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		
 	}
 	
-	public static boolean isSDMounted(){
-		String state = Environment.getExternalStorageState();
-		return state.equals(Environment.MEDIA_MOUNTED);
-	}
-	
 	private ArrayList<DownloadPony> loadPonies(){
 		ArrayList<DownloadPony> r = new ArrayList<DownloadPony>();
 		try {
 			URL listFile = new URL(REMOTE_BASE_URL + "ponies.lst");
 			URLConnection urlCon = listFile.openConnection();
-			urlCon.setConnectTimeout(5000);
-			urlCon.setReadTimeout(5000);
+			urlCon.setConnectTimeout(10000);
+			urlCon.setReadTimeout(10000);
 			BufferedReader br = new BufferedReader(new InputStreamReader(urlCon.getInputStream()));
 			String line = "";
 			int count = 0;
@@ -326,8 +321,9 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		} catch (final Exception e) {
 			runOnUiThread(new Runnable() {			
 				@Override
-				public void run() {	Toast.makeText(PonyManager.this, "Error loading Ponies\nPlease make sure you are connected to the internet", Toast.LENGTH_LONG).show(); }
+				public void run() {	Toast.makeText(PonyManager.this, "Error loading Ponies\nPlease make sure you are connected to the internet\n" + e.getMessage(), Toast.LENGTH_LONG).show(); }
 			});
+			e.printStackTrace();
 		}	
 		return r;
 	}
@@ -418,4 +414,97 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		adapter.notifyDataSetChanged();
 		updateTitle();
 	}
+	
+	private void showHelpDialog(){
+		Builder dialog = new AlertDialog.Builder(this);
+		dialog.setTitle(getString(R.string.manager_help));
+		try {
+			PackageInfo pinfo = getPackageManager().getPackageInfo("com.overkill.live.pony" ,0);
+			dialog.setTitle(getString(R.string.app_name) + " v" + pinfo.versionName);
+		} catch (NameNotFoundException e) {
+		}
+		dialog.setIcon(android.R.drawable.ic_menu_help);
+		dialog.setMessage(Html.fromHtml(getString(R.string.help_text), new ImageGetter() {				
+			@Override
+			public Drawable getDrawable(String source) {
+				int resId = getResources().getIdentifier("drawable/" + source, null, getPackageName());
+				Drawable d = getResources().getDrawable(resId);
+				d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+				Log.i("ImageGetter", source + " > " + resId);
+				return d;
+			}
+		}, null));
+		dialog.setPositiveButton(android.R.string.ok, null);
+		dialog.setNegativeButton("Follow on Twitter", new OnClickListener() {				
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(LiveWallpaperSettings.URL_TWITTER));
+				startActivity(i);	
+				dialog.dismiss();
+			}
+		});
+		dialog.setNeutralButton("Like on Facebook", new OnClickListener() {				
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(LiveWallpaperSettings.URL_FACEBOOK));
+				startActivity(i);
+				dialog.dismiss();
+			}
+		});
+		dialog.show();			
+	}
+	
+	public static boolean isSDMounted(){
+		String state = Environment.getExternalStorageState();
+		return state.equals(Environment.MEDIA_MOUNTED);
+	}
+	
+	public static File selectForcedFolder(Context context, boolean internalStorage){
+		SharedPreferences preferences = context.getSharedPreferences(MyLittleWallpaperService.SETTINGS_NAME, MODE_PRIVATE);
+    	File folder = null;
+    	if(internalStorage){
+    		folder = new File(context.getFilesDir(), "ponies");    
+    	}else{
+    		folder = new File(Environment.getExternalStorageDirectory(), "ponies");
+    	}
+    	Editor editor = preferences.edit();
+		editor.putString("localFolder", folder.getPath());
+		editor.commit();
+		PonyManager.createNoMedia(folder);
+		return folder;
+	}
+	
+    public static File selectFolder(Context context){    	
+		SharedPreferences preferences = context.getSharedPreferences(MyLittleWallpaperService.SETTINGS_NAME, MODE_PRIVATE);
+    	String path = preferences.getString("localFolder", null);
+    	File folder = null;
+    	if(path == null){ // Choose for the first time
+    		if(PonyManager.isSDMounted())
+    			folder = new File(Environment.getExternalStorageDirectory(), "ponies");
+    		else
+    			folder = new File(context.getFilesDir(), "ponies");    
+    		Editor editor = preferences.edit();
+    		editor.putString("localFolder", folder.getPath());
+    		editor.commit();
+    	}else{
+    		folder = new File(path);
+    	}
+
+    	// create folder and place .nomedia file if needed
+		PonyManager.createNoMedia(folder);
+    	return folder;
+    }
+    
+    public static void createNoMedia(File folder){
+    	if(folder.isDirectory() == false){
+    		folder.mkdir();
+		}
+    	File nomedia = new File(folder, ".nomedia");
+    	if(nomedia.exists()) return;
+		try {
+			nomedia.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
 }

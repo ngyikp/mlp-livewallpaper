@@ -1,11 +1,15 @@
 package com.overkill.ponymanager;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.overkill.live.pony.ToolSet;
 
 import android.graphics.Bitmap;
 
 public class DownloadPony {	
 	private String name;
+	private List<String> categories = new LinkedList<String>();
 	private String folder;
 	private int state;
 	private Bitmap image;
@@ -26,7 +30,7 @@ public class DownloadPony {
 	public String getName() {
 		return name;
 	}
-
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -90,7 +94,20 @@ public class DownloadPony {
 	public void setLastUpdate(long lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}	
+		
+	public List<String> getCategories() {
+		return categories;
+	}
+
+	public void setCategories(List<String> categories) {
+		this.categories = categories;
+	}
 	
+	public void addCategory(String category) {
+		this.categories.add(category);
+	}
+
+
 	@Override
 	public boolean equals(Object o) {
 		return this.getName().equals(((DownloadPony) o).getName());

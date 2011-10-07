@@ -1,7 +1,10 @@
-package com.overkill.live.pony;
+package com.overkill.live.pony.engine;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+
+import com.overkill.live.pony.MyLittleWallpaperService;
+import com.overkill.live.pony.ToolSet;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -12,7 +15,7 @@ import android.util.Log;
 
 public class Sprite {
 	
-	private boolean loading = false;
+	//private boolean loading = false;
 	private String fileName;
 	private GifDecoder gif = null;
 	private int spriteWidth = 0;
@@ -43,7 +46,7 @@ public class Sprite {
 	 */
 	public void initialize(){
 //		if(this.loading) return;
-		this.loading = true;
+//		this.loading = true;
 		long t0 = System.currentTimeMillis();
 		try {
 			GifDecoder decoder = new GifDecoder();
@@ -65,7 +68,7 @@ public class Sprite {
 			Log.i("Sprite", e.getMessage());
 			this.initialized = false;
 		}finally{
-			this.loading = false;
+//			this.loading = false;
 		}
 	}
 	

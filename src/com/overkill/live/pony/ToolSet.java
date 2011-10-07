@@ -1,6 +1,7 @@
 package com.overkill.live.pony;
 
-import com.overkill.live.pony.Pony.Directions;
+import com.overkill.live.pony.engine.Pony;
+import com.overkill.live.pony.engine.Pony.Directions;
 
 public class ToolSet {
 	public static String[] splitWithQualifiers(String SourceText, String TextDelimiter, String TextQualifier) {

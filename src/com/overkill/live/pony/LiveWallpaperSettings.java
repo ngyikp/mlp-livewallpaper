@@ -17,6 +17,7 @@ import yuku.ambilwarna.AmbilWarnaDialog;
 import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -31,7 +32,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -46,8 +46,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class LiveWallpaperSettings extends PreferenceActivity {
-	private static final String URL = "http://android.ov3rk1ll.com";
-	private static final String PAYPAL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4E99YZ7MYNAEE";
+	public static final String URL_WEB = "http://android.ov3rk1ll.com";
+	public static final String URL_TWITTER = "https://twitter.com/OV3RK1LL";
+	public static final String URL_FACEBOOK = "http://www.facebook.com/MLPLiveWallpaper";
+	public static final String PAYPAL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4E99YZ7MYNAEE";
 	
 	private SharedPreferences sharedPreferences;
 	private Editor editor;
@@ -60,12 +62,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
     
 	private static final int CROP_FROM_CAMERA = 1;
 	private static final int PICK_FROM_FILE = 2;
-	
-	private boolean isSDMounted(){
-		String state = Environment.getExternalStorageState();
-		return state.equals(Environment.MEDIA_MOUNTED);
-	}
-	
+		
 	@Override
 	protected void onDestroy() {
 		editor.commit();
@@ -80,35 +77,28 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         
         sharedPreferences = getPreferenceManager().getSharedPreferences();
         editor = sharedPreferences.edit();
-        
-        
-        if(isSDMounted())
-			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
-		else
-			localFolder = new File(getFilesDir(), "ponies");
-        
-        if(localFolder.exists() == false || localFolder.isDirectory() == false){
-			localFolder.mkdir();
-			File nomedia = new File(localFolder, ".nomedia");
-			try {
-				nomedia.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+
+        localFolder = PonyManager.selectFolder(this);
         
 		try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);
 	        ((Preference)findPreference("more_version")).setSummary(pinfo.versionName);
 		} catch (NameNotFoundException e) {
 		}
-		
-		Preference link = (Preference)findPreference("more_link");
-		link.setSummary(URL);
-		link.setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+				
+		((Preference)findPreference("more_link_twitter")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(URL));
+				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(URL_TWITTER));
+				startActivity(i);
+				return true;
+			}
+		});
+		
+		((Preference)findPreference("more_link_facebook")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(URL_FACEBOOK));
 				startActivity(i);
 				return true;
 			}
@@ -131,14 +121,49 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				return true;
 			}
 		});
-		
-		((CheckBoxPreference)findPreference("force_local_storage")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+
+		((CheckBoxPreference)findPreference("force_internal_storage")).setSummary(localFolder.getPath());
+		((CheckBoxPreference)findPreference("force_internal_storage")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
-				boolean value = (Boolean) newValue;
-				if(value == false && isSDMounted() == false) return false; // want to save on sd but has no sd card
-				// TODO move already installed ponies
-				return true;
+				final boolean value = (Boolean) newValue;
+				if(value == false && PonyManager.isSDMounted() == false) return false; // want to save on sd but has no sd card
+
+				Log.i("force_internal_storage", "changed to " + value);
+				
+				final File newFolder = PonyManager.selectForcedFolder(LiveWallpaperSettings.this, value);
+				if(newFolder.equals(localFolder) == false){
+					final ProgressDialog dialog = new ProgressDialog(LiveWallpaperSettings.this);
+					dialog.setMessage("From:\n" + localFolder.getPath() + "\nTo:\n" + newFolder.getPath() + "\nPlease wait...");
+					dialog.setTitle("Moving Ponies");
+					dialog.setCancelable(false);
+					Thread thread = new Thread(new Runnable() {						
+						@Override
+						public void run() {
+							Log.i("move", "treecopy " + localFolder.getPath() + " > " + newFolder.getPath());
+							try {
+								movePonies(localFolder, newFolder);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							Log.i("move", "treecopy done");
+							localFolder = newFolder;
+							editor.putBoolean("changed_folder", true);		
+							runOnUiThread(new Runnable() {								
+								@Override
+								public void run() {
+									((CheckBoxPreference)findPreference("force_internal_storage")).setSummary(localFolder.getPath());
+									dialog.dismiss();
+									((CheckBoxPreference)findPreference("force_internal_storage")).setChecked(value);
+								}
+							});
+						}
+					});
+					dialog.show();
+					thread.start();
+					
+				}				
+				return false;
 			}
 		});
 		
@@ -174,6 +199,8 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				for(int i = 0; i < ponyFolders.length; i++){
 					String line = "";
 				    File iniFile = new File(ponyFolders[i], "pony.ini");
+				    if(iniFile.exists() == false)
+					    iniFile = new File(ponyFolders[i], "Pony.ini");				    	
 				    BufferedReader content;
 					try {
 						content = new BufferedReader(new FileReader(iniFile));
@@ -182,8 +209,12 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 						    if(line.startsWith("Name")){ poniesName[i] = line.substring(5).trim(); break;}
 					    }
 					} catch (FileNotFoundException e) {
+						poniesName[i] = "404 Error";
+						Toast.makeText(LiveWallpaperSettings.this, "Error accessing file \"" + iniFile.getPath() + "\"", Toast.LENGTH_LONG).show();
 						e.printStackTrace();
 					} catch (IOException e) {
+						poniesName[i] = "IO Error";
+						Toast.makeText(LiveWallpaperSettings.this, "Error accessing file \"" + iniFile.getPath() + "\"", Toast.LENGTH_LONG).show();
 						e.printStackTrace();
 					}
 				    
@@ -372,8 +403,18 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	    }
 	}
 	
-	public void movePonies(File from, File to){
-		
+	public void movePonies(File from, File to) throws IOException{
+		File files[] = from.listFiles();
+		if(to.exists() == false) to.mkdir();
+		for(File file : files){
+			if(file.isDirectory()){
+				movePonies(new File(from, file.getName()), new File(to, file.getName()));
+			}else{
+				copyFile(file, new File(to, file.getName()));
+				file.delete();
+			}
+		}
+		from.delete();
 	}
 	
 	public String getRealPathFromURI(Uri contentUri) {

@@ -1,6 +1,5 @@
 package com.overkill.ponymanager;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -90,6 +89,15 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
 	
 	public void resetFilter(){
 		this.filteredPonies = new LinkedList<DownloadPony>(this.allPonies);
+	}
+	
+	public void filterByName(String name){
+		this.filteredPonies.clear();
+		for(DownloadPony p : this.allPonies){
+			if(p.getName().toLowerCase().contains(name.toLowerCase())){
+				this.filteredPonies.add(p);
+			}
+		}
 	}
 	
 	@Override

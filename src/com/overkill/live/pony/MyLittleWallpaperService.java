@@ -1,29 +1,31 @@
 package com.overkill.live.pony;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Random;
 
-import com.overkill.live.pony.Pony.AllowedMoves;
-import com.overkill.live.pony.Pony.Directions;
+import com.overkill.live.pony.engine.Pony;
+import com.overkill.live.pony.engine.RenderEngine;
 import com.overkill.ponymanager.PonyManager;
 
 import android.app.WallpaperManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
 public class MyLittleWallpaperService extends WallpaperService {
+	public static final String SETTINGS_NAME = "mlpWallpaper";	
 	public static final String TAG = "mlpWallpaper";	
 	public static String VERSION = "";
 	// Settings
@@ -39,26 +41,39 @@ public class MyLittleWallpaperService extends WallpaperService {
 
     public File localFolder;
 
+    private BroadcastReceiver mStorageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Log.i("ExternalMediaFormatActivity", "got action " + action);
+            File sdcardFolder = PonyManager.selectForcedFolder(context, false);
+            File usedFolder = PonyManager.selectFolder(context);
+            if(sdcardFolder.equals(usedFolder)){
+            	SharedPreferences preferences = context.getSharedPreferences(TAG, MODE_PRIVATE);  
+            	Editor editor = preferences.edit();
+            	editor.putBoolean("changed_folder", true);
+            	editor.commit();
+            }
+        }
+    };
+    
     @Override
     public void onCreate() {    	
         super.onCreate();                       
         try {
-			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);
+			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(), 0);
 	        VERSION = pinfo.versionName;
 		} catch (NameNotFoundException e) {;}        
-        rand = new Random();              
-        selectLocalFolder();
+        rand = new Random();
+        localFolder = PonyManager.selectFolder(this);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+        registerReceiver(mStorageReceiver, filter);
     }
     
-    public void selectLocalFolder(){
-    	if(PonyManager.isSDMounted())
-			localFolder = new File(Environment.getExternalStorageDirectory(), "ponies");
-		else
-			localFolder = new File(getFilesDir(), "ponies");    
-    }
-                    
     @Override
     public void onDestroy() {
+    	unregisterReceiver(mStorageReceiver);
         super.onDestroy();
     }
 
@@ -70,11 +85,11 @@ public class MyLittleWallpaperService extends WallpaperService {
     class SpriteEngine extends Engine implements SharedPreferences.OnSharedPreferenceChangeListener {
     	private RenderEngine engine;
         private SharedPreferences preferences;
-        private boolean previewMode = false;
+//        private boolean previewMode = false;
 		//private boolean ready = false;
         
         SpriteEngine() {
-        	this.previewMode = false;
+//        	this.previewMode = false;
         }
 
         @Override
@@ -91,7 +106,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         }
         
         public void loadSelectablePonies(){
-        	selectLocalFolder();
+        	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
 			if(localFolder.exists()){
 				try {
 					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
@@ -141,6 +156,12 @@ public class MyLittleWallpaperService extends WallpaperService {
 					if(sharedPreferences.getBoolean("changed_pony", false) == true){
 						selectPonies(sharedPreferences);
 						editor.putBoolean("changed_pony", false);
+					}
+					if(sharedPreferences.getBoolean("changed_folder", false) == true){
+						this.engine.reloadLocalFolder();
+						loadSelectablePonies();
+						selectPonies(sharedPreferences);
+						editor.putBoolean("changed_folder", false);
 					}
 					editor.commit();
 					

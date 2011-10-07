@@ -1,7 +1,11 @@
-package com.overkill.live.pony;
+package com.overkill.live.pony.engine;
 
 import java.io.File;
 import java.util.ArrayList;
+
+import com.overkill.live.pony.MyLittleWallpaperService;
+import com.overkill.live.pony.R;
+import com.overkill.ponymanager.PonyManager;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -26,12 +30,12 @@ public class RenderEngine {
 	public static int CONFIG_FRAME_DELAY = 1000 / CONFIG_FPS;
 	public static float CONFIG_SCALE = 1.0f;
 	public static int OFFSET;
+    public static File localFolder;
 	
 	public static int TOP_PADDING = 50;
 	
 	//private UpdateThread updateThread;
-    private RenderThread renderThread;
-    
+    private RenderThread renderThread;    
     
     private SurfaceHolder surfaceHolder;
     private Context context;
@@ -65,6 +69,7 @@ public class RenderEngine {
     	this.context = context;
     	this.lastTimeDrawn = 0;
     	this.visible = true;
+    	RenderEngine.localFolder = PonyManager.selectFolder(this.context);
     	
     	//this.updateThread = new UpdateThread(this);
     	this.renderThread = new RenderThread(this);
@@ -103,8 +108,8 @@ public class RenderEngine {
     protected void drawFrame(Canvas canvas, long globalTime) {   	
         try {
         	if (canvas != null) {
-        		//if(RenderEngine.loading == true){ this.renderLoadingText(canvas); return; }
-        		this.renderBackground(canvas);
+        		if(localFolder.canRead() == false){ this.renderLoadingText(canvas, "Waiting for filesystem... " + localFolder.getPath()); return; }   
+        		this.renderBackground(canvas);     		
 //        		if(updateThread.ready == false) return;
 	            for(int i=0; i < activePonies.size(); i++){
 	           		activePonies.get(i).update(globalTime);
@@ -135,14 +140,15 @@ public class RenderEngine {
     	}
     }   
     
-    private void renderLoadingText(Canvas c){
+    private void renderLoadingText(Canvas c, String text){
     	backgroundTextPaint.setTextAlign(Align.CENTER);
-		c.drawText("loading... Please wait", screenCenter.x, screenCenter.y, backgroundTextPaint);
+		c.drawText(text, screenCenter.x, screenCenter.y, backgroundTextPaint);
     }
     
     public void start(){
 //    	this.updateThread.startUpdate();
-        this.renderThread.startRender();
+		this.renderThread = new RenderThread(this);
+    	this.renderThread.startRender();
     }
 
     public void stop(){
@@ -153,7 +159,7 @@ public class RenderEngine {
             try {
                 this.renderThread.join();
                 retry = false;
-            } catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                 // we will try it again and again...
             }
         }
@@ -247,7 +253,19 @@ public class RenderEngine {
     		setWallpaperSize(-1, -1);
     }
     
-    public void pause(){
+    public File getLocalFolder() {
+		return localFolder;
+	}
+
+	public void setLocalFolder(File localFolder) {
+		RenderEngine.localFolder = localFolder;
+	}
+	
+	public void reloadLocalFolder(){
+		RenderEngine.localFolder = PonyManager.selectFolder(this.context);		
+	}
+
+	public void pause(){
 //    	this.updateThread.pauseUpdate();
     	this.renderThread.pauseRender();
     }

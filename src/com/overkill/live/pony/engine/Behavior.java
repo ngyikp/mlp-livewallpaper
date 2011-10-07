@@ -1,4 +1,4 @@
-package com.overkill.live.pony;
+package com.overkill.live.pony.engine;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -6,7 +6,8 @@ import java.util.List;
 import android.graphics.Canvas;
 import android.graphics.Point;
 
-import com.overkill.live.pony.Pony.AllowedMoves;
+import com.overkill.live.pony.MyLittleWallpaperService;
+import com.overkill.live.pony.engine.Pony.AllowedMoves;
 
 public class Behavior {
 	public String name;

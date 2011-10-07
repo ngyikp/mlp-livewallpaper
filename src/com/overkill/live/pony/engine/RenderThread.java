@@ -1,7 +1,6 @@
-package com.overkill.live.pony;
+package com.overkill.live.pony.engine;
 
 import android.os.SystemClock;
-import android.util.Log;
 
 public class RenderThread extends Thread {
 

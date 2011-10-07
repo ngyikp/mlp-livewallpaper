@@ -1,4 +1,4 @@
-package com.overkill.live.pony;
+package com.overkill.live.pony.engine;
 
 
 import java.io.BufferedReader;
@@ -7,6 +7,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.overkill.live.pony.MyLittleWallpaperService;
+import com.overkill.live.pony.ToolSet;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
@@ -981,6 +984,8 @@ public class Pony{
     	try{
 		    String line = "";
 		    File iniFile = new File(localFolder, "pony.ini");
+		    if(iniFile.exists() == false)
+			    iniFile = new File(localFolder, "Pony.ini");		
 		    BufferedReader br = new BufferedReader(new FileReader(iniFile));
 		    while ((line = br.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
