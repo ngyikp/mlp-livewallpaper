@@ -122,8 +122,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 
-		((CheckBoxPreference)findPreference("force_internal_storage")).setSummary(localFolder.getPath());
-		((CheckBoxPreference)findPreference("force_internal_storage")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+		final CheckBoxPreference force_internal_storage = (CheckBoxPreference)findPreference("force_internal_storage");
+		force_internal_storage.setSummary(getString(R.string.force_local_storage_summary, localFolder.getPath()));
+		force_internal_storage.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				final boolean value = (Boolean) newValue;
@@ -152,9 +153,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 							runOnUiThread(new Runnable() {								
 								@Override
 								public void run() {
-									((CheckBoxPreference)findPreference("force_internal_storage")).setSummary(localFolder.getPath());
+									force_internal_storage.setSummary(getString(R.string.force_local_storage_summary, localFolder.getPath()));
+									force_internal_storage.setChecked(value);
 									dialog.dismiss();
-									((CheckBoxPreference)findPreference("force_internal_storage")).setChecked(value);
 								}
 							});
 						}

@@ -1,5 +1,7 @@
 package com.overkill.ponymanager;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,10 +37,10 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
 		this.context = context;
 		this.textViewResourceId = textViewResourceId;
 		this.allPonies = new LinkedList<DownloadPony>(objects);
+		this.filteredPonies = new LinkedList<DownloadPony>();
 		this.resetFilter();
+		this.sort(true);
 	}
-
-
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
@@ -47,7 +49,7 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
             LayoutInflater vi = (LayoutInflater)this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             v = vi.inflate(this.textViewResourceId, parent, false);
         }
-        DownloadPony p = super.getItem(position);
+        DownloadPony p = this.filteredPonies.get(position);
         if (p != null) {          	
         	((ImageView)v.findViewById(R.id.imagePony)).setImageBitmap(p.getImage());
 
@@ -100,8 +102,49 @@ public class PonyAdapter extends ArrayAdapter<DownloadPony>{
 		}
 	}
 	
+	public void filterByState(int state){
+		this.filteredPonies.clear();
+		for(DownloadPony p : this.allPonies){
+			if(p.getState() == state){
+				this.filteredPonies.add(p);
+			}
+		}
+	}
+	
 	@Override
 	public int getCount() {
 		return this.filteredPonies.size();
+	}
+	
+	public void sort(boolean ASC){
+		if(ASC){
+			Collections.sort(this.filteredPonies, new Comparator<DownloadPony>() {
+				@Override
+				public int compare(DownloadPony a, DownloadPony b) {
+					return a.compareTo(b);
+				}			
+			});
+		}else{
+			Collections.sort(this.filteredPonies, new Comparator<DownloadPony>() {
+				@Override
+				public int compare(DownloadPony a, DownloadPony b) {
+					return b.compareTo(a);
+				}			
+			});
+		}
+	}
+
+	public DownloadPony getItem(int position) {
+		if(position > this.filteredPonies.size()) return null;
+		return this.filteredPonies.get(position);
+	}
+
+	public DownloadPony getItem(String ID) {
+		for(DownloadPony p : this.allPonies){
+			if(p.getFolder().equals(ID)){
+				return p;
+			}
+		}
+		return null;
 	}
 }

@@ -14,23 +14,23 @@ import org.apache.http.util.ByteArrayBuffer;
 public class AsynFolderDownloader extends Thread {
 
 	public interface onDownloadListener{
-		void onDownloadStart(int position);
-		void onDownloadChanged(int position, int filesDone);
-		void onDownloadDone(int position);
-		void onDownloadError(int position, String error);
+		void onDownloadStart(String ID);
+		void onDownloadChanged(String ID, int filesDone);
+		void onDownloadDone(String ID);
+		void onDownloadError(String ID, String error);
 	}
 	
 	private String remotePath;
 	private File localPath;
-	private int position;
+	private String ID;
 	private onDownloadListener listener;
 	
-	public AsynFolderDownloader(String remotePath, File localPath, int position, onDownloadListener listener) {
+	public AsynFolderDownloader(String remotePath, File localPath, String ID, onDownloadListener listener) {
 		this.localPath = localPath;
 		this.remotePath = remotePath;
 		if(this.remotePath.endsWith("/") == false)
 			this.remotePath = this.remotePath + "/";
-		this.position = position;
+		this.ID = ID;
 		this.listener = listener;
 	}	
 	
@@ -40,7 +40,7 @@ public class AsynFolderDownloader extends Thread {
 			localPath.mkdir();
 		}
 		int fileCount = 0;
-		this.listener.onDownloadStart(this.position);
+		this.listener.onDownloadStart(this.ID);
 		URL base;
 		try {
 			base = new URL(remotePath);
@@ -70,14 +70,14 @@ public class AsynFolderDownloader extends Thread {
                 fos.close();
                 
                 fileCount++;
-                this.listener.onDownloadChanged(this.position, fileCount);
+                this.listener.onDownloadChanged(this.ID, fileCount);
 				
 			}
-			this.listener.onDownloadDone(this.position);
+			this.listener.onDownloadDone(this.ID);
 		} catch (MalformedURLException e) {
-			this.listener.onDownloadError(this.position, e.getMessage());
+			this.listener.onDownloadError(this.ID, e.getMessage());
 		} catch (IOException e) {
-			this.listener.onDownloadError(this.position, e.getMessage());
+			this.listener.onDownloadError(this.ID, e.getMessage());
 		}
 	}
 	
