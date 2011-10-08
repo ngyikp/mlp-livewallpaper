@@ -25,6 +25,7 @@ import android.util.Log;
 public class Pony{
 	private static final int MOVEMENT_DELAY_MS = 100;
 		
+	// Effect options
 	public static final int EF_effect_name = 1;
     public static final int EF_behavior_name = 2;
     public static final int EF_right_image = 3;
@@ -81,13 +82,6 @@ public class Pony{
 	private boolean atDestination;
 
 	private boolean sleeping;
-
-
-	//private float largestSizeX;
-
-	//private int largestSizeY;
-
-	//private boolean AtDestination;
 	
 	public enum AllowedMoves {
 		None,
@@ -534,7 +528,7 @@ public class Pony{
 		}		
 		if(MyLittleWallpaperService.INTERACTIONLINES){
 			if(destination.x != 0 && destination.y != 0){
-				canvas.drawLine(position.x + RenderEngine.OFFSET, position.y, destination.x + RenderEngine.OFFSET, destination.y, Sprite.renderPaint);
+				canvas.drawLine(position.x + RenderEngine.OFFSET, position.y, destination.x + RenderEngine.OFFSET, destination.y, Sprite.debugPaint);
 			}
 		}
 	}
@@ -998,8 +992,7 @@ public class Pony{
 							int xcoord = 0;
 							int ycoord = 0;
 							String follow = "";
-							boolean skip = false;
-							
+							boolean skip = false;							
 				           	
 							if (columns[BO_movement_type].trim().equalsIgnoreCase("none")) {
 								movement = AllowedMoves.None;
@@ -1022,10 +1015,7 @@ public class Pony{
 							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("sleep")) {
 								movement = AllowedMoves.Sleep;
 							}
-							
-							if(columns[BO_right_image_path].trim().endsWith(".gif") == false)
-								continue;
-							
+														
 							if (columns.length > BO_linked_behavior) {
 								linked_behavior = columns[BO_linked_behavior].trim();
 								skip = Boolean.parseBoolean(columns[BO_skip].trim());

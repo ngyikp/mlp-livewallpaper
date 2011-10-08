@@ -642,9 +642,9 @@ public class GifDecoder {
 	
 	public void destroy(){
 		if(image != null) image.recycle();
-		//image = null;
+		image = null;
 		if(lastBitmap != null) lastBitmap.recycle();
-		//lastBitmap = null;
+		lastBitmap = null;
 		frames = null;
 	}
 }

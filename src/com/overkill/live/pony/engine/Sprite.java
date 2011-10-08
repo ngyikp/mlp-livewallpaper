@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.ToolSet;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
@@ -14,10 +16,16 @@ import android.graphics.Rect;
 import android.util.Log;
 
 public class Sprite {
-	
+	public static Paint debugPaint = new Paint();
 	//private boolean loading = false;
 	private String fileName;
+	
 	private GifDecoder gif = null;
+	private Bitmap staticImage;
+	private boolean isAnimated = true;
+	
+	private BitmapFactory.Options opts = new BitmapFactory.Options();
+	
 	private int spriteWidth = 0;
 	private int spriteHeight = 0;
 	private int frameCount = 0;
@@ -25,7 +33,6 @@ public class Sprite {
 	private int currentFrame = 0;	
 	
 	private boolean initialized = false;
-	public static Paint renderPaint = new Paint();
 	
 	/**
 	 * Sets the file and initializes the GifDecoder
@@ -39,6 +46,9 @@ public class Sprite {
 	public Sprite(String fileName, boolean initializeGIF){
 		this.fileName = fileName;	
 		if(initializeGIF) this.initialize();
+		debugPaint.setStyle(Style.STROKE);
+		debugPaint.setColor(0xffffffff);
+		opts.inScaled = false;
 	}
 
 	/**
@@ -49,14 +59,20 @@ public class Sprite {
 //		this.loading = true;
 		long t0 = System.currentTimeMillis();
 		try {
-			GifDecoder decoder = new GifDecoder();
-			decoder.read(new FileInputStream(this.fileName));
-			this.spriteWidth = decoder.width;
-			this.spriteHeight = decoder.height;		
-			this.frameCount = decoder.getFrameCount();
-			this.gif = decoder;
-			renderPaint.setStyle(Style.STROKE);
-			renderPaint.setColor(0xffffffff);
+			if(fileName.endsWith(".gif")){
+				GifDecoder decoder = new GifDecoder();
+				decoder.read(new FileInputStream(this.fileName));
+				this.spriteWidth = decoder.width;
+				this.spriteHeight = decoder.height;		
+				this.frameCount = decoder.getFrameCount();
+				this.gif = decoder;
+				this.isAnimated = true;
+			}else{
+				this.staticImage = BitmapFactory.decodeFile(fileName, opts);
+				this.spriteWidth = this.staticImage.getWidth();
+				this.spriteHeight = this.staticImage.getHeight();
+				this.isAnimated = false;
+			}
 			if(MyLittleWallpaperService.DEBUG)
 				Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*4));
 
@@ -97,6 +113,7 @@ public class Sprite {
 	 */
 	public void update(long globalTime) {
 		if(!this.initialized) this.initialize();
+		if(!this.isAnimated) return; // No need to update frames for a static image
 		if (globalTime > this.lastFrameTime + this.gif.getDelay(currentFrame)) {
 			this.lastFrameTime = globalTime;
 			this.currentFrame++;
@@ -117,17 +134,26 @@ public class Sprite {
 		if(!this.initialized) this.initialize();
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);
-		canvas.drawBitmap(this.gif.getFrame(currentFrame), null, new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
-		if(MyLittleWallpaperService.SHOWPONYBOX) canvas.drawRect(new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), renderPaint);
+		
+		if(this.isAnimated)
+			canvas.drawBitmap(this.gif.getFrame(currentFrame), null,
+					new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
+		else
+			canvas.drawBitmap(this.staticImage, null,
+					new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
+		
+		if(MyLittleWallpaperService.SHOWPONYBOX) 
+			canvas.drawRect(new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), debugPaint);
 	}
 	
 	/**
 	 * releases and cleans up objects
 	 */
 	public void destroy(){
-		//Log.i("Sprite.destroy", this.fileName);
 		if(this.gif != null) this.gif.destroy();
+		if(this.staticImage != null) this.staticImage.recycle();
 		this.gif = null;
+		this.staticImage = null;
 		this.initialized = false;
 	}
 }
