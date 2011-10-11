@@ -38,11 +38,13 @@ public class Effect {
 	}
 	
 	public Sprite getRightImage(boolean initializeGIF){
+		if(initializeGIF) right_image = new Sprite(right_image_path, true);
 		if(right_image == null) right_image = new Sprite(right_image_path, initializeGIF);
 		return right_image;
 	}
 	
 	public Sprite getLeftImage(boolean initializeGIF){
+		if(initializeGIF) left_image = new Sprite(left_image_path, true);
 		if(left_image == null) left_image = new Sprite(left_image_path, initializeGIF);
 		return left_image;
 	}

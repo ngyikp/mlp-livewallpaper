@@ -235,10 +235,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	@Override
 	public void imageComplete(String ID, Bitmap image) {
-		Log.i("imageComplete", "for " + ID);
 		final DownloadPony p = adapter.getItem(ID);
 		if(p == null) return;
-		Log.i("imageComplete", "set Image for " + ID);
 		p.setImage(image);
 		runOnUiThread(new Runnable() {			
 			@Override

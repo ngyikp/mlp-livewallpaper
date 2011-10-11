@@ -54,7 +54,7 @@ public class Sprite {
 	/**
 	 * Decodes the GIF File and stores data
 	 */
-	public void initialize(){
+	public boolean initialize(){
 //		if(this.loading) return;
 //		this.loading = true;
 		long t0 = System.currentTimeMillis();
@@ -73,19 +73,18 @@ public class Sprite {
 				this.spriteHeight = this.staticImage.getHeight();
 				this.isAnimated = false;
 			}
-			if(MyLittleWallpaperService.DEBUG)
-				Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*4));
+//			if(MyLittleWallpaperService.DEBUG)
+				Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*2));
 
 			this.initialized = true;
 		} catch (OutOfMemoryError e) {
-			Log.i("Sprite", e.getMessage());
+			Log.i("Sprite", "Error:" + e.getMessage());
 			this.initialized = false;
 		} catch (FileNotFoundException e) {
-			Log.i("Sprite", e.getMessage());
+			Log.i("Sprite", "Error:" + e.getMessage());
 			this.initialized = false;
-		}finally{
-//			this.loading = false;
 		}
+		return this.initialized;
 	}
 	
 	/**
@@ -142,7 +141,7 @@ public class Sprite {
 			canvas.drawBitmap(this.staticImage, null,
 					new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
 		
-		if(MyLittleWallpaperService.SHOWPONYBOX) 
+		//if(MyLittleWallpaperService.SHOWPONYBOX) 
 			canvas.drawRect(new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), debugPaint);
 	}
 	

@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Point;
 
 import com.overkill.live.pony.MyLittleWallpaperService;
+import com.overkill.live.pony.ToolSet;
 import com.overkill.live.pony.engine.Pony.AllowedMoves;
 
 public class Behavior {
@@ -30,7 +31,7 @@ public class Behavior {
 	public String linkedBehaviorName = null;
 	public Behavior linkedBehavior;
 
-	public long endTime;
+	public long endTime = 0;
 	
 	public AllowedMoves Allowed_Movement;
 	public boolean Skip;
@@ -48,6 +49,7 @@ public class Behavior {
 	
 	public List<Effect> effects = new LinkedList<Effect>();
 	public boolean blocked;
+	public boolean keep = false;
 	
 	/**
 	 * Default Constructor
@@ -104,6 +106,11 @@ public class Behavior {
 	    }
 	}
 		
+	public void preloadImages(){
+		image_right = new Sprite(image_right_path, true);
+		image_left = new Sprite(image_left_path, true);
+	}
+	
 //	public Point getDestination(int screenWidth, int screenHeight) {
 //	    // If we have a coordinate to go to
 //	    if (destination_xcoord != 0 && destination_ycoord != 0) {
@@ -275,4 +282,145 @@ public class Behavior {
         effects.add(new_effect);
 		
 	}
+	
+	public boolean willPlayEffect(long globalTime){
+		// Loop through the effects for this behavior
+        for (Effect effect : this.effects) {
+	        // Determine if we should initialize or repeat the behavior
+	        if ((globalTime - effect.last_used) >= (effect.repeat_delay * 1000)) {
+	           	// If the effect has no repeat delay, only show once
+	           	if (effect.repeat_delay != 0 || effect.already_played_for_currentbehavior == false) {
+	           		return true;
+	           	}
+	        }
+        }
+        return false;
+	}
+	
+	public List<EffectWindow> getEffects(long globalTime, Pony pony){
+		List<EffectWindow> newEffects = new LinkedList<EffectWindow>();
+		// Loop through the effects for this behavior
+        for (Effect effect : this.effects) {
+	        // Determine if we should initialize or repeat the behavior
+	        if ((globalTime - effect.last_used) >= (effect.repeat_delay * 1000)) {
+	           	// If the effect has no repeat delay, only show once
+	           	if (effect.repeat_delay != 0 || effect.already_played_for_currentbehavior == false) {
+	           		effect.already_played_for_currentbehavior = true;
+	           			           		
+	           		EffectWindow effectWindow = new EffectWindow();
+	           		
+		            // Set the duration of the effect
+		            if (effect.duration != 0) {
+		            	effectWindow.endTime = globalTime + Math.round(effect.duration * 1000);
+		            	effectWindow.Close_On_New_Behavior = false;
+		            } else {
+		            	effectWindow.endTime = this.endTime;		               	
+		            	effectWindow.Close_On_New_Behavior = true;
+		            }
+			                
+		            // Load the effect animation
+		            if (this.right) {
+		            	effectWindow.setImage(effect.getRightImage(true));
+		            	effectWindow.direction = effect.placement_direction_right;
+		            	effectWindow.centering = effect.centering_right;			            
+		            } else {
+		            	effectWindow.setImage(effect.getLeftImage(true));
+		            	effectWindow.direction = effect.placement_direction_left;
+		            	effectWindow.centering = effect.centering_left;
+		            }
+		               	            
+		            if (effectWindow.direction == Pony.Directions.random)
+		            	effectWindow.direction = ToolSet.getRandomDirection(true);
+		            if (effectWindow.centering == Pony.Directions.random)
+		            	effectWindow.centering = ToolSet.getRandomDirection(true);
+		            if (effectWindow.direction == Pony.Directions.random_not_center)
+		            	effectWindow.direction = ToolSet.getRandomDirection(false);
+		            if (effectWindow.centering == Pony.Directions.random_not_center)
+		            	effectWindow.centering = ToolSet.getRandomDirection(false);
+		
+		            // Initialize the effect values
+		            effectWindow.follows = effect.follow;
+		            effectWindow.effectName = effect.name;
+		            effectWindow.behaviorName = this.name;
+		            effectWindow.ponyName = this.name;
+		            
+		            // Position the effect's initial location and size
+		            //effectWindow.setLocation(this.getEffectLocation(effectWindow, pony, effectWindow.direction, effectWindow.centering));
+		             		                
+		            // Set the timestamp
+		            effect.last_used = globalTime;
+		            effectWindow.startTime = globalTime;
+		            
+		            newEffects.add(effectWindow);
+	            }
+	        }
+        }
+		return newEffects;
+	}
+	
+	public Point getEffectLocation(EffectWindow effectWindow, Pony pony, Pony.Directions direction, Pony.Directions centering) {
+		Point point = new Point(0, 0);		
+		switch(direction) {
+			case bottom:
+				point = new Point(pony.getLocation().x + (this.getCurrentImage().getSpriteWidth() / 2), pony.getLocation().y + this.getCurrentImage().getSpriteHeight());
+				break;
+			case bottom_left:
+				point = new Point(pony.getLocation().x, pony.getLocation().y + this.getCurrentImage().getSpriteHeight());
+				break;
+			case bottom_right:
+				point = new Point(pony.getLocation().x + this.getCurrentImage().getSpriteWidth(), pony.getLocation().y + this.getCurrentImage().getSpriteHeight());
+				break;
+			case center:
+				point = new Point(pony.getLocation().x + (this.getCurrentImage().getSpriteWidth() / 2), pony.getLocation().y + (this.getCurrentImage().getSpriteHeight() / 2));
+				break;
+			case left:
+				point = new Point(pony.getLocation().x, pony.getLocation().y + (this.getCurrentImage().getSpriteHeight() / 2));
+				break;
+			case right:
+				point = new Point(pony.getLocation().x + this.getCurrentImage().getSpriteWidth(), pony.getLocation().y + (this.getCurrentImage().getSpriteHeight() / 2));
+				break;
+			case top:
+				point = new Point(pony.getLocation().x + (this.getCurrentImage().getSpriteWidth() / 2), pony.getLocation().y);
+				break;
+			case top_left:
+				point = new Point(pony.getLocation().x, pony.getLocation().y);
+				break;
+			case top_right:
+				point = new Point(pony.getLocation().x + this.getCurrentImage().getSpriteWidth(), pony.getLocation().y);
+				break;
+		}
+		
+		switch(centering) {
+			case bottom:
+				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y - effectWindow.getImage().getSpriteHeight());
+				break;
+	        case bottom_left:
+				point = new Point(point.x, point.y - effectWindow.getImage().getSpriteHeight());
+				break;
+	        case bottom_right:
+				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y - effectWindow.getImage().getSpriteHeight());
+				break;
+	        case center:
+				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y - (effectWindow.getImage().getSpriteHeight() / 2));
+				break;
+	        case left:
+				point = new Point(point.x, point.y - (effectWindow.getImage().getSpriteHeight() / 2));
+				break;
+	        case right:
+				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y - (effectWindow.getImage().getSpriteHeight() / 2));
+				break;
+	        case top:
+				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y);
+				break;
+	        case top_left:
+				// no change
+				break;
+	        case top_right:
+				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y);
+				break;
+		}
+		
+		return point;
+	}
+	
 }

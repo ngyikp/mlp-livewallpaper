@@ -32,7 +32,8 @@ public class RenderEngine {
 	public static int OFFSET;
     public static File localFolder;
 	
-	public static int TOP_PADDING = 50;
+	public static int PADDING_TOP = 50;
+	public static int PADDING_BOTTOM = 120;
 	
 	//private UpdateThread updateThread;
     private RenderThread renderThread;    
@@ -130,8 +131,8 @@ public class RenderEngine {
 
     	if(CONFIG_DEBUG_TEXT){
     		backgroundTextPaint.setTextAlign(Align.LEFT);    		
-        	c.drawText(this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, TOP_PADDING, backgroundTextPaint);
-        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, TOP_PADDING + 15, backgroundTextPaint);
+        	c.drawText(this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, PADDING_TOP, backgroundTextPaint);
+        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, PADDING_TOP + 15, backgroundTextPaint);
     	}
     	
     	if(activePonies.size() == 0){
@@ -166,15 +167,15 @@ public class RenderEngine {
     }      
     
     public void setFrameSize(int w, int h){
-    	RenderEngine.visibleScreenArea = new Rect(0, TOP_PADDING, w, h);
+    	RenderEngine.visibleScreenArea = new Rect(0, PADDING_TOP, w, h - PADDING_BOTTOM);
     	if(RenderEngine.screenBounds.width() <= 0 || RenderEngine.screenBounds.height() <= 0){
-        	this.setWallpaperSize(w, h);   		
+        	this.setWallpaperSize(w, h - PADDING_BOTTOM);   		
     	}
     	this.screenCenter = new Point(w / 2, h / 2);
     }
     
     public void setWallpaperSize(int w, int h){
-        RenderEngine.screenBounds = new Rect(0, TOP_PADDING, w, h);
+        RenderEngine.screenBounds = new Rect(0, PADDING_TOP, w, h - PADDING_BOTTOM);
     	this.wallpaperCenter = new Point(w / 2, h / 2);
     	Log.i("setWallpaperSize", "w="+w+" h="+h);
     }

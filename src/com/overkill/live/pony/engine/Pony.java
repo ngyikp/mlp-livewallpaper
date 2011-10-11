@@ -61,7 +61,11 @@ public class Pony{
 	private Point destination;
 	
 	public List<Behavior> behaviors;
+	
 	private Behavior currentBehavior = null;
+	private Behavior nextBehavior = null;
+	//private Behavior cachedBehavior = null;
+	
 	private boolean ponyDirection;
 
 	private long lastTimeMoved = 0;
@@ -82,6 +86,10 @@ public class Pony{
 	private boolean atDestination;
 
 	private boolean sleeping;
+
+	private boolean waitForEffectToLoad;
+
+	protected boolean currentlyLoadingEffects;
 	
 	public enum AllowedMoves {
 		None,
@@ -138,7 +146,7 @@ public class Pony{
 		if (currentBehavior == null) { // If we have no behavior, select a random one
 			cancelInteraction(globalTime);
 			selectBehavior(null, globalTime);
-		} else if ((currentBehavior.endTime - globalTime) <= 0) { // If the behavior has run its course, select a new one			
+		} else if ((currentBehavior.endTime - globalTime) <= 0 && currentBehavior.keep == false) { // If the behavior has run its course, select a new one			
 			if (currentBehavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
 				selectBehavior(currentBehavior.linkedBehavior, globalTime);
 			} else { // Otherwise select a random one
@@ -325,7 +333,7 @@ public class Pony{
 	    
 	}
 		
-	public void paint(long globalTime){
+	public void paint(final long globalTime){
 		
 		// Verify if we are following something
 		if (destination.x != 0 || destination.y != 0) {
@@ -372,12 +380,43 @@ public class Pony{
 	        this.currentBehavior.image_right_path = appropriate_behavior.image_right_path;
 		}
 			    
-	    // Verify if we can create effects		
-		if(RenderEngine.CONFIG_SHOW_EFFECTS)
-	    	loadEffects(globalTime); 
+	    // Verify if we should create effects		
+		if(RenderEngine.CONFIG_SHOW_EFFECTS){
+	    	cleanUpEffects(globalTime); 
+	    	if(nextBehavior != null && currentlyLoadingEffects == false){
+	    		Thread t = new Thread(new Runnable() {					
+					@Override
+					public void run() {
+						currentlyLoadingEffects = true;
+						Log.i("LoadEffect", "start at " + globalTime);
+						long effectLoadStartTime = globalTime;
+				        nextBehavior.preloadImages();
+				    	List<EffectWindow> newEffects = nextBehavior.getEffects(globalTime, Pony.this);
+				        long effectLoadDuration = SystemClock.elapsedRealtime() - effectLoadStartTime;
+				        Log.i("LoadEffect", "Got " + newEffects.size() + " new Effects");
+						for(EffectWindow newEffect : newEffects){
+					        Log.i("LoadEffect", "Effect " + newEffect.effectName + " is ready");
+					        newEffect.timeOffset = effectLoadDuration;
+					        newEffect.endTime += effectLoadDuration;
+					        newEffect.setLocation(nextBehavior.getEffectLocation(newEffect, Pony.this, newEffect.direction, newEffect.centering));
+					        activeEffects.add(newEffect);	
+						}
+				        nextBehavior.endTime += effectLoadDuration;
+						Log.i("LoadEffect", "changing endtime for " + nextBehavior.name + " to " + nextBehavior.endTime + " (in " + (nextBehavior.endTime - SystemClock.elapsedRealtime())+ " ms)");
+				        currentBehavior = nextBehavior;
+				        currentBehavior.keep = false;
+				        nextBehavior = null;
+						Log.i("LoadEffect", "took " + (SystemClock.elapsedRealtime() - effectLoadStartTime) + " ms (" + effectLoadDuration + " ms)");
+						Log.i("LoadEffect", "Done. currentBehavior is now " + currentBehavior.name);
+						currentlyLoadingEffects = false;
+					}
+				});
+	    		t.start();
+	    	}
+		}
 	}
 	
-	public void loadEffects(long globalTime){
+	public void cleanUpEffects(long globalTime){
 		List<EffectWindow> effectsToRemove = new LinkedList<EffectWindow>();
 		
         for (EffectWindow effect : this.activeEffects) {
@@ -391,73 +430,15 @@ public class Pony{
         		effectsToRemove.add(effect);
         	
         	if (effect.follows)
-        		effect.setLocation(getEffectLocation(effect.getImage().getSpriteWidth(), effect.getImage().getSpriteHeight(), effect.direction, effect.centering));
+        		effect.setLocation(currentBehavior.getEffectLocation(effect, this, effect.direction, effect.centering));
         }
         
         for (EffectWindow effect : effectsToRemove) {
+        	Log.i("Effect[" + effect.effectName +"]", "destroy");
         	effect.destroy();
             this.activeEffects.remove(effect);
         }
-        
-    	// Loop through the effects for this behavior
-        for (Effect effect : currentBehavior.effects) {
-	        // Determine if we should initialize or repeat the behavior
-	        if ((globalTime - effect.last_used) >= (effect.repeat_delay * 1000)) {
-	           	// If the effect has no repeat delay, only show once
-	           	if (effect.repeat_delay != 0 || effect.already_played_for_currentbehavior == false) {
-	           		effect.already_played_for_currentbehavior = true;
-	           					
-	           		EffectWindow effectWindow = new EffectWindow();
-	           		
-		            // Set the duration of the effect
-		            if (effect.duration != 0) {
-		            	effectWindow.endTime = globalTime + Math.round(effect.duration * 1000);
-		            	effectWindow.Close_On_New_Behavior = false;
-		            } else {
-		            	effectWindow.endTime = currentBehavior.endTime;		               	
-		            	effectWindow.Close_On_New_Behavior = true;
-		            }
-			                
-		            // Load the effect animation
-		            if (currentBehavior.right) {
-		            	effectWindow.setImage(effect.getRightImage(true));
-		            	effectWindow.direction = effect.placement_direction_right;
-		            	effectWindow.centering = effect.centering_right;			            
-		            } else {
-		            	effectWindow.setImage(effect.getLeftImage(true));
-		            	effectWindow.direction = effect.placement_direction_left;
-		            	effectWindow.centering = effect.centering_left;
-		            }
-		               	            
-		            if (effectWindow.direction == Pony.Directions.random)
-		            	effectWindow.direction = ToolSet.getRandomDirection(true);
-		            if (effectWindow.centering == Pony.Directions.random)
-		            	effectWindow.centering = ToolSet.getRandomDirection(true);
-		            if (effectWindow.direction == Pony.Directions.random_not_center)
-		            	effectWindow.direction = ToolSet.getRandomDirection(false);
-		            if (effectWindow.centering == Pony.Directions.random_not_center)
-		            	effectWindow.centering = ToolSet.getRandomDirection(false);
-		
-		            // Initialize the effect values
-		            effectWindow.follows = effect.follow;
-		            effectWindow.effectName = effect.name;
-		            effectWindow.behaviorName = currentBehavior.name;
-		            effectWindow.ponyName = this.name;
-		            
-		            // Position the effect's initial location and size
-		            if (currentBehavior.right) {
-		            	effect.setLocation(getEffectLocation(effect.getRightImage().getSpriteWidth(), effect.getRightImage().getSpriteHeight(), effectWindow.direction, effectWindow.centering));
-		            } else {
-		              	effect.setLocation(getEffectLocation(effect.getLeftImage().getSpriteWidth(), effect.getLeftImage().getSpriteHeight(), effectWindow.direction, effectWindow.centering));
-		            }  		                
-		            // Set the timestamp
-		            effect.last_used = globalTime;
-
-		            this.activeEffects.add(effectWindow);
-	            }
-	        }
-        }
-	}
+    }
 	
 	public Interaction findInteraction(long globalTime) {
 		if (globalTime <= interactionDelayUntil) return null;
@@ -724,6 +705,11 @@ public class Pony{
 		return direction;
 	}
 	
+//	public Behavior getCurrentBehavior(){
+//		if(cachedBehavior != null) return cachedBehavior;
+//		return currentBehavior;
+//	}
+	
 	public void selectBehavior(Behavior specifiedBehavior, long globalTime) {
 		if (isInteracting && specifiedBehavior == null) cancelInteraction(globalTime);
 		long startTime = SystemClock.elapsedRealtime();
@@ -844,18 +830,31 @@ public class Pony{
 	    } // End if moving
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
-	    
-	    // TODO Tell the GC to pick up the old behavior
-		if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
-			if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
-			currentBehavior.destroy();
-			currentBehavior = null;
-			//System.gc();
+	    		
+		if(newBehavior.willPlayEffect(globalTime)){
+			// The next behavior need an effect so we will preload the effect
+			Log.i("selectBehavior", newBehavior.name + ".willPlayEffect");
+			nextBehavior = newBehavior;
+			currentBehavior.keep = true;
+		}else{
+			nextBehavior = null;
+			currentBehavior = newBehavior;
+			currentBehavior.keep = false;
+			// TODO Tell the GC to pick up the old behavior
+			if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
+				if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
+				currentBehavior.destroy();
+				currentBehavior = null;
+				//System.gc();
+			}
 		}
-		
-		currentBehavior = newBehavior;
 	    
-		if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+//		if(MyLittleWallpaperService.DEBUG) 
+		if(nextBehavior == null)
+			Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+		else
+			Log.i("Pony[" + name + "]", "Found next Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+		
 	}
 	
 	public void setDestination(int x, int y){
@@ -878,72 +877,6 @@ public class Pony{
 			currentInteraction = null;
 			isInteractionInitiator = false;
 		}
-	}
-	
-	private Point getEffectLocation(int width, int height, Pony.Directions direction, Pony.Directions centering) {
-		Point point = null;
-		
-		switch(direction) {
-			case bottom:
-				point = new Point(this.position.x + (this.currentBehavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + this.currentBehavior.getCurrentImage().getSpriteHeight());
-				break;
-			case bottom_left:
-				point = new Point(this.position.x, this.position.y + this.currentBehavior.getCurrentImage().getSpriteHeight());
-				break;
-			case bottom_right:
-				point = new Point(this.position.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), this.position.y + this.currentBehavior.getCurrentImage().getSpriteHeight());
-				break;
-			case center:
-				point = new Point(this.position.x + (this.currentBehavior.getCurrentImage().getSpriteWidth() / 2), this.position.y + (this.currentBehavior.getCurrentImage().getSpriteHeight() / 2));
-				break;
-			case left:
-				point = new Point(this.position.x, this.position.y + (this.currentBehavior.getCurrentImage().getSpriteHeight() / 2));
-				break;
-			case right:
-				point = new Point(this.position.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), this.position.y + (this.currentBehavior.getCurrentImage().getSpriteHeight() / 2));
-				break;
-			case top:
-				point = new Point(this.position.x + (this.currentBehavior.getCurrentImage().getSpriteWidth() / 2), this.position.y);
-				break;
-			case top_left:
-				point = new Point(this.position.x, this.position.y);
-				break;
-			case top_right:
-				point = new Point(this.position.x + this.currentBehavior.getCurrentImage().getSpriteWidth(), this.position.y);
-				break;
-		}
-		
-		switch(centering) {
-			case bottom:
-				point = new Point(point.x - (width / 2), point.y - height);
-				break;
-	        case bottom_left:
-				point = new Point(point.x, point.y - height);
-				break;
-	        case bottom_right:
-				point = new Point(point.x - width, point.y - height);
-				break;
-	        case center:
-				point = new Point(point.x - (width / 2), point.y - (height / 2));
-				break;
-	        case left:
-				point = new Point(point.x, point.y - (height / 2));
-				break;
-	        case right:
-				point = new Point(point.x - width, point.y - (height / 2));
-				break;
-	        case top:
-				point = new Point(point.x - (width / 2), point.y);
-				break;
-	        case top_left:
-				// no change
-				break;
-	        case top_right:
-				point = new Point(point.x - width, point.y);
-				break;
-		}
-		
-		return point;
 	}
 		
 	public void linkBehaviors(){

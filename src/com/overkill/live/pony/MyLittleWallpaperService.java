@@ -147,7 +147,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 //			Thread t = new Thread(new Runnable() {				
 //				@Override
 //				public void run() {
-					Log.i("onSharedPreferenceChanged", "key=" + key + " start");
+//					Log.i("onSharedPreferenceChanged", "key=" + key + " start");
 					Editor editor = sharedPreferences.edit();
 					if(sharedPreferences.getBoolean("added_pony", false) == true){
 						loadSelectablePonies();
@@ -185,7 +185,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 			        	engine.setBackground(filePath);
 			        }       
 			        //RenderEngine.loading = false;
-					Log.i("onSharedPreferenceChanged", "key=" + key + " done");
+//					Log.i("onSharedPreferenceChanged", "key=" + key + " done");
 //				}
 //			});	
 //			t.start();
@@ -211,7 +211,8 @@ public class MyLittleWallpaperService extends WallpaperService {
         	else
         		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());*/
 
-    		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
+//    		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
+    		this.engine.setWallpaperSize(-1,-1);
             this.engine.setFrameSize(width, height);
             this.engine.render();
         }

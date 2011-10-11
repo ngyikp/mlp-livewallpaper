@@ -2,6 +2,7 @@ package com.overkill.live.pony.engine;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.util.Log;
 
 public class EffectWindow{
 
@@ -17,6 +18,11 @@ public class EffectWindow{
 	public Point position;
 	
 	private Sprite image;
+	
+	public long startTime;
+	public long timeOffset = 0;
+	
+	boolean ready = false;
 	
 	public void update(long globalTime){
 		this.image.update(globalTime);
@@ -37,7 +43,7 @@ public class EffectWindow{
 	public void setLocation(Point effectLocation) {
 		this.position = effectLocation;		
 	}
-
+	
 	public void destroy() {
 		if(this.image != null) this.image.destroy();
 		this.image = null;
