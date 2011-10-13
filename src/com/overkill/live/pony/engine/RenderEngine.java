@@ -22,18 +22,18 @@ import android.view.SurfaceHolder;
 import android.widget.Toast;
 
 public class RenderEngine {
-	public static boolean CONFIG_DEBUG_TEXT = true;
+	public static boolean CONFIG_DEBUG_TEXT = false;
 	public static boolean CONFIG_SHOW_EFFECTS = false;
 	public static boolean CONFIG_INTERACT_PONY = false;
 	public static boolean CONFIG_INTERACT_TOUCH = true;
-	static int CONFIG_FPS = 20;
+	static int CONFIG_FPS = 10;
 	public static int CONFIG_FRAME_DELAY = 1000 / CONFIG_FPS;
 	public static float CONFIG_SCALE = 1.0f;
 	public static int OFFSET;
     public static File localFolder;
 	
 	public static int PADDING_TOP = 50;
-	public static int PADDING_BOTTOM = 120;
+	public static int PADDING_BOTTOM = 0;
 	
 	//private UpdateThread updateThread;
     private RenderThread renderThread;    
@@ -59,7 +59,8 @@ public class RenderEngine {
 	public static Rect screenBounds;
 	public static Rect visibleScreenArea;
 	
-	//public static boolean loading = false;
+	public boolean ready = false;	
+	public static boolean loading = false;
 	
 	public RenderEngine(Context context, SurfaceHolder surfaceHolder){        
     	backgroundTextPaint.setColor(Color.WHITE);
@@ -81,7 +82,7 @@ public class RenderEngine {
 	}
 	
     public void render(long globalTime){
-    	if(visible == false) return;   	
+    	if(visible == false || ready == false) return;   	
     	// Do only render if enough time elapsed since last time rendering 
         // if((globalTime - lastTimeDrawn) < RenderEngine.CONFIG_FRAME_DELAY) return;
         Canvas canvas = null;
@@ -109,8 +110,15 @@ public class RenderEngine {
     protected void drawFrame(Canvas canvas, long globalTime) {   	
         try {
         	if (canvas != null) {
+        		this.renderBackground(canvas);  
         		if(localFolder.canRead() == false){ this.renderLoadingText(canvas, "Waiting for filesystem... " + localFolder.getPath()); return; }   
-        		this.renderBackground(canvas);     		
+        		if(loading == true){ this.renderLoadingText(canvas, "Loading... Please wait..."); return; }   
+   		
+        		if(activePonies.size() == 0){
+            		backgroundTextPaint.setTextAlign(Align.CENTER);
+            		canvas.drawText(this.context.getString(R.string.no_ponies_selected), screenCenter.x, screenCenter.y, backgroundTextPaint);
+            	}
+        		
 //        		if(updateThread.ready == false) return;
 	            for(int i=0; i < activePonies.size(); i++){
 	           		activePonies.get(i).update(globalTime);
@@ -133,12 +141,7 @@ public class RenderEngine {
     		backgroundTextPaint.setTextAlign(Align.LEFT);    		
         	c.drawText(this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, PADDING_TOP, backgroundTextPaint);
         	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, PADDING_TOP + 15, backgroundTextPaint);
-    	}
-    	
-    	if(activePonies.size() == 0){
-    		backgroundTextPaint.setTextAlign(Align.CENTER);
-    		c.drawText(this.context.getString(R.string.no_ponies_selected), screenCenter.x, screenCenter.y, backgroundTextPaint);
-    	}
+    	}   	
     }   
     
     private void renderLoadingText(Canvas c, String text){
@@ -275,4 +278,8 @@ public class RenderEngine {
 //    	this.updateThread.resumeUpdate();
     	this.renderThread.resumeRender();
     }
+
+	public void startIfNotRunning() {
+		
+	}
 }

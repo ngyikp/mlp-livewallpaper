@@ -15,7 +15,6 @@ import com.overkill.live.pony.R;
 import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
 import com.overkill.ponymanager.AsynImageLoader.onImageListener;
 
-import android.R.anim;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ListActivity;
@@ -259,7 +258,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		case R.id.btn_title_help:	
 			showHelpDialog();
 			break;
-		case R.string.manager_update_all:
+		case R.id.btn_title_update_all:
 			int count_update = 0;
 			for(int i = 0; i < adapter.getCount(); i++){
 				DownloadPony p = adapter.getItem(i);
@@ -398,7 +397,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				int state = R.string.pony_state_not_installed;
 				if(local.exists())
 					state = R.string.pony_state_installed;
-				DownloadPony p = new DownloadPony(data[0], data[1], Integer.valueOf(data[2]), Integer.valueOf(data[3]), state);
+				DownloadPony p = new DownloadPony(data[0], data[1], Integer.valueOf(data[2].trim()), Long.valueOf(data[3].trim()), state);
 				p.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.ponytemp));
 				p.setLastUpdate(Long.valueOf(data[4]));
 				r.add(p);

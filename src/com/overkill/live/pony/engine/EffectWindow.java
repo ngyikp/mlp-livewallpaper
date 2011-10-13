@@ -2,7 +2,6 @@ package com.overkill.live.pony.engine;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
-import android.util.Log;
 
 public class EffectWindow{
 
@@ -20,7 +19,6 @@ public class EffectWindow{
 	private Sprite image;
 	
 	public long startTime;
-	public long timeOffset = 0;
 	
 	boolean ready = false;
 	

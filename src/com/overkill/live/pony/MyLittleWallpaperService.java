@@ -85,8 +85,8 @@ public class MyLittleWallpaperService extends WallpaperService {
     class SpriteEngine extends Engine implements SharedPreferences.OnSharedPreferenceChangeListener {
     	private RenderEngine engine;
         private SharedPreferences preferences;
+        private long lastTimeSettingsLoaded = 0; 
 //        private boolean previewMode = false;
-		//private boolean ready = false;
         
         SpriteEngine() {
 //        	this.previewMode = false;
@@ -97,9 +97,12 @@ public class MyLittleWallpaperService extends WallpaperService {
         	this.engine = new RenderEngine(getBaseContext(), getSurfaceHolder());            	
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
+            
             Editor editor = preferences.edit();
+            editor.putLong("savedTime", SystemClock.elapsedRealtime());
             editor.putBoolean("added_pony", true);
             editor.putBoolean("changed_pony", true);
+            editor.putLong("savedTime", SystemClock.elapsedRealtime());
             editor.commit();
             //onSharedPreferenceChanged(preferences, null);
         	super.onCreate(surfaceHolder);
@@ -143,11 +146,17 @@ public class MyLittleWallpaperService extends WallpaperService {
         
 		@Override
 		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-			//RenderEngine.loading = true;
-//			Thread t = new Thread(new Runnable() {				
-//				@Override
-//				public void run() {
-//					Log.i("onSharedPreferenceChanged", "key=" + key + " start");
+			final long savedTime = sharedPreferences.getLong("savedTime", 0);
+			Log.i("onSharedPreferenceChanged", "savedTime:" + savedTime + "\nlastSavedTime:" + lastTimeSettingsLoaded);
+			if(savedTime == lastTimeSettingsLoaded){
+				return;
+			}
+			lastTimeSettingsLoaded = savedTime;
+			RenderEngine.loading = true;
+			Thread t = new Thread(new Runnable() {				
+				@Override
+				public void run() {
+					Log.i("onSharedPreferenceChanged", "loading settings");
 					Editor editor = sharedPreferences.edit();
 					if(sharedPreferences.getBoolean("added_pony", false) == true){
 						loadSelectablePonies();
@@ -158,12 +167,11 @@ public class MyLittleWallpaperService extends WallpaperService {
 						editor.putBoolean("changed_pony", false);
 					}
 					if(sharedPreferences.getBoolean("changed_folder", false) == true){
-						this.engine.reloadLocalFolder();
+						engine.reloadLocalFolder();
 						loadSelectablePonies();
 						selectPonies(sharedPreferences);
 						editor.putBoolean("changed_folder", false);
 					}
-					editor.commit();
 					
 					engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
 					engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
@@ -184,11 +192,11 @@ public class MyLittleWallpaperService extends WallpaperService {
 			        }else{
 			        	engine.setBackground(filePath);
 			        }       
-			        //RenderEngine.loading = false;
-//					Log.i("onSharedPreferenceChanged", "key=" + key + " done");
-//				}
-//			});	
-//			t.start();
+			        RenderEngine.loading = false;
+			        editor.commit();
+				}
+			});	
+			t.start();
 		}  
                         
         @Override
@@ -211,9 +219,10 @@ public class MyLittleWallpaperService extends WallpaperService {
         	else
         		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());*/
 
-//    		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
-    		this.engine.setWallpaperSize(-1,-1);
+    		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
+//    		this.engine.setWallpaperSize(-1,-1);
             this.engine.setFrameSize(width, height);
+            this.engine.ready = true;
             this.engine.render();
         }
 
@@ -241,13 +250,16 @@ public class MyLittleWallpaperService extends WallpaperService {
         @Override
         public Bundle onCommand(String action, int x, int y, int z,	Bundle extras, boolean resultRequested) {
         	if(action.equals(WallpaperManager.COMMAND_TAP) && RenderEngine.CONFIG_INTERACT_TOUCH == true){
-            	Log.i("onCommand", action + " [" + x + "," + y + "]");
-        		long currentTime = SystemClock.elapsedRealtime();
-        		for(Pony p : this.engine.getPonies()){
-	            	if(p.isPonyAtLocation(x, y)){
-	            		p.touch(currentTime);
-	            	}
-	            }	
+        		try{
+	        		long currentTime = SystemClock.elapsedRealtime();
+	        		for(Pony p : this.engine.getPonies()){
+		            	if(p.isPonyAtLocation(x, y)){
+		            		p.touch(currentTime);
+		            	}
+		            }	
+        		}catch(NullPointerException e){
+        			// a part of the pony seems to be not ready yet
+        		}
         	}
         	return super.onCommand(action, x, y, z, extras, resultRequested);
         }

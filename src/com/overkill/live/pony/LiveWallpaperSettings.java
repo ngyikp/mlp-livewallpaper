@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
 import java.util.List;
 
 import com.overkill.ponymanager.PonyManager;
@@ -18,9 +19,11 @@ import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.app.WallpaperManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -30,6 +33,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -65,6 +71,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		
 	@Override
 	protected void onDestroy() {
+		editor.putLong("savedTime", SystemClock.elapsedRealtime());
 		editor.commit();
 		super.onDestroy();
 	}
@@ -112,10 +119,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					return true;
 				}else{
 					if(sharedPreferences.getString("background_image", null) == null){
-						Intent intent = new Intent();
-		                intent.setType("image/*");
-		                intent.setAction(Intent.ACTION_GET_CONTENT);
-		                startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_image_from)), PICK_FROM_FILE);
+						pickImage();
 					}
 				}
 				return true;
@@ -221,6 +225,8 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				    
 				}
 		                
+				Arrays.sort(poniesName);
+				
 		        poniesState = new boolean[poniesName.length];
 		        
 		        for(int i = 0; i < poniesName.length; i++){
@@ -270,10 +276,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		((Preference)findPreference("background_image")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				Intent intent = new Intent();
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_image_from)), PICK_FROM_FILE);                
+				pickImage();
                 return true;
 			}
 		});
@@ -307,16 +310,21 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	 * @throws IOException 
 	 */
 	private Uri getTempUri() throws IOException {
-		File f = new File(getFilesDir(), "temp_background.jpg");
+		File f = getTempFile();
 		if(f.exists()) f.delete();
-		FileOutputStream fos = openFileOutput("temp_background.jpg", Context.MODE_WORLD_WRITEABLE);
+		FileOutputStream fos = openFileOutput(f.getName(), Context.MODE_WORLD_WRITEABLE);
         fos.close();         
         return Uri.fromFile(f);
 	}
 	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) { 
-		if (resultCode != RESULT_OK){ ((CheckBoxPreference)findPreference("background_global")).setChecked(false); return;}
-
+		if (resultCode != RESULT_OK){
+			if(sharedPreferences.getString("background_image", null) == null){
+				((CheckBoxPreference)findPreference("background_global")).setChecked(false); 
+			}
+			return;
+		}
+		
 	    switch(requestCode) { 
 	    case PICK_FROM_FILE: 
 	    	selectedImageUri = data.getData();
@@ -331,10 +339,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			if (resultCode != RESULT_OK) return;
 			if (data == null) return;
 	        Bundle extras = data.getExtras();	
-	        if (extras != null) {
-	        	
-	            File newFile = new File(getFilesDir(), "background_" + SystemClock.elapsedRealtime() + ".jpg");
-	            File temp = new File(getFilesDir(), "temp_background.jpg");
+	        if (extras != null) {	        	
+	            File newFile = getBackgroundFile();
+	            File temp = getTempFile();
 	            try {
 					copyFile(temp, newFile);
 		            temp.delete();
@@ -345,10 +352,45 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	            	Toast.makeText(this, R.string.error_custom_image, Toast.LENGTH_LONG).show();
 	            	return;
 	            }
-	            setNewBackgroundImage(newFile.getPath());
+	            setNewBackgroundImage(newFile);
 	        }	
 	        break;
 	    }
+	}
+	
+	private void pickImage(){
+		// Can we take the current wallpaper ?
+		String items[] = {"Use current wallpaper", "Pick image"};
+		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+		dialog.setTitle(R.string.background_image_title);
+		dialog.setItems(items, new OnClickListener() {			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				if(which == 0){
+					WallpaperManager wpm = WallpaperManager.getInstance(LiveWallpaperSettings.this);
+					Drawable d = wpm.getDrawable();
+					if(d != null){
+						try {
+							Bitmap bitmap = ((BitmapDrawable)d).getBitmap();
+							File image = getBackgroundFile();			
+							bitmap.compress(CompressFormat.JPEG, 100, new FileOutputStream(image));
+							setNewBackgroundImage(image);
+							Toast.makeText(LiveWallpaperSettings.this, "Save current background image", Toast.LENGTH_LONG).show();
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}else{
+					Intent intent = new Intent();
+			        intent.setType("image/*");
+			        intent.setAction(Intent.ACTION_GET_CONTENT);
+			        startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_image_from)), PICK_FROM_FILE);
+				}
+				dialog.dismiss();
+			}
+		});	
+		dialog.show();
 	}
 	
 	private void doCrop() throws IOException {
@@ -360,10 +402,10 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         int size = list.size();
         
         if (size == 0) {
-        	File newFile = new File(getFilesDir(), "background_" + SystemClock.elapsedRealtime() + ".jpg");
+        	File newFile = getBackgroundFile();
         	File srcFile = new File(getRealPathFromURI(selectedImageUri));   
         	copyFile(srcFile, newFile);
-        	setNewBackgroundImage(newFile.getPath());
+        	setNewBackgroundImage(newFile);
         	Toast.makeText(this, R.string.no_crop_app, Toast.LENGTH_SHORT).show();     
             return;
         } else {
@@ -390,6 +432,13 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         }
 	}
 		
+	public File getBackgroundFile(){
+		return new File(getFilesDir(), "background_" + SystemClock.elapsedRealtime() + ".jpg");
+	}
+	
+	public File getTempFile(){
+		return new File(getFilesDir(), "temp_background.jpg");
+	}
 	
 	public static void copyFile(File src, File dst) throws IOException {
 	    FileChannel inChannel = new FileInputStream(src).getChannel();
@@ -426,13 +475,13 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         return cursor.getString(column_index);
     }
 	
-	public void setNewBackgroundImage(String path){
+	public void setNewBackgroundImage(File newFile){
 		String oldFilePath = sharedPreferences.getString("background_image", null);
 		if(oldFilePath != null){
 			File oldFile = new File(oldFilePath);
 			if(oldFile.exists())
 				oldFile.delete();
 		}
-        editor.putString("background_image", path);
+        editor.putString("background_image", newFile.getPath());
 	}
 }

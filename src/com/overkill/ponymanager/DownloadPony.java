@@ -15,12 +15,12 @@ public class DownloadPony implements Comparable<DownloadPony> {
 	private String folder;
 	private int state;
 	private Bitmap image;
-	private int size;
+	private long size;
 	private int totalFileCount;
 	private int doneFileCount;
 	private long lastUpdate = 0;
 		
-	public DownloadPony(String name, String folder, int totalFileCount, int size, int state) {
+	public DownloadPony(String name, String folder, int totalFileCount, long size, int state) {
 		this.name = name;
 		this.folder = folder;
 		this.size = size;
@@ -45,11 +45,11 @@ public class DownloadPony implements Comparable<DownloadPony> {
 		this.folder = folder;
 	}
 
-	public int getSize() {
+	public long getSize() {
 		return size;
 	}
 
-	public void setSize(int size) {
+	public void setSize(long size) {
 		this.size = size;
 	}
 

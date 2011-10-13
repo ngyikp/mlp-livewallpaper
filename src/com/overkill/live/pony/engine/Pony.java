@@ -87,7 +87,7 @@ public class Pony{
 
 	private boolean sleeping;
 
-	private boolean waitForEffectToLoad;
+//	private boolean waitForEffectToLoad;
 
 	protected boolean currentlyLoadingEffects;
 	
@@ -388,26 +388,19 @@ public class Pony{
 					@Override
 					public void run() {
 						currentlyLoadingEffects = true;
-						Log.i("LoadEffect", "start at " + globalTime);
 						long effectLoadStartTime = globalTime;
 				        nextBehavior.preloadImages();
 				    	List<EffectWindow> newEffects = nextBehavior.getEffects(globalTime, Pony.this);
 				        long effectLoadDuration = SystemClock.elapsedRealtime() - effectLoadStartTime;
-				        Log.i("LoadEffect", "Got " + newEffects.size() + " new Effects");
 						for(EffectWindow newEffect : newEffects){
-					        Log.i("LoadEffect", "Effect " + newEffect.effectName + " is ready");
-					        newEffect.timeOffset = effectLoadDuration;
 					        newEffect.endTime += effectLoadDuration;
 					        newEffect.setLocation(nextBehavior.getEffectLocation(newEffect, Pony.this, newEffect.direction, newEffect.centering));
 					        activeEffects.add(newEffect);	
 						}
 				        nextBehavior.endTime += effectLoadDuration;
-						Log.i("LoadEffect", "changing endtime for " + nextBehavior.name + " to " + nextBehavior.endTime + " (in " + (nextBehavior.endTime - SystemClock.elapsedRealtime())+ " ms)");
-				        currentBehavior = nextBehavior;
+						currentBehavior = nextBehavior;
 				        currentBehavior.keep = false;
 				        nextBehavior = null;
-						Log.i("LoadEffect", "took " + (SystemClock.elapsedRealtime() - effectLoadStartTime) + " ms (" + effectLoadDuration + " ms)");
-						Log.i("LoadEffect", "Done. currentBehavior is now " + currentBehavior.name);
 						currentlyLoadingEffects = false;
 					}
 				});
@@ -445,8 +438,11 @@ public class Pony{
 		
 		for (Interaction interact : interactions) {
 			for (Pony target : interact.interactsWith) {
-                // don't start an interaction if we or the target haven't finished loading yet
-				double distance = Math.sqrt(Math.pow(this.getLocation().x + this.currentBehavior.getCurrentImage().getSpriteWidth() - target.getLocation().x + target.currentBehavior.getCurrentImage().getSpriteWidth(), 2) + Math.pow(this.getLocation().y + this.currentBehavior.getCurrentImage().getSpriteHeight() - target.getLocation().y + target.currentBehavior.getCurrentImage().getSpriteHeight(),2));;
+				// Use Pythagorean theorem to get the distance
+				double distance = 	Math.sqrt(
+								Math.pow(this.getLocation().x + this.currentBehavior.getCurrentImage().getSpriteWidth()  - target.getLocation().x + target.currentBehavior.getCurrentImage().getSpriteWidth(),  2) + 
+								Math.pow(this.getLocation().y + this.currentBehavior.getCurrentImage().getSpriteHeight() - target.getLocation().y + target.currentBehavior.getCurrentImage().getSpriteHeight(), 2)
+									);
 					
 				if (distance <= interact.proximityActivationDistance) {
 					double dice = MyLittleWallpaperService.rand.nextDouble();						
@@ -497,7 +493,7 @@ public class Pony{
 	
 	public void touch(long globalTime) {
 		shouldBeSleeping = !shouldBeSleeping;
-		Log.i("Pony[" + name + "]", "touch. we are sleeing now: " + shouldBeSleeping);
+		Log.i("Pony[" + name + "]", "touch. are we sleeping now? " + shouldBeSleeping);
 	}
 	
 	public void draw(Canvas canvas) {
@@ -833,7 +829,6 @@ public class Pony{
 	    		
 		if(newBehavior.willPlayEffect(globalTime)){
 			// The next behavior need an effect so we will preload the effect
-			Log.i("selectBehavior", newBehavior.name + ".willPlayEffect");
 			nextBehavior = newBehavior;
 			currentBehavior.keep = true;
 		}else{
@@ -849,12 +844,12 @@ public class Pony{
 			}
 		}
 	    
-//		if(MyLittleWallpaperService.DEBUG) 
-		if(nextBehavior == null)
-			Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
-		else
-			Log.i("Pony[" + name + "]", "Found next Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
-		
+		if(MyLittleWallpaperService.DEBUG){
+			if(nextBehavior == null)
+				Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+			else
+				Log.i("Pony[" + name + "]", "Found next Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+		}
 	}
 	
 	public void setDestination(int x, int y){
