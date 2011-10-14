@@ -259,14 +259,28 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
-		EditText editText = (EditText)((EditTextPreference)findPreference("pony_scale")).getEditText();
-        editText.setKeyListener(DigitsKeyListener.getInstance(false, true));
+		EditText editTextPonyScale = (EditText)((EditTextPreference)findPreference("pony_scale")).getEditText();
+        editTextPonyScale.setKeyListener(DigitsKeyListener.getInstance(false, true));
         ((EditTextPreference)findPreference("pony_scale")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				String value = (String)newValue;
 				if(value.equals("") || value == null){
 					editor.putString("pony_scale", "1");
+					return false;
+				}
+				return true;
+			}
+		});
+        
+        EditText editTextMovementDelay = (EditText)((EditTextPreference)findPreference("movement_delay_ms")).getEditText();
+        editTextMovementDelay.setKeyListener(DigitsKeyListener.getInstance(false, false));
+        ((EditTextPreference)findPreference("movement_delay_ms")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+			@Override
+			public boolean onPreferenceChange(Preference preference, Object newValue) {
+				String value = (String)newValue;
+				if(value.equals("") || value == null){
+					editor.putString("movement_delay_ms", "100");
 					return false;
 				}
 				return true;

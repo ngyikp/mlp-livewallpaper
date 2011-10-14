@@ -85,7 +85,6 @@ public class MyLittleWallpaperService extends WallpaperService {
     class SpriteEngine extends Engine implements SharedPreferences.OnSharedPreferenceChangeListener {
     	private RenderEngine engine;
         private SharedPreferences preferences;
-        private long lastTimeSettingsLoaded = 0; 
 //        private boolean previewMode = false;
         
         SpriteEngine() {
@@ -102,7 +101,6 @@ public class MyLittleWallpaperService extends WallpaperService {
             editor.putLong("savedTime", SystemClock.elapsedRealtime());
             editor.putBoolean("added_pony", true);
             editor.putBoolean("changed_pony", true);
-            editor.putLong("savedTime", SystemClock.elapsedRealtime());
             editor.commit();
             //onSharedPreferenceChanged(preferences, null);
         	super.onCreate(surfaceHolder);
@@ -146,17 +144,11 @@ public class MyLittleWallpaperService extends WallpaperService {
         
 		@Override
 		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-			final long savedTime = sharedPreferences.getLong("savedTime", 0);
-			Log.i("onSharedPreferenceChanged", "savedTime:" + savedTime + "\nlastSavedTime:" + lastTimeSettingsLoaded);
-			if(savedTime == lastTimeSettingsLoaded){
-				return;
-			}
-			lastTimeSettingsLoaded = savedTime;
+			if(key.equals("savedTime") == false) return;
 			RenderEngine.loading = true;
 			Thread t = new Thread(new Runnable() {				
 				@Override
 				public void run() {
-					Log.i("onSharedPreferenceChanged", "loading settings");
 					Editor editor = sharedPreferences.edit();
 					if(sharedPreferences.getBoolean("added_pony", false) == true){
 						loadSelectablePonies();
@@ -177,7 +169,8 @@ public class MyLittleWallpaperService extends WallpaperService {
 					engine.setShowEffects(sharedPreferences.getBoolean("show_effects", false));
 					engine.setMaxFramerate(Integer.valueOf(sharedPreferences.getString("framerate_cap", "10")));
 					engine.setScale(Float.valueOf(sharedPreferences.getString("pony_scale", "1")));			
-
+					RenderEngine.MOVEMENT_DELAY_MS = Integer.valueOf(sharedPreferences.getString("movement_delay_ms", "100"));
+					
 					engine.setInteraction(
 							sharedPreferences.getBoolean("interact_pony", false),
 							sharedPreferences.getBoolean("interact_user", false));

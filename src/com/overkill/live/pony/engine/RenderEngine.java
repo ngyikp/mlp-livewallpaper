@@ -19,13 +19,13 @@ import android.graphics.Paint.Align;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.SurfaceHolder;
-import android.widget.Toast;
 
 public class RenderEngine {
 	public static boolean CONFIG_DEBUG_TEXT = false;
 	public static boolean CONFIG_SHOW_EFFECTS = false;
 	public static boolean CONFIG_INTERACT_PONY = false;
 	public static boolean CONFIG_INTERACT_TOUCH = true;
+	public static int MOVEMENT_DELAY_MS = 100;
 	static int CONFIG_FPS = 10;
 	public static int CONFIG_FRAME_DELAY = 1000 / CONFIG_FPS;
 	public static float CONFIG_SCALE = 1.0f;
@@ -201,7 +201,8 @@ public class RenderEngine {
 	    		opts.inInputShareable = true;
 	    		this.setBackground(BitmapFactory.decodeFile(filePath, opts));
     		} catch(OutOfMemoryError e){
-    			Toast.makeText(context, "Error loading background image\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+    			//Toast.makeText(context, "Error loading background image\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+    			e.printStackTrace();
     			// fallback to backgroundcolor
     			this.setBackground((Bitmap) null);
     		}
@@ -281,5 +282,9 @@ public class RenderEngine {
 
 	public void startIfNotRunning() {
 		
+	}
+
+	public static void suggestRestart() {
+		// TODO Stop all child-threads, Clean up arrays in engine, reload config		
 	}
 }

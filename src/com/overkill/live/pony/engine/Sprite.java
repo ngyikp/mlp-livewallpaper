@@ -78,10 +78,10 @@ public class Sprite {
 
 			this.initialized = true;
 		} catch (OutOfMemoryError e) {
-			Log.i("Sprite", "Error:" + e.getMessage());
+			Log.i("Sprite", fileName + " Error: " + e.getMessage());
 			this.initialized = false;
 		} catch (FileNotFoundException e) {
-			Log.i("Sprite", "Error:" + e.getMessage());
+			Log.i("Sprite", fileName + " Error: " + e.getMessage());
 			this.initialized = false;
 		}
 		return this.initialized;
@@ -113,6 +113,7 @@ public class Sprite {
 	public void update(long globalTime) {
 		if(!this.initialized) this.initialize();
 		if(!this.isAnimated) return; // No need to update frames for a static image
+		if(this.gif == null) { RenderEngine.suggestRestart(); return; }
 		if (globalTime > this.lastFrameTime + this.gif.getDelay(currentFrame)) {
 			this.lastFrameTime = globalTime;
 			this.currentFrame++;
@@ -134,14 +135,16 @@ public class Sprite {
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);
 		
-		if(this.isAnimated)
+		if(this.isAnimated){
+			if(this.gif == null) return;
 			canvas.drawBitmap(this.gif.getFrame(currentFrame), null,
 					new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
-		else
+		} else {
+			if(this.staticImage == null) return;
 			canvas.drawBitmap(this.staticImage, null,
 					new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), null);
-		
-		//if(MyLittleWallpaperService.SHOWPONYBOX) 
+		}
+		if(MyLittleWallpaperService.SHOWPONYBOX) 
 			canvas.drawRect(new Rect(realPosition.x, realPosition.y, realPosition.x + this.getSpriteWidth(), realPosition.y + this.getSpriteHeight()), debugPaint);
 	}
 	

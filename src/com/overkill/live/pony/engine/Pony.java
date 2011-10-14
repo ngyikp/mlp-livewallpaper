@@ -23,7 +23,6 @@ import android.util.Log;
  *
  */
 public class Pony{
-	private static final int MOVEMENT_DELAY_MS = 100;
 		
 	// Effect options
 	public static final int EF_effect_name = 1;
@@ -209,14 +208,14 @@ public class Pony{
 	}
 	
 	public void move(long globalTime) {		
-		if(globalTime - lastTimeMoved < MOVEMENT_DELAY_MS) // we want to move again to quickly
+		if(globalTime - lastTimeMoved < RenderEngine.MOVEMENT_DELAY_MS) // we want to move again to quickly
 			return;
 		
 		lastTimeMoved = globalTime;
 
 		currentBehavior.blocked = false;
 		
-		double speed = currentBehavior.speed;
+		double speed = currentBehavior.speed * RenderEngine.CONFIG_SCALE;
 				
 		// Get the destination for following (will be blank(0,0) if not following)
 		destination = currentBehavior.getDestination(this);
@@ -398,8 +397,10 @@ public class Pony{
 					        activeEffects.add(newEffect);	
 						}
 				        nextBehavior.endTime += effectLoadDuration;
+				        currentBehavior.destroy();
 						currentBehavior = nextBehavior;
 				        currentBehavior.keep = false;
+				        nextBehavior.destroy();
 				        nextBehavior = null;
 						currentlyLoadingEffects = false;
 					}
@@ -827,14 +828,12 @@ public class Pony{
 	    
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
 	    		
-		if(newBehavior.willPlayEffect(globalTime)){
-			// The next behavior need an effect so we will preload the effect
+		if(RenderEngine.CONFIG_SHOW_EFFECTS && newBehavior.willPlayEffect(globalTime)){
+			// The next behavior needs an effect so we will preload the effect
 			nextBehavior = newBehavior;
-			currentBehavior.keep = true;
+			if(currentBehavior != null) currentBehavior.keep = true;
 		}else{
-			nextBehavior = null;
-			currentBehavior = newBehavior;
-			currentBehavior.keep = false;
+			newBehavior.keep = false;
 			// TODO Tell the GC to pick up the old behavior
 			if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
 				if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
@@ -842,6 +841,7 @@ public class Pony{
 				currentBehavior = null;
 				//System.gc();
 			}
+			currentBehavior = newBehavior;
 		}
 	    
 		if(MyLittleWallpaperService.DEBUG){
@@ -1008,7 +1008,7 @@ public class Pony{
 		    		
 		    	}
 	        br.close();
-	        Log.i("loading", newPony.name + " with " + newPony.behaviors.size() + " Behaviors");
+	        Log.i("Pony[" + newPony.name + "]", "loaded with " + newPony.behaviors.size() + " Behaviors");
 		  	
     	}catch (Exception e) {
 			e.printStackTrace();

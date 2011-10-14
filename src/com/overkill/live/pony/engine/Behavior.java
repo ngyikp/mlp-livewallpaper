@@ -306,7 +306,9 @@ public class Behavior {
 	           	// If the effect has no repeat delay, only show once
 	           	if (effect.repeat_delay != 0 || effect.already_played_for_currentbehavior == false) {
 	           		effect.already_played_for_currentbehavior = true;
-	           			           		
+	           			   
+	           		effect.preload();
+	           		
 	           		EffectWindow effectWindow = new EffectWindow();
 	           		
 		            // Set the duration of the effect
@@ -320,11 +322,11 @@ public class Behavior {
 			                
 		            // Load the effect animation
 		            if (this.right) {
-		            	effectWindow.setImage(effect.getRightImage(true));
+		            	effectWindow.setImage(effect.getRightImage());
 		            	effectWindow.direction = effect.placement_direction_right;
 		            	effectWindow.centering = effect.centering_right;			            
 		            } else {
-		            	effectWindow.setImage(effect.getLeftImage(true));
+		            	effectWindow.setImage(effect.getLeftImage());
 		            	effectWindow.direction = effect.placement_direction_left;
 		            	effectWindow.centering = effect.centering_left;
 		            }

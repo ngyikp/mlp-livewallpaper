@@ -57,6 +57,11 @@ public class Effect {
 		return getLeftImage(false);
 	}
 	
+	public void preload(){
+		if(right_image == null) right_image = new Sprite(right_image_path, true);
+		if(left_image == null) left_image = new Sprite(left_image_path, true);	
+	}
+	
 	public void destroy(){
 		Log.i("Effect[" + name + "]", "destroy");
 		this.already_played_for_currentbehavior = false;
