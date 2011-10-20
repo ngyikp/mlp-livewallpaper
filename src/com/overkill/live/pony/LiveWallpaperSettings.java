@@ -1,21 +1,16 @@
 package com.overkill.live.pony;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.List;
 
 import com.overkill.ponymanager.PonyManager;
-
-import yuku.ambilwarna.AmbilWarnaDialog;
-import yuku.ambilwarna.AmbilWarnaDialog.OnAmbilWarnaListener;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -24,7 +19,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -79,7 +73,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.TAG);
+		getPreferenceManager().setSharedPreferencesName(MyLittleWallpaperService.SETTINGS_NAME);
         addPreferencesFromResource(R.xml.preferences);
         
         sharedPreferences = getPreferenceManager().getSharedPreferences();
@@ -145,13 +139,11 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					Thread thread = new Thread(new Runnable() {						
 						@Override
 						public void run() {
-							Log.i("move", "treecopy " + localFolder.getPath() + " > " + newFolder.getPath());
 							try {
 								movePonies(localFolder, newFolder);
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
-							Log.i("move", "treecopy done");
 							localFolder = newFolder;
 							editor.putBoolean("changed_folder", true);		
 							runOnUiThread(new Runnable() {								
@@ -202,27 +194,11 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				poniesName = new String[ponyFolders.length];
 				
 				for(int i = 0; i < ponyFolders.length; i++){
-					String line = "";
-				    File iniFile = new File(ponyFolders[i], "pony.ini");
-				    if(iniFile.exists() == false)
-					    iniFile = new File(ponyFolders[i], "Pony.ini");				    	
-				    BufferedReader content;
-					try {
-						content = new BufferedReader(new FileReader(iniFile));
-						while ((line = content.readLine()) != null) {		    	
-					    	if(line.startsWith("'")) continue;
-						    if(line.startsWith("Name")){ poniesName[i] = line.substring(5).trim(); break;}
-					    }
-					} catch (FileNotFoundException e) {
-						poniesName[i] = "404 Error";
-						Toast.makeText(LiveWallpaperSettings.this, "Error accessing file \"" + iniFile.getPath() + "\"", Toast.LENGTH_LONG).show();
-						e.printStackTrace();
-					} catch (IOException e) {
-						poniesName[i] = "IO Error";
-						Toast.makeText(LiveWallpaperSettings.this, "Error accessing file \"" + iniFile.getPath() + "\"", Toast.LENGTH_LONG).show();
-						e.printStackTrace();
+					poniesName[i] = ToolSet.getPonyNameFromINI(ponyFolders[i]);
+					if(poniesName[i] == null){
+						poniesName[i] = "ERROR";
+						Toast.makeText(LiveWallpaperSettings.this, "Error accessing file \"" + ponyFolders[i].getPath() + "\"", Toast.LENGTH_LONG).show();
 					}
-				    
 				}
 		                
 				Arrays.sort(poniesName);
@@ -245,16 +221,18 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 						editor.putBoolean("changed_pony", true);					
 					}
 				});
-		        AlertDialog alert = builder.create();
-		        alert.setOnDismissListener(new OnDismissListener() {			
+		        builder.setPositiveButton(android.R.string.ok, new OnClickListener() {					
 					@Override
-					public void onDismiss(DialogInterface dialog) {	
+					public void onClick(DialogInterface dialog, int which) {
 						for(int i = 0; i < poniesName.length; i++){
 							editor.putBoolean("usepony_" + poniesName[i], poniesState[i]);
-						}
+						}	
+						editor.commit();
+						dialog.dismiss();
 					}
 				});
-		        alert.show();
+		        builder.setNegativeButton(android.R.string.cancel, null);
+		        builder.show();
 				return true;
 			}
 		});
@@ -295,28 +273,42 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 						
-		((Preference)findPreference("background_color")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+//		((Preference)findPreference("background_color")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+//			@Override
+//			public boolean onPreferenceClick(Preference preference) {
+//                return true;
+//			}
+//		});
+				
+		((CheckBoxPreference)findPreference("show_effects")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
 			@Override
-			public boolean onPreferenceClick(Preference preference) {
-				colorpicker();
-                return true;
+			public boolean onPreferenceChange(Preference preference, Object newValue) {
+				boolean value = (Boolean) newValue;
+				if(value == false) return true;
+				AlertDialog.Builder dialog = new AlertDialog.Builder(LiveWallpaperSettings.this);
+				dialog.setTitle(R.string.show_effects_warning_title);
+				dialog.setIcon(android.R.drawable.ic_dialog_alert);
+				dialog.setMessage(R.string.show_effects_warning_message);
+				dialog.setPositiveButton(android.R.string.ok, null);
+				dialog.show();
+				return true;
 			}
 		});
-				
+		
 	}
 	
-	public void colorpicker(){	    
-		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LiveWallpaperSettings.this, sharedPreferences.getInt("background_color", 0xff000000), new OnAmbilWarnaListener(){
-			@Override
-			public void onCancel(AmbilWarnaDialog dialog) { }
-
-			@Override
-			public void onOk(AmbilWarnaDialog dialog, int color) {
-				editor.putInt("background_color", color);			
-			}				
-		});
-	    dialog.show();
-	}
+//	public void colorpicker(){	    
+//		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LiveWallpaperSettings.this, sharedPreferences.getInt("background_color", 0xff000000), new OnAmbilWarnaListener(){
+//			@Override
+//			public void onCancel(AmbilWarnaDialog dialog) { }
+//
+//			@Override
+//			public void onOk(AmbilWarnaDialog dialog, int color) {
+//				editor.putInt("background_color", color);			
+//			}				
+//		});
+//	    dialog.show();
+//	}
 	
 	/**
 	 * Creates an empty public access file for the crop intent to write to

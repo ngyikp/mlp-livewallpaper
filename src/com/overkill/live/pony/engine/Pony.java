@@ -12,6 +12,7 @@ import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.ToolSet;
 
 import android.graphics.Canvas;
+import android.graphics.Movie;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.SystemClock;
@@ -144,7 +145,7 @@ public class Pony{
 		
 		if (currentBehavior == null) { // If we have no behavior, select a random one
 			cancelInteraction(globalTime);
-			selectBehavior(null, globalTime);
+			selectBehavior(null, globalTime, true);
 		} else if ((currentBehavior.endTime - globalTime) <= 0 && currentBehavior.keep == false) { // If the behavior has run its course, select a new one			
 			if (currentBehavior.linkedBehavior != null) { // If we have a linked behavior, select that one next
 				selectBehavior(currentBehavior.linkedBehavior, globalTime);
@@ -708,6 +709,10 @@ public class Pony{
 //	}
 	
 	public void selectBehavior(Behavior specifiedBehavior, long globalTime) {
+		selectBehavior(specifiedBehavior, globalTime, false);
+	}
+	
+	public void selectBehavior(Behavior specifiedBehavior, final long globalTime, boolean preventPreload) {		
 		if (isInteracting && specifiedBehavior == null) cancelInteraction(globalTime);
 		long startTime = SystemClock.elapsedRealtime();
 		Behavior newBehavior = null;		
@@ -825,23 +830,52 @@ public class Pony{
 		    else
 		    	newBehavior.up = false;
 	    } // End if moving
-	    
+
+		newBehavior.keep = false;
+		
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
-	    		
+	    
 		if(RenderEngine.CONFIG_SHOW_EFFECTS && newBehavior.willPlayEffect(globalTime)){
 			// The next behavior needs an effect so we will preload the effect
 			nextBehavior = newBehavior;
 			if(currentBehavior != null) currentBehavior.keep = true;
+//			Log.i("Pony[" + name + "]", "Found next (effect) Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 		}else{
-			newBehavior.keep = false;
-			// TODO Tell the GC to pick up the old behavior
-			if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
-				if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
-				currentBehavior.destroy();
-				currentBehavior = null;
-				//System.gc();
+			if(preventPreload || currentBehavior == null){
+				// Tell the GC to pick up the old behavior
+				if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
+					if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
+					currentBehavior.destroy();
+					currentBehavior = null;
+				}
+				long loadingStartTime = SystemClock.elapsedRealtime();
+				newBehavior.preloadImages();
+				long loadingDurationTime = SystemClock.elapsedRealtime() - loadingStartTime;
+				newBehavior.endTime += loadingDurationTime;
+				currentBehavior = newBehavior;
+//				Log.i("Pony[" + name + "]", "Found new (null) Behavior after " + (timeNeeded + loadingDurationTime) + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+			}else{
+				if(currentBehavior != null) currentBehavior.keep = true;
+				nextBehavior = newBehavior;
+				Thread t = new Thread(new Runnable() {					
+					@Override
+					public void run() {
+						long loadingStartTime = SystemClock.elapsedRealtime();
+						nextBehavior.preloadImages();
+						long loadingDurationTime = SystemClock.elapsedRealtime() - loadingStartTime;
+						nextBehavior.endTime += loadingDurationTime;
+						if(currentBehavior != null && nextBehavior != null && (nextBehavior.equals(currentBehavior) == false)){
+							if(MyLittleWallpaperService.DEBUG) 
+								Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + nextBehavior.name);
+							currentBehavior.destroy();
+							currentBehavior = null;
+						}
+						currentBehavior = nextBehavior;
+						nextBehavior = null;
+					}
+				});
+				t.start();
 			}
-			currentBehavior = newBehavior;
 		}
 	    
 		if(MyLittleWallpaperService.DEBUG){
@@ -851,6 +885,7 @@ public class Pony{
 				Log.i("Pony[" + name + "]", "Found next Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
 		}
 	}
+
 	
 	public void setDestination(int x, int y){
 		this.destination = new Point(x, y);

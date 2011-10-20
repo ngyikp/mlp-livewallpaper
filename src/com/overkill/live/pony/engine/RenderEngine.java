@@ -45,6 +45,7 @@ public class RenderEngine {
     private Bitmap backgroundBitmap = null;
     private int backgroundWidth = 0;    
     private int backgroundColor = 0;
+    private boolean useBackgroundImage = false;
     public Paint backgroundTextPaint = new Paint();
     
 	private long lastTimeDrawn;
@@ -59,7 +60,7 @@ public class RenderEngine {
 	public static Rect screenBounds;
 	public static Rect visibleScreenArea;
 	
-	public boolean ready = false;	
+	public static boolean ready = false;	
 	public static boolean loading = false;
 	
 	public RenderEngine(Context context, SurfaceHolder surfaceHolder){        
@@ -132,11 +133,10 @@ public class RenderEngine {
     }
 
     private void renderBackground(Canvas c){
-    	if(backgroundBitmap == null)
+    	if(this.useBackgroundImage)
+    		c.drawBitmap(backgroundBitmap, this.wallpaperCenter.x - (backgroundWidth / 2) + OFFSET, 0, null);     
+    	else   	
     		c.drawColor(backgroundColor);
-    	else
-    		c.drawBitmap(backgroundBitmap, this.wallpaperCenter.x - (backgroundWidth / 2) + OFFSET, 0, null);        	
-
     	if(CONFIG_DEBUG_TEXT){
     		backgroundTextPaint.setTextAlign(Align.LEFT);    		
         	c.drawText(this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, PADDING_TOP, backgroundTextPaint);
@@ -183,7 +183,7 @@ public class RenderEngine {
     	Log.i("setWallpaperSize", "w="+w+" h="+h);
     }
     
-    public void setBackground(int color){
+    public void setBackgroundColor(int color){
     	this.backgroundColor = color;
     }
     
@@ -204,14 +204,18 @@ public class RenderEngine {
     			//Toast.makeText(context, "Error loading background image\n" + e.getMessage(), Toast.LENGTH_LONG).show();
     			e.printStackTrace();
     			// fallback to backgroundcolor
-    			this.setBackground((Bitmap) null);
+    	    	this.backgroundBitmap = null;
     		}
     	}else{
     		backgroundBitmap = null;
     	}
     }
     
-    public void setMaxFramerate(int fps){
+    public void setUseBackgroundImage(boolean useBackgroundImage) {
+		this.useBackgroundImage = useBackgroundImage;
+	}
+
+	public void setMaxFramerate(int fps){
     	RenderEngine.CONFIG_FPS = fps;
     	RenderEngine.CONFIG_FRAME_DELAY = 1000 / RenderEngine.CONFIG_FPS;
     }

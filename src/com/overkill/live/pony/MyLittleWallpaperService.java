@@ -28,7 +28,8 @@ public class MyLittleWallpaperService extends WallpaperService {
 	public static final String SETTINGS_NAME = "mlpWallpaper";	
 	public static final String TAG = "mlpWallpaper";	
 	public static String VERSION = "";
-	// Settings
+	
+	// Debug Settings
 	public static final boolean DEBUG = false;
 	public static final boolean SHOWPONYBOX = false;
 	public static final boolean INTERACTIONLINES = false;
@@ -40,20 +41,12 @@ public class MyLittleWallpaperService extends WallpaperService {
     public static Random rand;
 
     public File localFolder;
-
+    
+    
     private BroadcastReceiver mStorageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Log.i("ExternalMediaFormatActivity", "got action " + action);
-            File sdcardFolder = PonyManager.selectForcedFolder(context, false);
-            File usedFolder = PonyManager.selectFolder(context);
-            if(sdcardFolder.equals(usedFolder)){
-            	SharedPreferences preferences = context.getSharedPreferences(TAG, MODE_PRIVATE);  
-            	Editor editor = preferences.edit();
-            	editor.putBoolean("changed_folder", true);
-            	editor.commit();
-            }
+            
         }
     };
     
@@ -85,10 +78,10 @@ public class MyLittleWallpaperService extends WallpaperService {
     class SpriteEngine extends Engine implements SharedPreferences.OnSharedPreferenceChangeListener {
     	private RenderEngine engine;
         private SharedPreferences preferences;
-//        private boolean previewMode = false;
+        private boolean previewMode = false;
         
         SpriteEngine() {
-//        	this.previewMode = false;
+        	super();
         }
 
         @Override
@@ -104,9 +97,10 @@ public class MyLittleWallpaperService extends WallpaperService {
             editor.commit();
             //onSharedPreferenceChanged(preferences, null);
         	super.onCreate(surfaceHolder);
+        	this.previewMode = super.isPreview();
         }
         
-        public void loadSelectablePonies(){
+        private synchronized void loadSelectablePonies(){
         	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
 			if(localFolder.exists()){
 				try {
@@ -118,17 +112,18 @@ public class MyLittleWallpaperService extends WallpaperService {
 					});
 					selectablePonies.clear();
 				    for(File ponyFolder : ponyFolders){
-				    	//Pony tmp = createPonyFromFile(pony, true);
-				    	//if(selectablePonies.contains(tmp) == false)
+				    	Pony tmp = Pony.fromFile(ponyFolder, true);
+				    	if(selectablePonies.contains(tmp) == false)
 				    		selectablePonies.add(Pony.fromFile(ponyFolder));
 				    }
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 	        }
+			Log.i(TAG + ".loadSelectablePonies", "Got " + selectablePonies.size() + " Ponies");
         }
         
-        public void selectPonies(SharedPreferences sharedPreferences){
+        private synchronized void selectPonies(SharedPreferences sharedPreferences){
         	for(Pony p : this.engine.getPonies()){
 	        	p.cleanUp();
 	        }
@@ -136,7 +131,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 	        this.engine.clearPonies();
 	        
 	        for(Pony p : selectablePonies){
-	        	Log.i(TAG, "do we want \"" + p.name + "\"? " + sharedPreferences.getBoolean("usepony_" + p.name, false));
+	        	Log.i(TAG + ".selectPonies", "do we want \"" + p.name + "\"? " + sharedPreferences.getBoolean("usepony_" + p.name, false));
 	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == true)
 	        		this.engine.addPony(p);
 	        }
@@ -179,12 +174,15 @@ public class MyLittleWallpaperService extends WallpaperService {
 					
 					// get Background image if we want one			
 					String filePath = sharedPreferences.getString("background_image", null);
-					engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
-			        if(sharedPreferences.getBoolean("background_global", false) == false || filePath == null){
-						engine.setBackground(sharedPreferences.getInt("background_color", 0xff000000));
-			        }else{
-			        	engine.setBackground(filePath);
-			        }       
+					engine.setBackgroundColor(sharedPreferences.getInt("background_color", 0xff000000));
+					if(filePath != null){
+						File file = new File(filePath);
+						if(file.exists()){
+							engine.setBackground(filePath);
+						}						
+					}
+					engine.setUseBackgroundImage(sharedPreferences.getBoolean("background_global", false));   
+					
 			        RenderEngine.loading = false;
 			        editor.commit();
 				}
@@ -205,17 +203,18 @@ public class MyLittleWallpaperService extends WallpaperService {
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
-            /*previewMode = isPreview();
-            Log.i("onSurfaceChanged", "previewMode:" + previewMode);
-        	if(previewMode)
+//           previewMode = isPreview();
+//           Log.i("onSurfaceChanged", "previewMode:" + previewMode);
+        	if(previewMode){
         		this.engine.setWallpaperSize(-1, -1);
-        	else
-        		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());*/
+        	}else{
+        		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
+        	}
 
-    		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
+//    		this.engine.setWallpaperSize(getWallpaperDesiredMinimumWidth(), getWallpaperDesiredMinimumHeight());
 //    		this.engine.setWallpaperSize(-1,-1);
             this.engine.setFrameSize(width, height);
-            this.engine.ready = true;
+            RenderEngine.ready = true;
             this.engine.render();
         }
 
@@ -233,10 +232,11 @@ public class MyLittleWallpaperService extends WallpaperService {
 
         @Override
         public void onOffsetsChanged(float xOffset, float yOffset, float xStep, float yStep, int xPixels, int yPixels) {
-        	engine.setOffset(xPixels);   
-        	/*if(previewMode)
+        	if(previewMode)
                 engine.setOffset(0);     
-        	else*/  
+        	else  
+            	engine.setOffset(xPixels);   
+        	
             if(RENDER_ON_SWIPE) engine.render();
         }
         

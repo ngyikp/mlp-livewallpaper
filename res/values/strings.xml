@@ -28,7 +28,7 @@
     <string name="no_crop_app">Can not find image crop app</string>
     <string name="error_custom_image">There was an error saving your custom image</string>
     <string name="no_ponies_selected">No ponies selected. Go to settings</string>
-    <string name="debug_text">v%1$s / %2$d ponies active / Scale %3$.2f / %4$d FPS (max %5$d)</string>
+    <string name="debug_text">%1$s / %2$d ponies active / Scale %3$.2f / %4$d FPS (max %5$d)</string>
     <string name="pony_state_update">•</string>
     <string name="pony_state_installed">•</string>
     <string name="pony_state_not_installed">•</string>
@@ -56,4 +56,10 @@
     <string name="manager_delete_title">Delete %1$s?</string>   
     <string name="manager_delete_message">Are you sure you want to delete %1$s?</string>
     <string name="set_wallpaper">Choose &quot;MyLittleWallpaper&quot; from the list to set the wallpaper</string>
+    <string name="show_effects_warning_message">Effects can cause the wallpaper to become unstable!\nThey also need more cpu power and can drain the battery faster.</string>
+    <string name="show_effects_warning_title">Warning</string>
+    <string name="force_local_storage_warning_title">Warning</string>
+    <string name="force_local_storage_warning_message">force_local_storage_warning_message</string>
+   	<string name="dialog_color_picker">Color Picker</string>
+    <string name="press_color_to_apply">Press on Color to apply</string>    
 </resources>

@@ -1,5 +1,11 @@
 package com.overkill.live.pony;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
 import com.overkill.live.pony.engine.Pony;
 import com.overkill.live.pony.engine.Pony.Directions;
 
@@ -121,4 +127,24 @@ public class ToolSet {
 				return Pony.Directions.center;
 		}
 	}
+    
+    public static String getPonyNameFromINI(File folder){
+    	String line = "";
+    	File iniFile = new File(folder, "pony.ini");
+	    if(iniFile.exists() == false)
+		    iniFile = new File(folder, "Pony.ini");				    	
+	    BufferedReader content;
+		try {
+			content = new BufferedReader(new FileReader(iniFile));
+			while ((line = content.readLine()) != null) {		    	
+		    	if(line.startsWith("'")) continue;
+			    if(line.startsWith("Name")){ return line.substring(5).trim();}
+		    }
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+    }
 }

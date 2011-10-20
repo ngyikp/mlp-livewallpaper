@@ -69,7 +69,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	File localFolder;
 	
-	protected PonyAdapter adapter = null;
+	protected DownloadPonyAdapter adapter = null;
 	
 	int currentContextSelection = -1;
 	
@@ -244,7 +244,6 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	}
 	
 	public void onTitleClick(View view){
-		Log.i("onTitleClick", "btn_title_preferences");
 		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
 		switch (view.getId()) {
 		case R.id.btn_title_filter:
@@ -326,7 +325,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	protected void onCreate(Bundle savedInstanceState) {
 		requestWindowFeature(Window.FEATURE_CUSTOM_TITLE); 
 	    Random r = new Random();
-	    setTheme(THEMES[r.nextInt(THEMES.length)]);
+//	    setTheme(THEMES[r.nextInt(THEMES.length)]);
+	    setTheme(R.style.Theme_Pony_Rainbowdash);
 		super.onCreate(savedInstanceState);      
 	    setContentView(R.layout.pony_manager);	
 	    getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.system_title);
@@ -352,7 +352,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			@Override
 			public void run() {
 				final ArrayList<DownloadPony> ponies = loadPonies();
-				adapter = new PonyAdapter(PonyManager.this, R.layout.item_pony, ponies);
+				adapter = new DownloadPonyAdapter(PonyManager.this, R.layout.item_pony, ponies);
 				SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE);
 				for(int i = 0; i < adapter.getCount(); i++){
                     DownloadPony p = adapter.getItem(i);

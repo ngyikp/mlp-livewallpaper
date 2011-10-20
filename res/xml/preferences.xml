@@ -13,7 +13,12 @@
     
     
 </PreferenceCategory><PreferenceCategory android:key="background_settings" android:title="@string/background_settings">
-    <Preference android:key="background_color" android:title="@string/background_color_title"></Preference>
+    <!-- <Preference android:key="background_color" android:title=""></Preference>  -->
+    <com.att.preference.colorpicker.ColorPickerPreference 
+			android:key="background_color"
+			android:title="@string/background_color_title" 
+			android:defaultValue="0xff000000" 
+		/>
     <CheckBoxPreference android:key="background_global" android:title="@string/background_global_title"></CheckBoxPreference>
     <Preference android:key="background_image" android:dependency="background_global" android:title="@string/background_image_title"></Preference>
     
