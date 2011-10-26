@@ -2,7 +2,16 @@
 <resources>
     <string name="app_name">MyLittleWallpaper</string>
     <string name="description">My Little Pony</string>
-    <string name="pony_manager">Pony Manager</string>
+    <string name="pony_manager">Pony Manager</string>    
+    <plurals name="numberOfPoniesForAction">
+        <item quantity="one">1 Pony %1$s?</item>
+        <item quantity="other">%2$d Ponies %1$s?</item>
+    </plurals> 
+    <string name="manager_help">Help</string>
+    <string name="manager_update">updaten</string>
+    <string name="manager_update_all">Alle updaten</string>
+    <string name="manager_download">herunterladen</string>
+    <string name="manager_download_all">Alle herunterladen</string>
     <string name="background_settings">Background Settings</string>
     <string name="background_color_title">Select Background Color</string>
     <string name="background_global_title">Use custom Background</string>
@@ -42,15 +51,6 @@
     <string name="no_ponies_installed">You seem to have no ponies installed. We have to change that...</string>
     <string name="force_local_storage_title">Store ponies intern</string>
     <string name="force_local_storage_summary">Current folder: %1$s</string>  
-    <plurals name="numberOfPoniesForAction">
-        <item quantity="one">%1$s 1 Pony?</item>
-        <item quantity="other">%1$s %2$d Ponies?</item>
-    </plurals> 
-    <string name="manager_help">Help</string>
-    <string name="manager_update">Update</string>
-    <string name="manager_update_all">Update All</string>
-    <string name="manager_download">Download</string>
-    <string name="manager_download_all">Download All</string>
     <string name="help_text">&quot;&lt;img src='arrowdown_download' /&gt; Download all currently not installed Ponies&lt;br&gt;&lt;img src='arrowdown_update' /&gt; Updates all Ponies with an update achievable&lt;br&gt;&lt;img src='ic_menu_set_as' /&gt; Sets live wallpaper&lt;br&gt;&lt;br&gt;&lt;br&gt;The colored dots indicate different states of a Pony&lt;br /&gt;The state can be:&lt;br /&gt;&lt;font color='#ff0000'&gt;&lt;b&gt;•&lt;/b&gt; Pony is not installed&lt;/font&gt; &lt;br /&gt;&lt;font color='#FF7E00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is currently downloaded&lt;/font&gt;&lt;br /&gt;&lt;font color='#00ff00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is installed&lt;/font&gt;&lt;br /&gt;&lt;font color='#0000ff'&gt;&lt;b&gt;•&lt;/b&gt; The is an update for this Pony&lt;/font&gt;&lt;br /&gt;&quot;</string>
     <string name="display_settings_title">Display Settings</string>    
     <string name="manager_delete_title">Delete %1$s?</string>   
