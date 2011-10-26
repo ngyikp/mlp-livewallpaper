@@ -248,10 +248,10 @@ public class Behavior {
         }
     }
 	
-	
-	public boolean equals(Behavior b){
+	@Override
+	public boolean equals(Object o) {
 		// Compare the names since they should be unique
-		return this.name.endsWith(b.name);
+		return this.name.endsWith(((Behavior) o).name);
 	}
 	
 	public void destroy(){
@@ -297,7 +297,7 @@ public class Behavior {
         return false;
 	}
 	
-	public List<EffectWindow> getEffects(long globalTime, Pony pony){
+	public List<EffectWindow> getPreloadedEffects(long globalTime, Pony pony){
 		List<EffectWindow> newEffects = new LinkedList<EffectWindow>();
 		// Loop through the effects for this behavior
         for (Effect effect : this.effects) {
@@ -360,6 +360,14 @@ public class Behavior {
 		return newEffects;
 	}
 	
+	/**
+	 * Returns the position	of the effect depending on the target postionioning around the given Pony
+	 * @param effectWindow Holds the size of the effect
+	 * @param pony Pony to cast the effect
+	 * @param direction Direction from the Pony
+	 * @param centering Centering on the Pony
+	 * @return
+	 */
 	public Point getEffectLocation(EffectWindow effectWindow, Pony pony, Pony.Directions direction, Pony.Directions centering) {
 		Point point = new Point(0, 0);		
 		switch(direction) {

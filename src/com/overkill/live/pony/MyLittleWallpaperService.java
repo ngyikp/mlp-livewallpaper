@@ -90,12 +90,12 @@ public class MyLittleWallpaperService extends WallpaperService {
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
             
-            Editor editor = preferences.edit();
-            editor.putLong("savedTime", SystemClock.elapsedRealtime());
-            editor.putBoolean("added_pony", true);
-            editor.putBoolean("changed_pony", true);
-            editor.commit();
-            //onSharedPreferenceChanged(preferences, null);
+//            Editor editor = preferences.edit();
+//            editor.putLong("savedTime", SystemClock.elapsedRealtime());
+//            editor.putBoolean("added_pony", true);
+//            editor.putBoolean("changed_pony", true);
+//            editor.commit();
+            onSharedPreferenceChanged(preferences, "startup");
         	super.onCreate(surfaceHolder);
         	this.previewMode = super.isPreview();
         }
@@ -131,29 +131,40 @@ public class MyLittleWallpaperService extends WallpaperService {
 	        this.engine.clearPonies();
 	        
 	        for(Pony p : selectablePonies){
-	        	Log.i(TAG + ".selectPonies", "do we want \"" + p.name + "\"? " + sharedPreferences.getBoolean("usepony_" + p.name, false));
-	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == true)
+	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == true && this.engine.getPonies().contains(p) == false){
 	        		this.engine.addPony(p);
+	        		Log.i(TAG + ".selectPonies", "Added \"" + p.name + "\" to activePonies");
+	        	}
 	        }
         }
         
 		@Override
-		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-			if(key.equals("savedTime") == false) return;
+		public synchronized void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+			if(key.equals("savedTime") == false && key.equals("startup") == false){ return; }
 			RenderEngine.loading = true;
 			Thread t = new Thread(new Runnable() {				
 				@Override
 				public void run() {
 					Editor editor = sharedPreferences.edit();
+					
+					if(key.equals("startup")){
+						Log.i("onSharedPreferenceChanged", "startup was true. calling loadSelectablePonies() and selectPonies()");
+						loadSelectablePonies();
+						selectPonies(sharedPreferences);
+					}
+					
 					if(sharedPreferences.getBoolean("added_pony", false) == true){
+						Log.i("onSharedPreferenceChanged", "added_pony was true. calling loadSelectablePonies()");
 						loadSelectablePonies();
 						editor.putBoolean("added_pony", false);
 					}					
 					if(sharedPreferences.getBoolean("changed_pony", false) == true){
+						Log.i("onSharedPreferenceChanged", "changed_pony was true. calling selectPonies()");
 						selectPonies(sharedPreferences);
 						editor.putBoolean("changed_pony", false);
 					}
 					if(sharedPreferences.getBoolean("changed_folder", false) == true){
+						Log.i("onSharedPreferenceChanged", "changed_folder was true. calling loadSelectablePonies() and selectPonies()");
 						engine.reloadLocalFolder();
 						loadSelectablePonies();
 						selectPonies(sharedPreferences);

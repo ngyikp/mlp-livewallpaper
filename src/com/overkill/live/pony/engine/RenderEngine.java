@@ -13,12 +13,16 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Paint.Align;
+import android.graphics.Typeface;
 import android.os.SystemClock;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 
 public class RenderEngine {
 	public static boolean CONFIG_DEBUG_TEXT = false;
@@ -32,8 +36,8 @@ public class RenderEngine {
 	public static int OFFSET;
     public static File localFolder;
 	
-	public static int PADDING_TOP = 50;
-	public static int PADDING_BOTTOM = 0;
+	public static int PADDING_TOP = 25;
+	public static int PADDING_BOTTOM = 46;
 	
 	//private UpdateThread updateThread;
     private RenderThread renderThread;    
@@ -46,7 +50,9 @@ public class RenderEngine {
     private int backgroundWidth = 0;    
     private int backgroundColor = 0;
     private boolean useBackgroundImage = false;
-    public Paint backgroundTextPaint = new Paint();
+    
+    public Paint leftTextPaint = new Paint();
+    public Paint centerTextPaint = new Paint();
     
 	private long lastTimeDrawn;
 	
@@ -63,9 +69,7 @@ public class RenderEngine {
 	public static boolean ready = false;	
 	public static boolean loading = false;
 	
-	public RenderEngine(Context context, SurfaceHolder surfaceHolder){        
-    	backgroundTextPaint.setColor(Color.WHITE);
-    	backgroundTextPaint.setTextAlign(Align.LEFT);
+	public RenderEngine(Context context, SurfaceHolder surfaceHolder){            	
     	RenderEngine.screenBounds = new Rect(0, 0, 0, 0);
     	RenderEngine.visibleScreenArea = new Rect(0, 0, 0, 0);
     	this.surfaceHolder = surfaceHolder;
@@ -76,6 +80,27 @@ public class RenderEngine {
     	
     	//this.updateThread = new UpdateThread(this);
     	this.renderThread = new RenderThread(this);
+    	
+    	leftTextPaint.setColor(Color.WHITE);
+    	leftTextPaint.setTextAlign(Align.LEFT);
+    	leftTextPaint.setStyle(Style.STROKE);
+    	
+    	centerTextPaint.setColor(Color.WHITE);
+    	centerTextPaint.setTextAlign(Align.CENTER);
+    	    	
+    	try {
+        	Typeface celestia = Typeface.createFromAsset(this.context.getAssets(), "fonts/celestiamedium.ttf");
+        	centerTextPaint.setTypeface(celestia);
+        	centerTextPaint.setAntiAlias(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	
+		DisplayMetrics metrics = new DisplayMetrics();
+		((WindowManager) this.context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(metrics);
+		PADDING_TOP = Math.round(25 * metrics.density);
+		PADDING_BOTTOM = Math.round(46 * metrics.density);
+    	centerTextPaint.setTextSize(16 * metrics.density);
 	}
 	
 	public void render(){
@@ -114,10 +139,9 @@ public class RenderEngine {
         		this.renderBackground(canvas);  
         		if(localFolder.canRead() == false){ this.renderLoadingText(canvas, "Waiting for filesystem... " + localFolder.getPath()); return; }   
         		if(loading == true){ this.renderLoadingText(canvas, "Loading... Please wait..."); return; }   
-   		
+        		
         		if(activePonies.size() == 0){
-            		backgroundTextPaint.setTextAlign(Align.CENTER);
-            		canvas.drawText(this.context.getString(R.string.no_ponies_selected), screenCenter.x, screenCenter.y, backgroundTextPaint);
+            		canvas.drawText(this.context.getString(R.string.no_ponies_selected), screenCenter.x, screenCenter.y, centerTextPaint);
             	}
         		
 //        		if(updateThread.ready == false) return;
@@ -137,16 +161,25 @@ public class RenderEngine {
     		c.drawBitmap(backgroundBitmap, this.wallpaperCenter.x - (backgroundWidth / 2) + OFFSET, 0, null);     
     	else   	
     		c.drawColor(backgroundColor);
-    	if(CONFIG_DEBUG_TEXT){
-    		backgroundTextPaint.setTextAlign(Align.LEFT);    		
-        	c.drawText(this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS), 5, PADDING_TOP, backgroundTextPaint);
-        	c.drawText("©2011 ov3rk1ll - http://android.ov3rk1ll.com", 5, PADDING_TOP + 15, backgroundTextPaint);
+    	if(CONFIG_DEBUG_TEXT){   		
+        	drawText(c, this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS)
+        				+ "\n©2011 ov3rk1ll - http://android.ov3rk1ll.com", new Point(5, visibleScreenArea.top), leftTextPaint);
+        	c.drawLine(visibleScreenArea.left, visibleScreenArea.top, visibleScreenArea.right, visibleScreenArea.top, leftTextPaint);
+        	c.drawLine(visibleScreenArea.left, visibleScreenArea.bottom, visibleScreenArea.right, visibleScreenArea.bottom, leftTextPaint);
     	}   	
+    	
     }   
+        
+    public void drawText(Canvas c, String text, Point start, Paint p){
+		float textSize = leftTextPaint.getTextSize();    	
+    	String lines[] = text.split("\n");
+    	for(int i = 0; i < lines.length; i++){
+    		c.drawText(lines[i], start.x, start.y + (i+1) * textSize, p);
+    	}
+    }
     
     private void renderLoadingText(Canvas c, String text){
-    	backgroundTextPaint.setTextAlign(Align.CENTER);
-		c.drawText(text, screenCenter.x, screenCenter.y, backgroundTextPaint);
+    	drawText(c, text, screenCenter, centerTextPaint);
     }
     
     public void start(){

@@ -70,8 +70,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	File localFolder;
 	
 	protected DownloadPonyAdapter adapter = null;
-	
-	int currentContextSelection = -1;
+
+	AsynImageLoader asynImageLoader;
 	
 	DialogInterface.OnClickListener filterListener = new OnClickListener() {				
 		@Override
@@ -325,14 +325,14 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	protected void onCreate(Bundle savedInstanceState) {
 		requestWindowFeature(Window.FEATURE_CUSTOM_TITLE); 
 	    Random r = new Random();
-//	    setTheme(THEMES[r.nextInt(THEMES.length)]);
-	    setTheme(R.style.Theme_Pony_Rainbowdash);
+	    setTheme(THEMES[r.nextInt(THEMES.length)]);
 		super.onCreate(savedInstanceState);      
 	    setContentView(R.layout.pony_manager);	
 	    getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.system_title);
 	    updateTitle();
 		localFolder = PonyManager.selectFolder(this);
-
+		asynImageLoader = new AsynImageLoader(this, this);
+		
 		registerForContextMenu(getListView());
 		getListView().setOnItemClickListener(new OnItemClickListener() {
 			@Override
@@ -356,13 +356,13 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE);
 				for(int i = 0; i < adapter.getCount(); i++){
                     DownloadPony p = adapter.getItem(i);
-					AsynImageLoader ail = new AsynImageLoader(REMOTE_BASE_URL + p.getFolder() + "/preview.gif", p.getFolder(), PonyManager.this);
-                    ail.start();
+                    asynImageLoader.push(p.getFolder(), REMOTE_BASE_URL + p.getFolder() + "/preview.gif");
         			long lastUpdateLocal = preferences.getLong("lastupdate_" + p.getFolder(), 0);
         			long lastUpdateRemote = p.getLastUpdate();
         			if((lastUpdateRemote > lastUpdateLocal) && p.getState() != R.string.pony_state_not_installed)
         				adapter.getItem(i).setState(R.string.pony_state_update);
 				}
+				asynImageLoader.start();
 				runOnUiThread(new Runnable() {					
 					@Override
 					public void run() {						
@@ -416,11 +416,10 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
-		currentContextSelection = info.position;
-		DownloadPony p = adapter.getItem(currentContextSelection);
+		DownloadPony p = adapter.getItem(info.position);
 		menu.setHeaderTitle(p.getName());
-		File preview = new File(localFolder, p.getFolder() + "/preview.gif");
-		menu.setHeaderIcon(BitmapDrawable.createFromPath(preview.getPath()));
+		//File preview = new File(localFolder, p.getFolder() + "/preview.gif");
+		menu.setHeaderIcon(new BitmapDrawable(p.getImage()));
 		if(p.getState() == R.string.pony_state_not_installed)
 			menu.add(0, ACTION_INSTALL, 0, "Download");
 		
@@ -436,8 +435,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		if(currentContextSelection > adapter.getCount() || currentContextSelection < 0) return false;
-		DownloadPony p = adapter.getItem(currentContextSelection);
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		DownloadPony p = adapter.getItem(info.position);
 		switch (item.getItemId()) {
 		case ACTION_INSTALL:
 			actionDownload(p);

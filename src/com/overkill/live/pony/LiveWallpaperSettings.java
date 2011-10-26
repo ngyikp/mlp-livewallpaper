@@ -86,7 +86,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	        ((Preference)findPreference("more_version")).setSummary(pinfo.versionName);
 		} catch (NameNotFoundException e) {
 		}
-				
+		
 		((Preference)findPreference("more_link_twitter")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {

@@ -12,7 +12,6 @@ import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.ToolSet;
 
 import android.graphics.Canvas;
-import android.graphics.Movie;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.SystemClock;
@@ -230,6 +229,8 @@ public class Pony{
 	    	// Calculate the distance to this point
 	    	double distance = Math.sqrt(Math.pow(this.getLocation().x - destination.x, 2) + Math.pow(this.getLocation().y - destination.y, 2));
 	    	
+	    	distance = distance == 0 ? 1 : distance;
+	    	
 	    	List<Pony.Directions> direction = getDestinationDirection(destination);
 	    	
             try {
@@ -275,7 +276,8 @@ public class Pony{
 	
 	            atDestination = false;
 	        }
-	    } else { // If we aren't following anything
+	    } else { // There is no destination, go whereever (If we aren't following anything)
+	    	
 	        if (!currentBehavior.right) {
 	            speed = -speed;
 	        }
@@ -383,31 +385,6 @@ public class Pony{
 	    // Verify if we should create effects		
 		if(RenderEngine.CONFIG_SHOW_EFFECTS){
 	    	cleanUpEffects(globalTime); 
-	    	if(nextBehavior != null && currentlyLoadingEffects == false){
-	    		Thread t = new Thread(new Runnable() {					
-					@Override
-					public void run() {
-						currentlyLoadingEffects = true;
-						long effectLoadStartTime = globalTime;
-				        nextBehavior.preloadImages();
-				    	List<EffectWindow> newEffects = nextBehavior.getEffects(globalTime, Pony.this);
-				        long effectLoadDuration = SystemClock.elapsedRealtime() - effectLoadStartTime;
-						for(EffectWindow newEffect : newEffects){
-					        newEffect.endTime += effectLoadDuration;
-					        newEffect.setLocation(nextBehavior.getEffectLocation(newEffect, Pony.this, newEffect.direction, newEffect.centering));
-					        activeEffects.add(newEffect);	
-						}
-				        nextBehavior.endTime += effectLoadDuration;
-				        currentBehavior.destroy();
-						currentBehavior = nextBehavior;
-				        currentBehavior.keep = false;
-				        nextBehavior.destroy();
-				        nextBehavior = null;
-						currentlyLoadingEffects = false;
-					}
-				});
-	    		t.start();
-	    	}
 		}
 	}
 	
@@ -430,8 +407,8 @@ public class Pony{
         
         for (EffectWindow effect : effectsToRemove) {
         	Log.i("Effect[" + effect.effectName +"]", "destroy");
-        	effect.destroy();
             this.activeEffects.remove(effect);
+        	effect.destroy();
         }
     }
 	
@@ -495,7 +472,7 @@ public class Pony{
 	
 	public void touch(long globalTime) {
 		shouldBeSleeping = !shouldBeSleeping;
-		Log.i("Pony[" + name + "]", "touch. are we sleeping now? " + shouldBeSleeping);
+		Log.i("Pony[" + name + "].touch()", "are we sleeping now? " + shouldBeSleeping);
 	}
 	
 	public void draw(Canvas canvas) {
@@ -835,14 +812,38 @@ public class Pony{
 		
 	    long timeNeeded = SystemClock.elapsedRealtime() - startTime;
 	    
-		if(RenderEngine.CONFIG_SHOW_EFFECTS && newBehavior.willPlayEffect(globalTime)){
+		if(RenderEngine.CONFIG_SHOW_EFFECTS && preventPreload == false && newBehavior.willPlayEffect(globalTime)){
 			// The next behavior needs an effect so we will preload the effect
 			nextBehavior = newBehavior;
 			if(currentBehavior != null) currentBehavior.keep = true;
+			if(currentlyLoadingEffects == false){
+	    		Thread t = new Thread(new Runnable() {					
+					@Override
+					public void run() {
+						currentlyLoadingEffects = true;
+						long effectLoadStartTime = SystemClock.elapsedRealtime();
+				        nextBehavior.preloadImages();
+				    	List<EffectWindow> newEffects = nextBehavior.getPreloadedEffects(globalTime, Pony.this);
+						for(EffectWindow newEffect : newEffects){
+					        newEffect.setLocation(nextBehavior.getEffectLocation(newEffect, Pony.this, newEffect.direction, newEffect.centering));
+					        newEffect.endTime += SystemClock.elapsedRealtime() - effectLoadStartTime;
+					        activeEffects.add(newEffect);	
+						}
+				        nextBehavior.endTime += SystemClock.elapsedRealtime() - effectLoadStartTime;
+				        currentBehavior.destroy();
+						currentBehavior = nextBehavior;
+				        currentBehavior.keep = false;
+				        //nextBehavior.destroy();
+				        nextBehavior = null;
+						currentlyLoadingEffects = false;
+					}
+				});
+	    		t.start();
+	    	}
 //			Log.i("Pony[" + name + "]", "Found next (effect) Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
-		}else{
+		}else{ // No Effects to load
+			// Load Behavior for the first time
 			if(preventPreload || currentBehavior == null){
-				// Tell the GC to pick up the old behavior
 				if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
 					if(MyLittleWallpaperService.DEBUG) Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
 					currentBehavior.destroy();
@@ -850,10 +851,8 @@ public class Pony{
 				}
 				long loadingStartTime = SystemClock.elapsedRealtime();
 				newBehavior.preloadImages();
-				long loadingDurationTime = SystemClock.elapsedRealtime() - loadingStartTime;
-				newBehavior.endTime += loadingDurationTime;
-				currentBehavior = newBehavior;
-//				Log.i("Pony[" + name + "]", "Found new (null) Behavior after " + (timeNeeded + loadingDurationTime) + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+				newBehavior.endTime += SystemClock.elapsedRealtime() - loadingStartTime;
+				currentBehavior = newBehavior;		
 			}else{
 				if(currentBehavior != null) currentBehavior.keep = true;
 				nextBehavior = newBehavior;
@@ -862,15 +861,14 @@ public class Pony{
 					public void run() {
 						long loadingStartTime = SystemClock.elapsedRealtime();
 						nextBehavior.preloadImages();
-						long loadingDurationTime = SystemClock.elapsedRealtime() - loadingStartTime;
-						nextBehavior.endTime += loadingDurationTime;
+						nextBehavior.endTime += SystemClock.elapsedRealtime() - loadingStartTime;
+						// Clean up the old Behavior
 						if(currentBehavior != null && nextBehavior != null && (nextBehavior.equals(currentBehavior) == false)){
-							if(MyLittleWallpaperService.DEBUG) 
-								Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + nextBehavior.name);
 							currentBehavior.destroy();
 							currentBehavior = null;
 						}
 						currentBehavior = nextBehavior;
+						currentBehavior.keep = false;
 						nextBehavior = null;
 					}
 				});
@@ -937,7 +935,8 @@ public class Pony{
 	}
 	
 	public static Pony fromFile(File localFolder, boolean onlyName){
-    	Pony newPony = new Pony("Derp");
+		int effectCount = 0;
+    	Pony newPony = new Pony("Error");
     	try{
 		    String line = "";
 		    File iniFile = new File(localFolder, "pony.ini");
@@ -1031,6 +1030,7 @@ public class Pony{
 									String leftimage = localFolder.getPath() + "/" + columns[EF_left_image].trim();									
 									// Add the effect to the behavior if the image loaded correctly
 									behavior.addEffect(columns[EF_effect_name].replace('"', ' ').trim(), rightimage, leftimage, Double.parseDouble(columns[EF_duration].trim()), Double.parseDouble(columns[EF_delay_before_next].trim()), direction_right, centering_right, direction_left, centering_left, Boolean.parseBoolean(columns[EF_follow].trim()));
+									effectCount++;
 									found_behavior = true;
 									break;
 								}
@@ -1043,7 +1043,7 @@ public class Pony{
 		    		
 		    	}
 	        br.close();
-	        Log.i("Pony[" + newPony.name + "]", "loaded with " + newPony.behaviors.size() + " Behaviors");
+	        Log.i("Pony[" + newPony.name + "]", "Loaded with " + newPony.behaviors.size() + " Behavior(s) and " + effectCount + " Effect(s)");
 		  	
     	}catch (Exception e) {
 			e.printStackTrace();
