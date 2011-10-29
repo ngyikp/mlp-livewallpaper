@@ -90,11 +90,6 @@ public class MyLittleWallpaperService extends WallpaperService {
             preferences = MyLittleWallpaperService.this.getSharedPreferences(TAG, MODE_PRIVATE);        
             preferences.registerOnSharedPreferenceChangeListener(this);
             
-//            Editor editor = preferences.edit();
-//            editor.putLong("savedTime", SystemClock.elapsedRealtime());
-//            editor.putBoolean("added_pony", true);
-//            editor.putBoolean("changed_pony", true);
-//            editor.commit();
             onSharedPreferenceChanged(preferences, "startup");
         	super.onCreate(surfaceHolder);
         	this.previewMode = super.isPreview();
@@ -183,6 +178,8 @@ public class MyLittleWallpaperService extends WallpaperService {
 
 					RENDER_ON_SWIPE = sharedPreferences.getBoolean("render_on_swipe", true);
 					
+//		        	previewMode = SpriteEngine.this.isPreview() || sharedPreferences.getBoolean("disable_wallpaper_scrolling", false);
+
 					// get Background image if we want one			
 					String filePath = sharedPreferences.getString("background_image", null);
 					engine.setBackgroundColor(sharedPreferences.getInt("background_color", 0xff000000));
@@ -243,12 +240,13 @@ public class MyLittleWallpaperService extends WallpaperService {
 
         @Override
         public void onOffsetsChanged(float xOffset, float yOffset, float xStep, float yStep, int xPixels, int yPixels) {
-        	if(previewMode)
+        	if(previewMode){
                 engine.setOffset(0);     
-        	else  
-            	engine.setOffset(xPixels);   
+        	}else{  
+            	engine.setOffset(xPixels);  
+                if(RENDER_ON_SWIPE) engine.render();
+        	}
         	
-            if(RENDER_ON_SWIPE) engine.render();
         }
         
         @Override

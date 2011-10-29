@@ -10,6 +10,7 @@ import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.List;
 
+import com.overkill.live.pony.engine.Pony;
 import com.overkill.ponymanager.PonyManager;
 
 import android.app.AlertDialog;
@@ -194,7 +195,8 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 				poniesName = new String[ponyFolders.length];
 				
 				for(int i = 0; i < ponyFolders.length; i++){
-					poniesName[i] = ToolSet.getPonyNameFromINI(ponyFolders[i]);
+//					poniesName[i] = ToolSet.getPonyNameFromINI(ponyFolders[i]);
+					poniesName[i] = Pony.fromFile(ponyFolders[i], true).name;
 					if(poniesName[i] == null){
 						poniesName[i] = "ERROR";
 						Toast.makeText(LiveWallpaperSettings.this, "Error accessing file \"" + ponyFolders[i].getPath() + "\"", Toast.LENGTH_LONG).show();

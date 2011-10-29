@@ -215,7 +215,9 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				
 				// clean up already finished files
 				File folder = new File(localFolder, p.getFolder());
+				if(folder.isDirectory() == false) return;
 				File[] files = folder.listFiles();
+				if(files == null) return;
 				for(File f : files){
 					f.delete();
 				}

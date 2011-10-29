@@ -25,6 +25,7 @@
     
 </PreferenceCategory><PreferenceCategory android:key="display_settings" android:title="@string/display_settings_title"><ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference><EditTextPreference android:key="pony_scale" android:defaultValue="1" android:title="@string/pony_scale_title" android:summary="@string/pony_scale_summary" android:inputType="numberDecimal"></EditTextPreference>
 <EditTextPreference android:title="Movement Delay" android:summary="The delay to wait before moving the pony (in ms)" android:key="movement_delay_ms" android:defaultValue="100"></EditTextPreference>
+<!-- <CheckBoxPreference android:key="disable_wallpaper_scrolling" android:defaultValue="false" android:title="@string/disable_wallpaper_scrolling_title" android:summary="@string/disable_wallpaper_scrolling_summary"/> -->
     
     
 </PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="@string/more_settings_title"><CheckBoxPreference android:defaultValue="false" android:title="@string/force_local_storage_title" android:summary="@string/force_local_storage_summary" android:enabled="true" android:key="force_internal_storage"></CheckBoxPreference>

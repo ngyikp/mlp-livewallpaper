@@ -3,8 +3,12 @@ package com.overkill.live.pony.engine;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -822,20 +826,25 @@ public class Pony{
 					public void run() {
 						currentlyLoadingEffects = true;
 						long effectLoadStartTime = SystemClock.elapsedRealtime();
-				        nextBehavior.preloadImages();
-				    	List<EffectWindow> newEffects = nextBehavior.getPreloadedEffects(globalTime, Pony.this);
-						for(EffectWindow newEffect : newEffects){
-					        newEffect.setLocation(nextBehavior.getEffectLocation(newEffect, Pony.this, newEffect.direction, newEffect.centering));
-					        newEffect.endTime += SystemClock.elapsedRealtime() - effectLoadStartTime;
-					        activeEffects.add(newEffect);	
+						try{
+					        nextBehavior.preloadImages();
+					    	List<EffectWindow> newEffects = nextBehavior.getPreloadedEffects(globalTime, Pony.this);
+							for(EffectWindow newEffect : newEffects){
+						        newEffect.setLocation(nextBehavior.getEffectLocation(newEffect, Pony.this, newEffect.direction, newEffect.centering));
+						        newEffect.endTime += SystemClock.elapsedRealtime() - effectLoadStartTime;
+						        activeEffects.add(newEffect);	
+							}
+						}catch(Exception e){
+							e.printStackTrace();
+						}finally{
+							nextBehavior.endTime += SystemClock.elapsedRealtime() - effectLoadStartTime;
+					        currentBehavior.destroy();
+							currentBehavior = nextBehavior;
+					        currentBehavior.keep = false;
+					        //nextBehavior.destroy();
+					        nextBehavior = null;
+							currentlyLoadingEffects = false;
 						}
-				        nextBehavior.endTime += SystemClock.elapsedRealtime() - effectLoadStartTime;
-				        currentBehavior.destroy();
-						currentBehavior = nextBehavior;
-				        currentBehavior.keep = false;
-				        //nextBehavior.destroy();
-				        nextBehavior = null;
-						currentlyLoadingEffects = false;
 					}
 				});
 	    		t.start();
@@ -941,8 +950,15 @@ public class Pony{
 		    String line = "";
 		    File iniFile = new File(localFolder, "pony.ini");
 		    if(iniFile.exists() == false)
-			    iniFile = new File(localFolder, "Pony.ini");		
-		    BufferedReader br = new BufferedReader(new FileReader(iniFile));
+			    iniFile = new File(localFolder, "Pony.ini");
+		    BufferedReader br = null;
+		    InputStreamReader is = new InputStreamReader(new FileInputStream(iniFile), "UTF-8");
+		    if(is.read() == 0x0fffd){		    	
+		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-16LE"));
+		    } else {
+		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-8"));
+		    }
+		    is.close();
 		    while ((line = br.readLine()) != null) {		    	
 			           if(line.startsWith("'")) continue; //skip comments
 			           if(line.toLowerCase().startsWith("name")){ newPony = new Pony(line.substring(5)); if(onlyName) { return newPony; } continue;}

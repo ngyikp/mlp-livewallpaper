@@ -49,6 +49,8 @@ public class AsynImageLoader extends Thread{
 				Bitmap b = getFromCache(remoteImage);
 				if(b == null){
 					b = BitmapFactory.decodeStream(new URL(path).openStream());
+				}
+				if(b != null){
 					saveToCache(b, remoteImage);
 				}
 				this.listener.imageComplete(ID, b);
@@ -75,9 +77,10 @@ public class AsynImageLoader extends Thread{
 	private boolean saveToCache(Bitmap bitmap, File file){
 		try {
 			File cachedFile = getCachedFile(file);
+			if(cachedFile.canWrite() == false) return false;
 			bitmap.compress(CompressFormat.PNG, 100, new FileOutputStream(cachedFile));
 			return true;
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}

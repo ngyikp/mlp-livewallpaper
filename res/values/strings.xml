@@ -61,5 +61,8 @@
     <string name="force_local_storage_warning_title">Warning</string>
     <string name="force_local_storage_warning_message">force_local_storage_warning_message</string>
    	<string name="dialog_color_picker">Color Picker</string>
-    <string name="press_color_to_apply">Press on Color to apply</string>    
+    <string name="press_color_to_apply">Press on Color to apply</string>
+    <string name="disable_swipe_title">Disable Swipe</string>
+    <string name="disable_wallpaper_scrolling_title">Disable wallpaper scrolling</string>
+    <string name="disable_wallpaper_scrolling_summary">Turn off side scrolling</string>    
 </resources>

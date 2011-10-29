@@ -2,9 +2,14 @@ package com.overkill.live.pony;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import com.overkill.live.pony.engine.Pony;
 import com.overkill.live.pony.engine.Pony.Directions;
@@ -129,17 +134,26 @@ public class ToolSet {
 	}
     
     public static String getPonyNameFromINI(File folder){
-    	String line = "";
-    	File iniFile = new File(folder, "pony.ini");
-	    if(iniFile.exists() == false)
-		    iniFile = new File(folder, "Pony.ini");				    	
-	    BufferedReader content;
 		try {
-			content = new BufferedReader(new FileReader(iniFile));
-			while ((line = content.readLine()) != null) {		    	
+	    	String line = "";
+	    	File iniFile = new File(folder, "pony.ini");
+		    if(iniFile.exists() == false)
+			    iniFile = new File(folder, "Pony.ini");				    	
+		    BufferedReader br = null;
+		    InputStreamReader is = new InputStreamReader(new FileInputStream(iniFile), "UTF-8");
+		    if(is.read() == 0x0fffd){		    	
+		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-16LE"));
+		    } else {
+		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-8"));
+		    }
+		    is.close();
+
+			br = new BufferedReader(new FileReader(iniFile));
+			while ((line = br.readLine()) != null) {		    	
 		    	if(line.startsWith("'")) continue;
 			    if(line.startsWith("Name")){ return line.substring(5).trim();}
 		    }
+			br.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
