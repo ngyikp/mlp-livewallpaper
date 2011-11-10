@@ -108,7 +108,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 					selectablePonies.clear();
 				    for(File ponyFolder : ponyFolders){
 				    	Pony tmp = Pony.fromFile(ponyFolder, true);
-				    	if(selectablePonies.contains(tmp) == false)
+				    	if(tmp != null && selectablePonies.contains(tmp) == false)
 				    		selectablePonies.add(Pony.fromFile(ponyFolder));
 				    }
 				} catch (Exception e) {

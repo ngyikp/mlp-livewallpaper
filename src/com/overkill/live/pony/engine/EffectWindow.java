@@ -7,8 +7,8 @@ public class EffectWindow{
 
 	public long endTime;
 	public boolean follows;
-	public Pony.Directions direction;
-	public Pony.Directions centering;
+	public Pony.Direction direction;
+	public Pony.Direction centering;
 	public String effectName;
 	public boolean Close_On_New_Behavior;
 	public String behaviorName;
@@ -23,7 +23,7 @@ public class EffectWindow{
 	boolean ready = false;
 	
 	public void update(long globalTime){
-		this.image.update(globalTime);
+		this.image.update(globalTime, "effectWindow");
 	}
 	
 	public void draw(Canvas canvas){

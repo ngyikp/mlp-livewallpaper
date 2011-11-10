@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import com.overkill.live.pony.LiveWallpaperSettings;
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
+import com.overkill.live.pony.ToolSet;
 import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
 import com.overkill.ponymanager.AsynImageLoader.onImageListener;
 
@@ -22,6 +24,7 @@ import android.app.WallpaperInfo;
 import android.app.WallpaperManager;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.SharedPreferences.Editor;
 import android.content.Context;
 import android.content.Intent;
@@ -56,6 +59,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	public static final String ACTION_REMOVE_PONY = "com.overkill.live.pony.action.removed";
 	
 	public static final String REMOTE_BASE_URL = "http://mlp-livewallpaper.googlecode.com/svn/assets/";
+	public static final String REMOTE_LIST_URL = REMOTE_BASE_URL + "ponies2.lst";
 	public static final int ACTION_INSTALL = 1;
 	public static final int ACTION_DELETE = 2;
 	public static final int ACTION_STOP = 3;
@@ -63,7 +67,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	public static final int THEMES[] = {R.style.Theme_Pony_Applejack, R.style.Theme_Pony_Rainbowdash, R.style.Theme_Pony_Fluttershy, R.style.Theme_Pony_PinkiePie, R.style.Theme_Pony_Rarity, R.style.Theme_Pony_TwilightSparkle};
 	
-	public static final String filterOptions[] = {"SORT A-Z", "SORT Z-A", "Show all", "Only show not installed", "Only show updates"};
+	public static final String filterOptions[] = {"SORT A-Z", "SORT Z-A", "Show all", "Only show not installed", "Only show updates", "Filter By Category"};
 	private int currentFilter = 0;
 	private boolean currentSortASC = true;
 	
@@ -93,6 +97,28 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				break;
 			case 4: // only updates
 				adapter.filterByState(R.string.pony_state_update);
+				break;
+			case 5: // show category dialog
+				currentFilter = -1;
+				if(dialog != null) dialog.dismiss();
+				AlertDialog.Builder categoryDialog = new AlertDialog.Builder(PonyManager.this);
+				categoryDialog.setTitle("Filter Options");		
+				categoryDialog.setMultiChoiceItems(adapter.getCategoryNamesWithCount(), adapter.getCategoryStates(), new OnMultiChoiceClickListener() {					
+					@Override
+					public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+						adapter.setCategoryFilter(adapter.getCategoryNames()[which], isChecked);						
+					}
+				});
+				categoryDialog.setNegativeButton(android.R.string.cancel, null);
+				categoryDialog.setPositiveButton(android.R.string.ok, new OnClickListener() {					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						adapter.filterByCategory();		
+						dialog.dismiss();
+						adapter.notifyDataSetChanged();
+					}
+				});
+				categoryDialog.show();				
 				break;
 			default:
 				break;
@@ -250,7 +276,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		switch (view.getId()) {
 		case R.id.btn_title_filter:
 			dialog.setTitle("Filter Options");
-			dialog.setSingleChoiceItems(filterOptions, currentFilter, filterListener);
+			dialog.setItems(filterOptions, filterListener);
 			dialog.show();
 			break;
 		case R.id.btn_title_preferences:
@@ -335,6 +361,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		localFolder = PonyManager.selectFolder(this);
 		asynImageLoader = new AsynImageLoader(this, this);
 		
+		
+		
 		registerForContextMenu(getListView());
 		getListView().setOnItemClickListener(new OnItemClickListener() {
 			@Override
@@ -379,9 +407,9 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	}
 	
 	private ArrayList<DownloadPony> loadPonies(){
-		ArrayList<DownloadPony> r = new ArrayList<DownloadPony>();
+		ArrayList<DownloadPony> ponyList = new ArrayList<DownloadPony>();
 		try {
-			URL listFile = new URL(REMOTE_BASE_URL + "ponies.lst");
+			URL listFile = new URL(REMOTE_LIST_URL);
 			URLConnection urlCon = listFile.openConnection();
 			urlCon.setConnectTimeout(10000);
 			urlCon.setReadTimeout(10000);
@@ -392,19 +420,28 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				line = line.trim();
 				if(line.startsWith("'"))
 					continue;
-				final String data[] = line.split(",");
+				final String data[] = ToolSet.splitWithQualifiers(line, ",", "[", "]");
 				if(data.length < 5)
 					continue;
-				File local = new File(localFolder, data[1]);
+				File local = new File(localFolder, data[2]);
 				int state = R.string.pony_state_not_installed;
 				if(local.exists())
 					state = R.string.pony_state_installed;
-				DownloadPony p = new DownloadPony(data[0], data[1], Integer.valueOf(data[2].trim()), Long.valueOf(data[3].trim()), state);
+				DownloadPony p = new DownloadPony(data[0], data[2], Integer.valueOf(data[3].trim()), Long.valueOf(data[4].trim()), state);
+				
+				String[] categories;
+				if(data[1].contains(","))
+					categories = data[1].trim().split(",");
+				else
+					categories = new String[] {data[1].trim()};
+				
+				p.setCategories(Arrays.asList(categories));
 				p.setImage(BitmapFactory.decodeResource(getResources(), R.drawable.ponytemp));
 				p.setLastUpdate(Long.valueOf(data[4]));
-				r.add(p);
+				ponyList.add(p);
 				count++;
 			}
+			
 		} catch (final Exception e) {
 			runOnUiThread(new Runnable() {			
 				@Override
@@ -412,7 +449,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			});
 			e.printStackTrace();
 		}	
-		return r;
+		return ponyList;
 	}
 	
 	@Override
@@ -515,7 +552,6 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				int resId = getResources().getIdentifier("drawable/" + source, null, getPackageName());
 				Drawable d = getResources().getDrawable(resId);
 				d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-				Log.i("ImageGetter", source + " > " + resId);
 				return d;
 			}
 		}, null));

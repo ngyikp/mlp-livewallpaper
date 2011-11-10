@@ -1,7 +1,6 @@
 package com.overkill.ponymanager;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -77,7 +76,7 @@ public class AsynImageLoader extends Thread{
 	private boolean saveToCache(Bitmap bitmap, File file){
 		try {
 			File cachedFile = getCachedFile(file);
-			if(cachedFile.canWrite() == false) return false;
+			// if(cachedFile.canWrite() == false) return false;
 			bitmap.compress(CompressFormat.PNG, 100, new FileOutputStream(cachedFile));
 			return true;
 		} catch (Exception e) {

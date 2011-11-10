@@ -1,20 +1,15 @@
 package com.overkill.live.pony;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.Arrays;
+import android.graphics.Point;
 
+import com.overkill.live.pony.engine.EffectWindow;
 import com.overkill.live.pony.engine.Pony;
-import com.overkill.live.pony.engine.Pony.Directions;
+import com.overkill.live.pony.engine.PonyWindow;
+import com.overkill.live.pony.engine.Pony.Direction;
+
 
 public class ToolSet {
+	
 	public static String[] splitWithQualifiers(String SourceText, String TextDelimiter, String TextQualifier) {
 		return splitWithQualifiers(SourceText, TextDelimiter, TextQualifier, "");
 	}
@@ -60,37 +55,49 @@ public class ToolSet {
 		} else {
 		    strRes = new String[1];
 		    strRes[0] = SourceText;
-		}
+		}	
 		return strRes;
 	}
-    public static Directions getDirection(String setting) throws Exception {
+    
+    /**
+     * Converts a String to a {@link Direction}
+     * @param setting The String to convert
+     * @return The {@link Direction} indicated by the String
+     * @throws Exception If no match was found
+     */
+    public static Direction getDirection(String setting) throws Exception {
 		if (setting.trim().equalsIgnoreCase("top"))
-			return Directions.top;
+			return Direction.top;
 		if (setting.trim().equalsIgnoreCase("bottom"))
-			return Directions.bottom;
+			return Direction.bottom;
 		if (setting.trim().equalsIgnoreCase("left"))
-			return Directions.left;
+			return Direction.left;
 		if (setting.trim().equalsIgnoreCase("right"))
-			return Directions.right;
+			return Direction.right;
 		if (setting.trim().equalsIgnoreCase("bottom_right"))
-			return Directions.bottom_right;
+			return Direction.bottom_right;
 		if (setting.trim().equalsIgnoreCase("bottom_left"))
-			return Directions.bottom_left;
+			return Direction.bottom_left;
 		if (setting.trim().equalsIgnoreCase("top_right"))
-			return Directions.top_right;
+			return Direction.top_right;
 		if (setting.trim().equalsIgnoreCase("top_left"))
-			return Directions.top_left;
+			return Direction.top_left;
 		if (setting.trim().equalsIgnoreCase("center"))
-			return Directions.center;
+			return Direction.center;
 		if (setting.trim().equalsIgnoreCase("any"))
-			return Directions.random;
+			return Direction.random;
 		if (setting.trim().equalsIgnoreCase("any_notcenter"))
-			return Directions.random_not_center;
+			return Direction.random_not_center;
 		
 		// If not a valid direction, throw excepion
 		throw new Exception("Invalid placement direction or centering for effect.");
 	}
     
+    /**
+     * Format a byte value to a string ending with B, KB, MB, GB or TB
+     * @param bytes The value to format
+     * @return The given byte value with 2 decimal digits and B, KB, MB, GB or TB
+     */
     public static String formatBytes(float bytes) {
 	    String units[] = {"B", "KB", "MB", "GB", "TB"};
 	  
@@ -99,11 +106,16 @@ public class ToolSet {
 	    pow = Math.min(pow, units.length - 1);
 	  
 	    bytes /= Math.pow(1024, pow);
-	  
+	    
 	    return  String.format("%.2f", bytes) + ' ' + units[pow];
 	}
     
-    public static Pony.Directions getRandomDirection(boolean IncludeCentered) {
+    /**
+     * Returns a random {@link Direction}.
+     * @param IncludeCentered Include {@link Directions.center} as a possible value
+     * @return A random {@link Direction}
+     */
+    public static Direction getRandomDirection(boolean IncludeCentered) {
 		int dice;
 		if (IncludeCentered)
 			dice = MyLittleWallpaperService.rand.nextInt(9);
@@ -112,53 +124,97 @@ public class ToolSet {
 		
 		switch(dice) {
 			case 0:
-				return Pony.Directions.bottom;
+				return Pony.Direction.bottom;
 			case 1:
-				return Pony.Directions.bottom_left;
+				return Pony.Direction.bottom_left;
 			case 2:
-				return Pony.Directions.bottom_right;
+				return Pony.Direction.bottom_right;
 			case 3:
-				return Pony.Directions.left;
+				return Pony.Direction.left;
 			case 4:
-				return Pony.Directions.right;
+				return Pony.Direction.right;
 			case 5:
-				return Pony.Directions.top;
+				return Pony.Direction.top;
 			case 6:
-				return Pony.Directions.top_left;
+				return Pony.Direction.top_left;
 			case 7:
-				return Pony.Directions.top_right;
+				return Pony.Direction.top_right;
 			case 8:
 			default:
-				return Pony.Directions.center;
+				return Pony.Direction.center;
 		}
 	}
     
-    public static String getPonyNameFromINI(File folder){
-		try {
-	    	String line = "";
-	    	File iniFile = new File(folder, "pony.ini");
-		    if(iniFile.exists() == false)
-			    iniFile = new File(folder, "Pony.ini");				    	
-		    BufferedReader br = null;
-		    InputStreamReader is = new InputStreamReader(new FileInputStream(iniFile), "UTF-8");
-		    if(is.read() == 0x0fffd){		    	
-		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-16LE"));
-		    } else {
-		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-8"));
-		    }
-		    is.close();
-
-			br = new BufferedReader(new FileReader(iniFile));
-			while ((line = br.readLine()) != null) {		    	
-		    	if(line.startsWith("'")) continue;
-			    if(line.startsWith("Name")){ return line.substring(5).trim();}
-		    }
-			br.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+    /**
+	 * Returns the position	of the effect depending on the target postionioning around the given Pony
+	 * @param effectWindow Holds the size of the effect
+	 * @param pony Pony to cast the effect
+	 * @param direction Direction from the Pony
+	 * @param centering Centering on the Pony
+	 * @return
+	 */
+	public static Point getEffectLocation(EffectWindow effectWindow, Direction direction, PonyWindow ponyWindow, Direction centering) {
+		Point point = new Point(0, 0);		
+		switch(direction) {
+			case bottom:
+				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getSpriteWidth() / 2), ponyWindow.getLocation().y + ponyWindow.getSpriteHeight());
+				break;
+			case bottom_left:
+				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y + ponyWindow.getSpriteHeight());
+				break;
+			case bottom_right:
+				point = new Point(ponyWindow.getLocation().x + ponyWindow.getSpriteWidth(), ponyWindow.getLocation().y + ponyWindow.getSpriteHeight());
+				break;
+			case center:
+				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getSpriteWidth() / 2), ponyWindow.getLocation().y + (ponyWindow.getSpriteHeight() / 2));
+				break;
+			case left:
+				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y + (ponyWindow.getSpriteHeight() / 2));
+				break;
+			case right:
+				point = new Point(ponyWindow.getLocation().x + ponyWindow.getSpriteWidth(), ponyWindow.getLocation().y + (ponyWindow.getSpriteHeight() / 2));
+				break;
+			case top:
+				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getSpriteWidth() / 2), ponyWindow.getLocation().y);
+				break;
+			case top_left:
+				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y);
+				break;
+			case top_right:
+				point = new Point(ponyWindow.getLocation().x + ponyWindow.getSpriteWidth(), ponyWindow.getLocation().y);
+				break;
 		}
-		return null;
-    }
+		
+		switch(centering) {
+			case bottom:
+				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y - effectWindow.getImage().getSpriteHeight());
+				break;
+	        case bottom_left:
+				point = new Point(point.x, point.y - effectWindow.getImage().getSpriteHeight());
+				break;
+	        case bottom_right:
+				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y - effectWindow.getImage().getSpriteHeight());
+				break;
+	        case center:
+				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y - (effectWindow.getImage().getSpriteHeight() / 2));
+				break;
+	        case left:
+				point = new Point(point.x, point.y - (effectWindow.getImage().getSpriteHeight() / 2));
+				break;
+	        case right:
+				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y - (effectWindow.getImage().getSpriteHeight() / 2));
+				break;
+	        case top:
+				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y);
+				break;
+	        case top_left:
+				// no change
+				break;
+	        case top_right:
+				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y);
+				break;
+		}
+		
+		return point;
+	}
 }

@@ -3,7 +3,6 @@ package com.overkill.live.pony.engine;
 import java.util.LinkedList;
 import java.util.List;
 
-import android.graphics.Canvas;
 import android.graphics.Point;
 
 import com.overkill.live.pony.MyLittleWallpaperService;
@@ -18,7 +17,7 @@ public class Behavior {
 	public double minDuration; 
 	public double speed;
 	
-	private Sprite current_image = null;
+	public Sprite currentImage = null;
 	
 	public String image_right_path;
 	private Sprite image_right = null;
@@ -61,48 +60,48 @@ public class Behavior {
 	 * Updates the currently used image
 	 * @param globalTime The time
 	 */
-	public void update(long globalTime) {
-		this.getCurrentImage().update(globalTime);
-	}
+//	public void update(long globalTime) {
+//		this.getCurrentImage().update(globalTime);
+//	}
 
 	/**
 	 * Draws the currently used image on the canvas at the position
 	 * @param canvas The {@link Canvas} to draw on
 	 * @param position The position on the canvas
 	 */
-	public void draw(Canvas canvas, Point position) {
-		this.getCurrentImage().draw(canvas, position);
-	}	
+//	public void draw(Canvas canvas, Point position) {
+//		this.getCurrentImage().draw(canvas, position);
+//	}	
 	
 	/**
 	 * Set the current image if it is null or we need to change direction
 	 * @return
 	 */
-	public Sprite getCurrentImage(){	
-		if(current_image == null){
-			 this.selectCurrentImage();
-		}
-		if(currentRight != right){
-			this.selectCurrentImage();
-			currentRight = right;
-		}
-		return current_image;
-	}
+//	public Sprite getCurrentImage(){	
+//		if(current_image == null){
+//			 this.selectCurrentImage();
+//		}
+//		if(currentRight != right){
+//			this.selectCurrentImage();
+//			currentRight = right;
+//		}
+//		return current_image;
+//	}
 	
 	/**
 	 * Set Image depending on current direction
 	 */
-	private void selectCurrentImage(){
-		current_image = null;
+	public void selectCurrentImage(){
+		currentImage = null;
 		if (this.right){
 			if(image_right == null){
 				image_right = new Sprite(image_right_path);
 			}
-	        current_image = image_right;
+	        currentImage = image_right;
 		}else{
 	    	if(image_left == null)
 				image_left = new Sprite(image_left_path);
-	        current_image = image_left;
+	        currentImage = image_left;
 	    }
 	}
 		
@@ -126,7 +125,7 @@ public class Behavior {
 	
 	public Point getDestination(Pony pony) {
     	// If we aren't following anything yet
-    	if ((follow_object_name.length() > 0 && follow_object == null) || (follow_object != null && !follow_object.isVisible())) {
+    	if ((follow_object_name.length() > 0 && follow_object == null) || (follow_object != null && !follow_object.window.isVisible())) {
     		if (pony.isInteracting && follow_object_name.trim().equalsIgnoreCase(pony.currentInteraction.trigger.name.trim())) {
     			follow_object = pony.currentInteraction.trigger;
     			return new Point(follow_object.getLocation().x + destination_xcoord, follow_object.getLocation().y + destination_ycoord);
@@ -255,15 +254,15 @@ public class Behavior {
 	}
 	
 	public void destroy(){
-		if(this.current_image != null) this.current_image.destroy();
-		this.current_image = null;
+//		if(this.current_image != null) this.current_image.destroy();
+//		this.current_image = null;
 		if(this.image_left != null) this.image_left.destroy();
 		this.image_left = null;
 		if(this.image_right != null) this.image_right.destroy();
 		this.image_right = null;
 	}
 
-	public void addEffect(String effectname, String right_image, String left_image, double duration, double repeat_delay, Pony.Directions direction_right, Pony.Directions centering_right, Pony.Directions direction_left, Pony.Directions centering_left, boolean follow) {
+	public void addEffect(String effectname, String right_image, String left_image, double duration, double repeat_delay, Pony.Direction direction_right, Pony.Direction centering_right, Pony.Direction direction_left, Pony.Direction centering_left, boolean follow) {
 		Effect new_effect = new Effect();
     	
     	new_effect.behavior_name = this.name;
@@ -331,13 +330,13 @@ public class Behavior {
 		            	effectWindow.centering = effect.centering_left;
 		            }
 		               	            
-		            if (effectWindow.direction == Pony.Directions.random)
+		            if (effectWindow.direction == Pony.Direction.random)
 		            	effectWindow.direction = ToolSet.getRandomDirection(true);
-		            if (effectWindow.centering == Pony.Directions.random)
+		            if (effectWindow.centering == Pony.Direction.random)
 		            	effectWindow.centering = ToolSet.getRandomDirection(true);
-		            if (effectWindow.direction == Pony.Directions.random_not_center)
+		            if (effectWindow.direction == Pony.Direction.random_not_center)
 		            	effectWindow.direction = ToolSet.getRandomDirection(false);
-		            if (effectWindow.centering == Pony.Directions.random_not_center)
+		            if (effectWindow.centering == Pony.Direction.random_not_center)
 		            	effectWindow.centering = ToolSet.getRandomDirection(false);
 		
 		            // Initialize the effect values
@@ -360,77 +359,6 @@ public class Behavior {
 		return newEffects;
 	}
 	
-	/**
-	 * Returns the position	of the effect depending on the target postionioning around the given Pony
-	 * @param effectWindow Holds the size of the effect
-	 * @param pony Pony to cast the effect
-	 * @param direction Direction from the Pony
-	 * @param centering Centering on the Pony
-	 * @return
-	 */
-	public Point getEffectLocation(EffectWindow effectWindow, Pony pony, Pony.Directions direction, Pony.Directions centering) {
-		Point point = new Point(0, 0);		
-		switch(direction) {
-			case bottom:
-				point = new Point(pony.getLocation().x + (this.getCurrentImage().getSpriteWidth() / 2), pony.getLocation().y + this.getCurrentImage().getSpriteHeight());
-				break;
-			case bottom_left:
-				point = new Point(pony.getLocation().x, pony.getLocation().y + this.getCurrentImage().getSpriteHeight());
-				break;
-			case bottom_right:
-				point = new Point(pony.getLocation().x + this.getCurrentImage().getSpriteWidth(), pony.getLocation().y + this.getCurrentImage().getSpriteHeight());
-				break;
-			case center:
-				point = new Point(pony.getLocation().x + (this.getCurrentImage().getSpriteWidth() / 2), pony.getLocation().y + (this.getCurrentImage().getSpriteHeight() / 2));
-				break;
-			case left:
-				point = new Point(pony.getLocation().x, pony.getLocation().y + (this.getCurrentImage().getSpriteHeight() / 2));
-				break;
-			case right:
-				point = new Point(pony.getLocation().x + this.getCurrentImage().getSpriteWidth(), pony.getLocation().y + (this.getCurrentImage().getSpriteHeight() / 2));
-				break;
-			case top:
-				point = new Point(pony.getLocation().x + (this.getCurrentImage().getSpriteWidth() / 2), pony.getLocation().y);
-				break;
-			case top_left:
-				point = new Point(pony.getLocation().x, pony.getLocation().y);
-				break;
-			case top_right:
-				point = new Point(pony.getLocation().x + this.getCurrentImage().getSpriteWidth(), pony.getLocation().y);
-				break;
-		}
-		
-		switch(centering) {
-			case bottom:
-				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y - effectWindow.getImage().getSpriteHeight());
-				break;
-	        case bottom_left:
-				point = new Point(point.x, point.y - effectWindow.getImage().getSpriteHeight());
-				break;
-	        case bottom_right:
-				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y - effectWindow.getImage().getSpriteHeight());
-				break;
-	        case center:
-				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y - (effectWindow.getImage().getSpriteHeight() / 2));
-				break;
-	        case left:
-				point = new Point(point.x, point.y - (effectWindow.getImage().getSpriteHeight() / 2));
-				break;
-	        case right:
-				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y - (effectWindow.getImage().getSpriteHeight() / 2));
-				break;
-	        case top:
-				point = new Point(point.x - (effectWindow.getImage().getSpriteWidth() / 2), point.y);
-				break;
-	        case top_left:
-				// no change
-				break;
-	        case top_right:
-				point = new Point(point.x - effectWindow.getImage().getSpriteWidth(), point.y);
-				break;
-		}
-		
-		return point;
-	}
+	
 	
 }

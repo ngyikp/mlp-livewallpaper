@@ -17,10 +17,10 @@ public class Effect {
     
     public double duration;
     public double repeat_delay;
-    public Pony.Directions placement_direction_right;
-    public Pony.Directions centering_right;
-    public Pony.Directions placement_direction_left;
-    public Pony.Directions centering_left;
+    public Pony.Direction placement_direction_right;
+    public Pony.Direction centering_right;
+    public Pony.Direction placement_direction_left;
+    public Pony.Direction centering_left;
 	
 	public Point position;
 	
@@ -81,6 +81,6 @@ public class Effect {
 
 	public void update(long globalTime) {
 		//Log.i("Effect[" + name + "]", "update");
-		this.current_image.update(globalTime);		
+		this.current_image.update(globalTime, "effect");		
 	}
 }

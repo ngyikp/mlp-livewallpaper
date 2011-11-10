@@ -18,7 +18,7 @@ import android.util.Log;
 public class Sprite {
 	public static Paint debugPaint = new Paint();
 	//private boolean loading = false;
-	private String fileName;
+	public String fileName;
 	
 	private GifDecoder gif = null;
 	private Bitmap staticImage;
@@ -40,12 +40,12 @@ public class Sprite {
 	 * @throws FileNotFoundException
 	 */
 	public Sprite(String fileName){
-		this(fileName, true);	
+		this(fileName, false);	
 	}
 	
 	public Sprite(String fileName, boolean initializeGIF){
 		this.fileName = fileName;	
-		if(initializeGIF) this.initialize();
+		if(initializeGIF) this.initialize("constructor");
 		debugPaint.setStyle(Style.STROKE);
 		debugPaint.setColor(0xffffffff);
 		opts.inScaled = false;
@@ -54,7 +54,7 @@ public class Sprite {
 	/**
 	 * Decodes the GIF File and stores data
 	 */
-	public boolean initialize(){
+	public boolean initialize(String reason){
 //		if(this.loading) return;
 //		this.loading = true;
 		long t0 = System.currentTimeMillis();
@@ -73,8 +73,8 @@ public class Sprite {
 				this.spriteHeight = this.staticImage.getHeight();
 				this.isAnimated = false;
 			}
-			if(MyLittleWallpaperService.DEBUG)
-				Log.i("Sprite", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*2));
+//			if(MyLittleWallpaperService.DEBUG)
+				Log.i("Sprite[" + reason + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*2));
 
 			this.initialized = true;
 		} catch (OutOfMemoryError e) {
@@ -92,7 +92,7 @@ public class Sprite {
 	 * @return height to the GIF
 	 */
 	public int getSpriteHeight() {
-		if(!initialized) this.initialize();
+		if(!initialized) this.initialize("getSpriteHeight");
 		return (int) (this.spriteHeight * RenderEngine.CONFIG_SCALE);
 	}
 	
@@ -101,7 +101,7 @@ public class Sprite {
 	 * @return width to the GIF
 	 */
 	public int getSpriteWidth() {
-		if(!initialized) this.initialize();
+		if(!initialized) this.initialize("getSpriteWidth");
 		return (int) (this.spriteWidth * RenderEngine.CONFIG_SCALE);
 	}
 	
@@ -110,8 +110,8 @@ public class Sprite {
 	 * Updates the current frame for the given time
 	 * @param globalTime The time to find the frame for
 	 */
-	public void update(long globalTime) {
-		if(!this.initialized) this.initialize();
+	public void update(long globalTime, String origin) {
+		if(!this.initialized) this.initialize("update-" + origin);
 		if(!this.isAnimated) return; // No need to update frames for a static image
 		if(this.gif == null) { RenderEngine.suggestRestart(); return; }
 		if (globalTime > this.lastFrameTime + this.gif.getDelay(currentFrame)) {
@@ -131,7 +131,7 @@ public class Sprite {
 	public void draw(Canvas canvas, Point position) {
 		if(canvas == null || position == null) return;
 		//while(loading);
-		if(!this.initialized) this.initialize();
+		if(!this.initialized) this.initialize("draw");
 
 		Point realPosition = new Point(position.x + RenderEngine.OFFSET, position.y);
 		
@@ -157,5 +157,15 @@ public class Sprite {
 		this.gif = null;
 		this.staticImage = null;
 		this.initialized = false;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		Sprite s = (Sprite)o;
+		return s.fileName.equals(this.fileName);
+	}
+	
+	public boolean isInitialized(){
+		return this.initialized;
 	}
 }

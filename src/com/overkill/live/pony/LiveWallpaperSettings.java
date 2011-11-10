@@ -42,7 +42,6 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.provider.MediaStore;
 import android.text.method.DigitsKeyListener;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -66,6 +65,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		
 	@Override
 	protected void onDestroy() {
+		// Put saveTime to settings so the WallpaperEngine can pick up changes
 		editor.putLong("savedTime", SystemClock.elapsedRealtime());
 		editor.commit();
 		super.onDestroy();
@@ -83,11 +83,12 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         localFolder = PonyManager.selectFolder(this);
         
 		try {
-			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(),0);
+			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(), 0);
 	        ((Preference)findPreference("more_version")).setSummary(pinfo.versionName);
 		} catch (NameNotFoundException e) {
 		}
 		
+		// Open twitter link
 		((Preference)findPreference("more_link_twitter")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
@@ -97,6 +98,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
+		// Open facebook link
 		((Preference)findPreference("more_link_facebook")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
@@ -106,21 +108,25 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
+		// Set Background image (on/off)
 		((CheckBoxPreference)findPreference("background_global")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				boolean value = (Boolean) newValue;
 				if(value == false){
+					// Turn off -> Just do it
 					return true;
 				}else{
+					// Turn on -> If none is saved yet -> Open pick dialog
 					if(sharedPreferences.getString("background_image", null) == null){
-						pickImage();
+						showPickImageDialog();
 					}
 				}
 				return true;
 			}
 		});
 
+		
 		final CheckBoxPreference force_internal_storage = (CheckBoxPreference)findPreference("force_internal_storage");
 		force_internal_storage.setSummary(getString(R.string.force_local_storage_summary, localFolder.getPath()));
 		force_internal_storage.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
@@ -128,11 +134,11 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				final boolean value = (Boolean) newValue;
 				if(value == false && PonyManager.isSDMounted() == false) return false; // want to save on sd but has no sd card
-
-				Log.i("force_internal_storage", "changed to " + value);
-				
+				// Pick the folder depending on the value
 				final File newFolder = PonyManager.selectForcedFolder(LiveWallpaperSettings.this, value);
+				// If the folder is different from the current folder
 				if(newFolder.equals(localFolder) == false){
+					// Create a ProgressDialog
 					final ProgressDialog dialog = new ProgressDialog(LiveWallpaperSettings.this);
 					dialog.setMessage("From:\n" + localFolder.getPath() + "\nTo:\n" + newFolder.getPath() + "\nPlease wait...");
 					dialog.setTitle("Moving Ponies");
@@ -141,15 +147,18 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 						@Override
 						public void run() {
 							try {
+								// Move Ponies
 								movePonies(localFolder, newFolder);
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
+							// Set new folder as current folder and tell the engine
 							localFolder = newFolder;
 							editor.putBoolean("changed_folder", true);		
 							runOnUiThread(new Runnable() {								
 								@Override
 								public void run() {
+									// Update the text on the settings
 									force_internal_storage.setSummary(getString(R.string.force_local_storage_summary, localFolder.getPath()));
 									force_internal_storage.setChecked(value);
 									dialog.dismiss();
@@ -165,6 +174,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
+		// Open PayPal Link
 		((Preference)findPreference("more_donate_paypal")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
@@ -174,9 +184,12 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 				
+		// 
 		((Preference)findPreference("pony_select")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
+				
+				// Get sub-dirs of folder
 				File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
 					@Override
 					public boolean accept(File pathname) {
@@ -184,18 +197,18 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					}
 				});
 				
+				// we have no ponies, open PonyMananger				
 				if(ponyFolders.length == 0){
-					// we have no ponies, open PonyMananger
 					Toast.makeText(LiveWallpaperSettings.this, R.string.no_ponies_installed, Toast.LENGTH_LONG).show();
 					Intent i = new Intent(getBaseContext(), PonyManager.class);
 					startActivity(i);
 					return false;
 				}
 				
+				// Create Array to hold names
 				poniesName = new String[ponyFolders.length];
-				
+				// Read Pony Names from ini files
 				for(int i = 0; i < ponyFolders.length; i++){
-//					poniesName[i] = ToolSet.getPonyNameFromINI(ponyFolders[i]);
 					poniesName[i] = Pony.fromFile(ponyFolders[i], true).name;
 					if(poniesName[i] == null){
 						poniesName[i] = "ERROR";
@@ -203,14 +216,16 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					}
 				}
 		                
+				// Sort names
 				Arrays.sort(poniesName);
 				
-		        poniesState = new boolean[poniesName.length];
-		        
+				// Read current settings
+		        poniesState = new boolean[poniesName.length];		        
 		        for(int i = 0; i < poniesName.length; i++){
 		        	poniesState[i] = sharedPreferences.getBoolean("usepony_" + poniesName[i], false);
 		        }       
 				
+		        // Build Dialog
 				AlertDialog.Builder builder = new AlertDialog.Builder(LiveWallpaperSettings.this);
 		        builder.setTitle(R.string.pony_select_title);
 		        builder.setMultiChoiceItems(poniesName, poniesState, new DialogInterface.OnMultiChoiceClickListener() {			
@@ -218,11 +233,14 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 					public void onClick(DialogInterface dialog, int which, boolean isChecked) {						
 						poniesState[which] = isChecked;
 						if(isChecked){
+							// Tell Engine we added a pony so it reloads all of them
 							editor.putBoolean("added_pony", true);
 						}
+						// Tell Engine we changed a pony state
 						editor.putBoolean("changed_pony", true);					
 					}
 				});
+		        // Save from dialog
 		        builder.setPositiveButton(android.R.string.ok, new OnClickListener() {					
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -245,6 +263,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				String value = (String)newValue;
+				// Reset to 1 if user lets field empty
 				if(value.equals("") || value == null){
 					editor.putString("pony_scale", "1");
 					return false;
@@ -259,6 +278,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				String value = (String)newValue;
+				// Reset to 100 if user lets field empty
 				if(value.equals("") || value == null){
 					editor.putString("movement_delay_ms", "100");
 					return false;
@@ -270,18 +290,11 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		((Preference)findPreference("background_image")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				pickImage();
+				showPickImageDialog();
                 return true;
 			}
 		});
-						
-//		((Preference)findPreference("background_color")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
-//			@Override
-//			public boolean onPreferenceClick(Preference preference) {
-//                return true;
-//			}
-//		});
-				
+										
 		((CheckBoxPreference)findPreference("show_effects")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -298,20 +311,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		});
 		
 	}
-	
-//	public void colorpicker(){	    
-//		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LiveWallpaperSettings.this, sharedPreferences.getInt("background_color", 0xff000000), new OnAmbilWarnaListener(){
-//			@Override
-//			public void onCancel(AmbilWarnaDialog dialog) { }
-//
-//			@Override
-//			public void onOk(AmbilWarnaDialog dialog, int color) {
-//				editor.putInt("background_color", color);			
-//			}				
-//		});
-//	    dialog.show();
-//	}
-	
+		
 	/**
 	 * Creates an empty public access file for the crop intent to write to
 	 * @return The Uri to the empty file
@@ -334,40 +334,39 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		}
 		
 	    switch(requestCode) { 
-	    case PICK_FROM_FILE: 
-	    	selectedImageUri = data.getData();
-	    	try {
-				doCrop();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-
-	    	break;	  
-		case CROP_FROM_CAMERA:
-			if (resultCode != RESULT_OK) return;
-			if (data == null) return;
-	        Bundle extras = data.getExtras();	
-	        if (extras != null) {	        	
-	            File newFile = getBackgroundFile();
-	            File temp = getTempFile();
-	            try {
-					copyFile(temp, newFile);
-		            temp.delete();
-				} catch (IOException e) {
-					e.printStackTrace();
+		    case PICK_FROM_FILE: 
+		    	selectedImageUri = data.getData();
+		    	try {
+					startImageCropIntent();
+				} catch (IOException e1) {
+					e1.printStackTrace();
 				}
-	            if(newFile.exists() == false){
-	            	Toast.makeText(this, R.string.error_custom_image, Toast.LENGTH_LONG).show();
-	            	return;
-	            }
-	            setNewBackgroundImage(newFile);
-	        }	
-	        break;
+	
+		    	break;	  
+			case CROP_FROM_CAMERA:
+				if (resultCode != RESULT_OK) return;
+				if (data == null) return;
+		        Bundle extras = data.getExtras();	
+		        if (extras != null) {	        	
+		            File newFile = getBackgroundFile();
+		            File temp = getTempFile();
+		            try {
+						copyFile(temp, newFile);
+			            temp.delete();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		            if(newFile.exists() == false){
+		            	Toast.makeText(this, R.string.error_custom_image, Toast.LENGTH_LONG).show();
+		            	return;
+		            }
+		            setNewBackgroundImage(newFile);
+		        }	
+		        break;
 	    }
 	}
 	
-	private void pickImage(){
-		// Can we take the current wallpaper ?
+	private void showPickImageDialog(){
 		String items[] = {"Use current wallpaper", "Pick image"};
 		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
 		dialog.setTitle(R.string.background_image_title);
@@ -375,6 +374,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				if(which == 0){
+					// Try to use current wallpaper Image
 					WallpaperManager wpm = WallpaperManager.getInstance(LiveWallpaperSettings.this);
 					Drawable d = wpm.getDrawable();
 					if(d != null){
@@ -390,6 +390,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 						}
 					}
 				}else{
+					// Open Get Content Intent
 					Intent intent = new Intent();
 			        intent.setType("image/*");
 			        intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -401,7 +402,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		dialog.show();
 	}
 	
-	private void doCrop() throws IOException {
+	private void startImageCropIntent() throws IOException {
     	Intent intent = new Intent("com.android.camera.action.CROP");
         intent.setType("image/*");
         
