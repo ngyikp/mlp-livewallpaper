@@ -398,13 +398,13 @@ public class Pony{
 		}
 			
 		// Set the correct image to the behavior (left or right)
-	    this.currentBehavior.selectCurrentImage();
+//	    this.currentBehavior.selectCurrentImage();
+		this.window.ponyDirection = currentBehavior.right;
 		// Change the pony animation if necessary
-	    if (this.window.getCurrentImage() == null || this.window.getCurrentImage().equals(currentBehavior.currentImage) == false) {
-	    	if(this.window.getCurrentImage() != null)
-	    		Log.i("Pony[" + name + "]", "change image from " + this.window.getCurrentImage().fileName + " to " + this.currentBehavior.currentImage.fileName);
+	    if (this.window.getBehaviorName() == null || this.window.getBehaviorName().equals(currentBehavior.name) == false) {
 	    	this.window.setVisible(false);
-	    	this.window.setImage(currentBehavior.currentImage);	    	
+	    	this.window.setBehaviorName(currentBehavior.name);
+	    	this.window.setImages(new Sprite(currentBehavior.image_left_path), new Sprite(currentBehavior.image_right_path));    	
 	    }
 		
 	    // Verify if we should create effects		

@@ -88,22 +88,22 @@ public class Behavior {
 //		return current_image;
 //	}
 	
-	/**
-	 * Set Image depending on current direction
-	 */
-	public void selectCurrentImage(){
-		currentImage = null;
-		if (this.right){
-			if(image_right == null){
-				image_right = new Sprite(image_right_path);
-			}
-	        currentImage = image_right;
-		}else{
-	    	if(image_left == null)
-				image_left = new Sprite(image_left_path);
-	        currentImage = image_left;
-	    }
-	}
+//	/**
+//	 * Set Image depending on current direction
+//	 */
+//	public void selectCurrentImage(){
+//		currentImage = null;
+//		if (this.right){
+//			if(image_right == null){
+//				image_right = new Sprite(image_right_path);
+//			}
+//	        currentImage = image_right;
+//		}else{
+//	    	if(image_left == null)
+//				image_left = new Sprite(image_left_path);
+//	        currentImage = image_left;
+//	    }
+//	}
 		
 	public void preloadImages(){
 		image_right = new Sprite(image_right_path, true);

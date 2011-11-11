@@ -7,12 +7,15 @@ import android.util.Log;
 
 public class PonyWindow {
 	private String ponyName;
+	private String behaviorName = null;
 	
-	private Sprite currentImage;
-	private Sprite oldImage = null;
+	//private Sprite currentImage;
 	
-	private Sprite leftImage;
-	private Sprite rightImage;
+	private Sprite oldImageLeft = null;
+	private Sprite oldImageRight = null;
+	
+	private Sprite currentImageLeft;
+	private Sprite currentImageRight;
 	
 	private int spriteWidth;
 	private int spriteHeight;
@@ -22,7 +25,8 @@ public class PonyWindow {
 	public boolean ponyDirection;
 	public boolean shouldBeSleeping = false;
 	
-	private Thread preloadImage;
+	private Thread preloadImageLeftFirst;
+	private Thread preloadImageRightFirst;
 	
 	private boolean visible = false;
 	
@@ -34,37 +38,83 @@ public class PonyWindow {
 		this.ponyName = ponyName;
 	}
 	
-	public void setImage(Sprite image){
-		if(currentImage != null){
-			oldImage = currentImage;
+	public void setImages(Sprite imageLeft, Sprite imageRight){
+		if(currentImageLeft != null){
+			oldImageLeft = currentImageLeft;
 		}
-		if(image.isInitialized()){
-			this.spriteWidth = image.getSpriteWidth();
-			this.spriteHeight = image.getSpriteHeight();
+		if(imageLeft.isInitialized()){
+			this.spriteWidth = imageLeft.getSpriteWidth();
+			this.spriteHeight = imageLeft.getSpriteHeight();
 		} else {
 			BitmapFactory.Options opts = new BitmapFactory.Options();
 			opts.inJustDecodeBounds = true;
-			BitmapFactory.decodeFile(image.fileName, opts);
+			BitmapFactory.decodeFile(imageLeft.fileName, opts);
 			this.spriteWidth = opts.outWidth;
 			this.spriteHeight = opts.outHeight;
 		}
-		this.currentImage = image;
-		preloadImage = new Thread(new Runnable() {				
+		this.currentImageLeft = imageLeft;
+		
+		if(currentImageRight != null){
+			oldImageRight = currentImageRight;
+		}
+		if(imageRight.isInitialized()){
+			this.spriteWidth = imageRight.getSpriteWidth();
+			this.spriteHeight = imageRight.getSpriteHeight();
+		} else {
+			BitmapFactory.Options opts = new BitmapFactory.Options();
+			opts.inJustDecodeBounds = true;
+			BitmapFactory.decodeFile(imageRight.fileName, opts);
+			this.spriteWidth = opts.outWidth;
+			this.spriteHeight = opts.outHeight;
+		}
+		this.currentImageRight = imageRight;
+		preloadImageLeftFirst = new Thread(new Runnable() {				
 			@Override
 			public void run() {
-				if(currentImage.isInitialized() == false){			
-					boolean b = currentImage.initialize("window");
-					Log.i("PonyWindow[" + ponyName + "]", "preload " + currentImage.fileName + " -> " + b);					
+				if(currentImageLeft.isInitialized() == false){			
+					currentImageLeft.initialize("window");				
 				}
 				setVisible(true);
-				oldImage = null;
+				if(currentImageRight.isInitialized() == false){			
+					currentImageRight.initialize("window");					
+				}
+				oldImageLeft = null;
+				oldImageRight = null;
 			}
 		});
-		preloadImage.start();
+		preloadImageRightFirst = new Thread(new Runnable() {				
+			@Override
+			public void run() {
+				if(currentImageRight.isInitialized() == false){			
+					currentImageRight.initialize("window");				
+				}
+				setVisible(true);
+				if(currentImageLeft.isInitialized() == false){			
+					currentImageLeft.initialize("window");				
+				}
+				oldImageLeft = null;
+				oldImageRight = null;
+			}
+		});
+		if(this.ponyDirection){
+			preloadImageRightFirst.start();
+		}else{
+			preloadImageLeftFirst.start();
+		}
 	}
 	
 	public Sprite getCurrentImage(){
-		return this.currentImage;
+		if(ponyDirection)
+			return this.currentImageRight;
+		else
+			return this.currentImageLeft;
+	}
+	
+	public Sprite getOldImage(){
+		if(ponyDirection)
+			return this.oldImageRight;
+		else
+			return this.oldImageLeft;
 	}
 		
 	public int getSpriteWidth(){
@@ -76,18 +126,18 @@ public class PonyWindow {
 	}
 	
 	public void update(long globalTime, String origin){
-		if(this.oldImage != null){
-			this.oldImage.update(globalTime, "oldwindow-" + origin);
+		if(this.getOldImage() != null){
+			this.getOldImage().update(globalTime, "oldwindow-" + origin);
 		}else if(this.isVisible()){
-			this.currentImage.update(globalTime, "window-" + origin);
+			this.getCurrentImage().update(globalTime, "window-" + origin);
 		}
 	}
 	
 	public void draw(Canvas canvas){
-		if(this.oldImage != null){
-			this.oldImage.draw(canvas, position);
+		if(this.getOldImage() != null){
+			this.getOldImage().draw(canvas, position);
 		}else if(this.isVisible()){
-			this.currentImage.draw(canvas, position);
+			this.getCurrentImage().draw(canvas, position);
 		}
 	}
 	
@@ -105,5 +155,13 @@ public class PonyWindow {
 
 	public void setVisible(boolean visible) {
 		this.visible = visible;
+	}
+
+	public String getBehaviorName() {
+		return behaviorName;
+	}
+
+	public void setBehaviorName(String behaviorName) {
+		this.behaviorName = behaviorName;
 	}
 }
