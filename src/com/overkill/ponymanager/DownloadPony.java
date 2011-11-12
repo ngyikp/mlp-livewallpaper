@@ -1,16 +1,22 @@
 package com.overkill.ponymanager;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.text.Collator;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
 import com.overkill.live.pony.R;
 import com.overkill.live.pony.ToolSet;
+import com.overkill.live.pony.engine.Pony;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 public class DownloadPony implements Comparable<DownloadPony> {	
 	private String name;
@@ -123,7 +129,7 @@ public class DownloadPony implements Comparable<DownloadPony> {
 
 	@Override
 	public boolean equals(Object o) {
-		return this.getName().equals(((DownloadPony) o).getName());
+		return this.getFolder().equals(((DownloadPony) o).getFolder());
 	}
 
 	@Override
@@ -136,5 +142,41 @@ public class DownloadPony implements Comparable<DownloadPony> {
 	@Override
 	public String toString() {
 		return this.getName();
+	}
+	
+	public static DownloadPony fromINI(File folder){
+		String name = "";
+		String[] categories = null;		
+    	try{
+		    String line = "";
+		    File iniFile = new File(folder, "pony.ini");
+		    if(iniFile.exists() == false)
+			    iniFile = new File(folder, "Pony.ini");
+		    BufferedReader br = null;
+		    InputStreamReader is = new InputStreamReader(new FileInputStream(iniFile), "UTF-8");
+		    if(is.read() == 0x0fffd){		    	
+		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-16"));
+		    	Log.i("Pony", "opening " + iniFile.getPath() + " with UTF-16");
+		    } else {
+		    	br = new BufferedReader(new InputStreamReader(new FileInputStream(iniFile), "UTF-8"));
+		    	Log.i("Pony", "opening " + iniFile.getPath() + " with UTF-8");
+		    }
+		    is.close();
+		    while ((line = br.readLine()) != null) {	
+		    	if(line.startsWith("'")) continue; //skip comments
+			    if(line.toLowerCase().startsWith("name,")){ name = line.substring("name,".length()); continue;}
+			    if(line.toLowerCase().startsWith("categories,")){
+			    	String category = line.substring("categories,".length());
+			        categories = category.replace("\"", "").split(",");
+			        continue;
+			    }
+		    }
+			DownloadPony p = new DownloadPony(name, folder.getName(), ToolSet.getFolderItemCount(folder), ToolSet.getFolderSize(folder), R.string.pony_state_local_only);
+			p.setCategories(Arrays.asList(categories));
+			p.setLastUpdate(0);
+			return p;
+    	}catch (Exception e) {
+			return null;
+		}
 	}
 }

@@ -2,12 +2,14 @@ package com.overkill.ponymanager;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 import com.overkill.live.pony.LiveWallpaperSettings;
@@ -60,6 +62,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	public static final String REMOTE_BASE_URL = "http://mlp-livewallpaper.googlecode.com/svn/assets/";
 	public static final String REMOTE_LIST_URL = REMOTE_BASE_URL + "ponies2.lst";
+	
 	public static final int ACTION_INSTALL = 1;
 	public static final int ACTION_DELETE = 2;
 	public static final int ACTION_STOP = 3;
@@ -361,7 +364,18 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		localFolder = PonyManager.selectFolder(this);
 		asynImageLoader = new AsynImageLoader(this, this);
 		
-		
+		SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE);
+		if(preferences.getBoolean("updatedFolderNameDialog", false) == false){
+			AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+			dialog.setTitle("Updated folder names");
+			dialog.setIcon(android.R.drawable.ic_dialog_info);
+			dialog.setMessage(Html.fromHtml("With this update some of the pony folder names have changed.<br>To prevent you from having duplicate ponies, it's suggested to delete all ponies marked with <font color=\"#00ffff\">this color</font>."));
+			dialog.setPositiveButton(android.R.string.ok, null);
+			dialog.show();			
+			SharedPreferences.Editor editor = preferences.edit();
+			editor.putBoolean("updatedFolderNameDialog", true);
+			editor.commit();
+		}
 		
 		registerForContextMenu(getListView());
 		getListView().setOnItemClickListener(new OnItemClickListener() {
@@ -386,7 +400,11 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE);
 				for(int i = 0; i < adapter.getCount(); i++){
                     DownloadPony p = adapter.getItem(i);
-                    asynImageLoader.push(p.getFolder(), REMOTE_BASE_URL + p.getFolder() + "/preview.gif");
+                    if(p.getState() == R.string.pony_state_not_installed){
+                    	asynImageLoader.push(p.getFolder(), REMOTE_BASE_URL + p.getFolder() + "/preview.gif");
+                    }else{
+                    	adapter.getItem(i).setImage(BitmapFactory.decodeFile(new File(localFolder, p.getFolder() + "/preview.gif").getPath()));
+                    }
         			long lastUpdateLocal = preferences.getLong("lastupdate_" + p.getFolder(), 0);
         			long lastUpdateRemote = p.getLastUpdate();
         			if((lastUpdateRemote > lastUpdateLocal) && p.getState() != R.string.pony_state_not_installed)
@@ -442,6 +460,28 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				count++;
 			}
 			
+			// read local folders
+			File[] subFolders = this.localFolder.listFiles(new FileFilter() {				
+				@Override
+				public boolean accept(File pathname) {
+					if(pathname.isDirectory() == false) return false;
+					File[] files = pathname.listFiles(new FileFilter() {						
+						@Override
+						public boolean accept(File pathname) {
+							return pathname.getName().equalsIgnoreCase("pony.ini");
+						}
+					});
+					return files.length > 0;
+				}
+			});
+			
+			for(File folder : subFolders){
+				DownloadPony p = DownloadPony.fromINI(folder);
+				if(ponyList.contains(p) == false){
+					ponyList.add(p);
+				}
+			}
+			
 		} catch (final Exception e) {
 			runOnUiThread(new Runnable() {			
 				@Override
@@ -449,6 +489,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			});
 			e.printStackTrace();
 		}	
+//		Collections.sort(ponyList);
 		return ponyList;
 	}
 	
@@ -465,7 +506,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		if(p.getState() == R.string.pony_state_update)
 			menu.add(0, ACTION_INSTALL, 0, "Update");
 		
-		if(p.getState() == R.string.pony_state_installed || p.getState() == R.string.pony_state_update)
+		if(p.getState() == R.string.pony_state_installed || p.getState() == R.string.pony_state_update || p.getState() == R.string.pony_state_local_only)
 			menu.add(0, ACTION_DELETE, 0, "Delete");
 		
 		/*if(p.getState().equals(DownloadPony.STATE_RUNNING))
@@ -532,7 +573,12 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		editor.remove("usepony_" + p.getName());
 		editor.putBoolean("changed_pony", true);
 		editor.commit();
-		p.setState(R.string.pony_state_not_installed);
+		if(p.getState() == R.string.pony_state_local_only){
+			// Remove a local pony from the list since there is no remote data we could download
+			adapter.remove(p);
+		}else{
+			p.setState(R.string.pony_state_not_installed);
+		}
 		adapter.notifyDataSetChanged();
 		updateTitle();
 	}

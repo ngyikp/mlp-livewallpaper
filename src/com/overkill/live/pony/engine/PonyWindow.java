@@ -3,7 +3,6 @@ package com.overkill.live.pony.engine;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
-import android.util.Log;
 
 public class PonyWindow {
 	private String ponyName;
@@ -25,8 +24,7 @@ public class PonyWindow {
 	public boolean ponyDirection;
 	public boolean shouldBeSleeping = false;
 	
-	private Thread preloadImageLeftFirst;
-	private Thread preloadImageRightFirst;
+	private Thread preloadImageThread;
 	
 	private boolean visible = false;
 	
@@ -35,7 +33,7 @@ public class PonyWindow {
 	}
 	
 	public PonyWindow(String ponyName){
-		this.ponyName = ponyName;
+		this.setPonyName(ponyName);
 	}
 	
 	public void setImages(Sprite imageLeft, Sprite imageRight){
@@ -68,39 +66,39 @@ public class PonyWindow {
 			this.spriteHeight = opts.outHeight;
 		}
 		this.currentImageRight = imageRight;
-		preloadImageLeftFirst = new Thread(new Runnable() {				
-			@Override
-			public void run() {
-				if(currentImageLeft.isInitialized() == false){			
-					currentImageLeft.initialize("window");				
-				}
-				setVisible(true);
-				if(currentImageRight.isInitialized() == false){			
-					currentImageRight.initialize("window");					
-				}
-				oldImageLeft = null;
-				oldImageRight = null;
-			}
-		});
-		preloadImageRightFirst = new Thread(new Runnable() {				
-			@Override
-			public void run() {
-				if(currentImageRight.isInitialized() == false){			
-					currentImageRight.initialize("window");				
-				}
-				setVisible(true);
-				if(currentImageLeft.isInitialized() == false){			
-					currentImageLeft.initialize("window");				
-				}
-				oldImageLeft = null;
-				oldImageRight = null;
-			}
-		});
+		
 		if(this.ponyDirection){
-			preloadImageRightFirst.start();
+			preloadImageThread = new Thread(new Runnable() {				
+				@Override
+				public void run() {
+					if(currentImageRight.isInitialized() == false){			
+						currentImageRight.initialize("window");				
+					}
+					oldImageRight = null;
+					setVisible(true);
+					if(currentImageLeft.isInitialized() == false){			
+						currentImageLeft.initialize("window");				
+					}
+					oldImageLeft = null;
+				}
+			});
 		}else{
-			preloadImageLeftFirst.start();
+			preloadImageThread = new Thread(new Runnable() {				
+				@Override
+				public void run() {
+					if(currentImageLeft.isInitialized() == false){			
+						currentImageLeft.initialize("window");				
+					}
+					oldImageLeft = null;
+					setVisible(true);
+					if(currentImageRight.isInitialized() == false){			
+						currentImageRight.initialize("window");					
+					}
+					oldImageRight = null;
+				}
+			});
 		}
+		preloadImageThread.start();
 	}
 	
 	public Sprite getCurrentImage(){
@@ -163,5 +161,13 @@ public class PonyWindow {
 
 	public void setBehaviorName(String behaviorName) {
 		this.behaviorName = behaviorName;
+	}
+
+	public void setPonyName(String ponyName) {
+		this.ponyName = ponyName;
+	}
+
+	public String getPonyName() {
+		return ponyName;
 	}
 }

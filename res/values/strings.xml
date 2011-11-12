@@ -41,6 +41,7 @@
     <string name="pony_state_update">•</string>
     <string name="pony_state_installed">•</string>
     <string name="pony_state_not_installed">•</string>
+    <string name="pony_state_local_only">•</string>
     <string name="pony_state_loading">•</string>
     <string name="pony_info_loading">Files: %1$d / %2$d</string>
     <string name="pony_info">Files: %1$d Size: %2$s</string>
@@ -51,7 +52,7 @@
     <string name="no_ponies_installed">You seem to have no ponies installed. We have to change that...</string>
     <string name="force_local_storage_title">Store ponies intern</string>
     <string name="force_local_storage_summary">Current folder: %1$s</string>  
-    <string name="help_text">&quot;&lt;img src='arrowdown_download' /&gt; Download all currently not installed Ponies&lt;br&gt;&lt;img src='arrowdown_update' /&gt; Updates all Ponies with an update achievable&lt;br&gt;&lt;img src='ic_menu_set_as' /&gt; Sets live wallpaper&lt;br&gt;&lt;br&gt;&lt;br&gt;The colored dots indicate different states of a Pony&lt;br /&gt;The state can be:&lt;br /&gt;&lt;font color='#ff0000'&gt;&lt;b&gt;•&lt;/b&gt; Pony is not installed&lt;/font&gt; &lt;br /&gt;&lt;font color='#FF7E00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is currently downloaded&lt;/font&gt;&lt;br /&gt;&lt;font color='#00ff00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is installed&lt;/font&gt;&lt;br /&gt;&lt;font color='#0000ff'&gt;&lt;b&gt;•&lt;/b&gt; The is an update for this Pony&lt;/font&gt;&lt;br /&gt;&quot;</string>
+    <string name="help_text">&quot;&lt;img src='arrowdown_download' /&gt; Download all currently not installed Ponies&lt;br&gt;&lt;img src='arrowdown_update' /&gt; Updates all Ponies with an update achievable&lt;br&gt;&lt;img src='ic_menu_set_as' /&gt; Sets live wallpaper&lt;br&gt;&lt;br&gt;&lt;br&gt;The colored dots indicate different states of a Pony&lt;br /&gt;The state can be:&lt;br /&gt;&lt;font color='#ff0000'&gt;&lt;b&gt;•&lt;/b&gt; Pony is not installed&lt;/font&gt; &lt;br /&gt;&lt;font color='#FF7E00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is currently downloaded&lt;/font&gt;&lt;br /&gt;&lt;font color='#00ff00'&gt;&lt;b&gt;•&lt;/b&gt; Pony is installed&lt;/font&gt;&lt;br /&gt;&lt;font color='#0000ff'&gt;&lt;b&gt;•&lt;/b&gt; The is an update for this Pony&lt;/font&gt;&lt;br /&gt;&lt;font color='#00ffff'&gt;&lt;b&gt;•&lt;/b&gt; Pony is on the assets-server&lt;/font&gt;&lt;br /&gt;&quot;</string>
     <string name="display_settings_title">Display Settings</string>    
     <string name="manager_delete_title">Delete %1$s?</string>   
     <string name="manager_delete_message">Are you sure you want to delete %1$s?</string>

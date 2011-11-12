@@ -1085,7 +1085,7 @@ public class Pony{
 		  	
     	}catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			return new Pony(null);
 		}
 		return newPony;
     }

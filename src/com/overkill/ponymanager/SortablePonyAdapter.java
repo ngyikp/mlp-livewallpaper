@@ -51,6 +51,12 @@ public class SortablePonyAdapter extends ArrayAdapter<DownloadPony>{
 	public void add(DownloadPony object) {
 		this.allPonies.add(object);
 	}
+	
+	@Override
+	public void remove(DownloadPony object) {
+		this.allPonies.remove(object);
+		this.filteredPonies.remove(object);
+	}
 			
 	public void resetFilter(){
 		this.filteredPonies = new LinkedList<DownloadPony>(this.allPonies);

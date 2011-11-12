@@ -50,6 +50,8 @@ public class DownloadPonyAdapter extends SortablePonyAdapter{
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.RED);
         	if(p.getState() == R.string.pony_state_update)
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.BLUE);
+        	if(p.getState() == R.string.pony_state_local_only)
+        		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.CYAN);
         	
         	if(p.getState() == R.string.pony_state_loading){
         		((TextView)v.findViewById(R.id.textState)).setTextColor(Color.rgb(255, 126, 0));

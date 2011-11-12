@@ -54,7 +54,7 @@ public class Sprite {
 	/**
 	 * Decodes the GIF File and stores data
 	 */
-	public synchronized boolean initialize(String reason){
+	public boolean initialize(String reason){
 //		if(this.loading) return;
 //		this.loading = true;
 		long t0 = System.currentTimeMillis();

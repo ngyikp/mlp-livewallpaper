@@ -1,5 +1,8 @@
 package com.overkill.live.pony;
 
+import java.io.File;
+import java.io.FileFilter;
+
 import android.graphics.Point;
 
 import com.overkill.live.pony.engine.EffectWindow;
@@ -9,6 +12,28 @@ import com.overkill.live.pony.engine.Pony.Direction;
 
 
 public class ToolSet {
+	
+	public static FileFilter fileOnlyFilter = new FileFilter() {
+		@Override
+		public boolean accept(File pathname) {
+			String filename = pathname.getName().toLowerCase();
+			return pathname.isFile() && (filename.endsWith(".gif") || filename.endsWith(".png") || filename.endsWith(".ini"));
+		}
+	};
+	
+	public static long getFolderSize(File folder){
+		File[] files = folder.listFiles(fileOnlyFilter);
+		int size = 0;
+		for(File f : files){
+			size += f.length();
+		}
+		return size;
+	}
+	
+	public static int getFolderItemCount(File folder){
+		File[] files = folder.listFiles(fileOnlyFilter);
+		return files.length;
+	}
 	
 	public static String[] splitWithQualifiers(String SourceText, String TextDelimiter, String TextQualifier) {
 		return splitWithQualifiers(SourceText, TextDelimiter, TextQualifier, "");

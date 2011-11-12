@@ -35,7 +35,7 @@ public class Behavior {
 	public AllowedMoves Allowed_Movement;
 	public boolean Skip;
 	public boolean right;
-	private boolean currentRight = true;
+
 	public int destination_xcoord;
 	public int destination_ycoord;
 	public boolean horizontal;
