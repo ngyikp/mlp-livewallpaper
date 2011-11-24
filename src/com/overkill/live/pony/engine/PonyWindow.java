@@ -74,11 +74,13 @@ public class PonyWindow {
 					if(currentImageRight.isInitialized() == false){			
 						currentImageRight.initialize("window");				
 					}
+					if(oldImageRight != null) oldImageRight.destroy();
 					oldImageRight = null;
 					setVisible(true);
 					if(currentImageLeft.isInitialized() == false){			
 						currentImageLeft.initialize("window");				
 					}
+					if(oldImageLeft != null) oldImageLeft.destroy();
 					oldImageLeft = null;
 				}
 			});
@@ -89,11 +91,13 @@ public class PonyWindow {
 					if(currentImageLeft.isInitialized() == false){			
 						currentImageLeft.initialize("window");				
 					}
+					if(oldImageLeft != null) oldImageLeft.destroy();
 					oldImageLeft = null;
 					setVisible(true);
 					if(currentImageRight.isInitialized() == false){			
 						currentImageRight.initialize("window");					
 					}
+					if(oldImageRight != null) oldImageRight.destroy();
 					oldImageRight = null;
 				}
 			});

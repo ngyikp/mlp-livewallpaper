@@ -90,6 +90,8 @@ public class SortablePonyAdapter extends ArrayAdapter<DownloadPony>{
 			Collections.sort(this.filteredPonies, new Comparator<DownloadPony>() {
 				@Override
 				public int compare(DownloadPony a, DownloadPony b) {
+					if(a == null || b == null)
+						return 0;
 					return a.compareTo(b);
 				}			
 			});
@@ -97,6 +99,8 @@ public class SortablePonyAdapter extends ArrayAdapter<DownloadPony>{
 			Collections.sort(this.filteredPonies, new Comparator<DownloadPony>() {
 				@Override
 				public int compare(DownloadPony a, DownloadPony b) {
+					if(a == null || b == null)
+						return 0;
 					return b.compareTo(a);
 				}			
 			});

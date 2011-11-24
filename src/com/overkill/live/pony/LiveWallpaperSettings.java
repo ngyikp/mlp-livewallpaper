@@ -42,6 +42,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.provider.MediaStore;
 import android.text.method.DigitsKeyListener;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -65,6 +66,15 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		
 	@Override
 	protected void onDestroy() {
+//		if(poniesName != null){
+//			String query = "?";
+//			for(int i = 0; i < poniesName.length; i++){
+//				if(i!=0) query += "&";
+//				query += ToolSet.formatFolderName(poniesName[i]) + "=" + (poniesState[i] ? "1" : "0");
+//			}
+//			Toast.makeText(this, query, Toast.LENGTH_LONG);
+//			Log.i("tracking query", query);
+//		}
 		// Put saveTime to settings so the WallpaperEngine can pick up changes
 		editor.putLong("savedTime", SystemClock.elapsedRealtime());
 		editor.commit();
@@ -440,6 +450,13 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 	        startActivityForResult(i, CROP_FROM_CAMERA);
         }
 	}
+	
+//	private void startPickZipIntent(){
+//		Intent intent = new Intent();
+//        intent.setType("image/*");
+//        intent.setAction(Intent.ACTION_GET_CONTENT);
+//        startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_image_from)), 999);
+//	}
 		
 	public File getBackgroundFile(){
 		return new File(getFilesDir(), "background_" + SystemClock.elapsedRealtime() + ".jpg");

@@ -13,11 +13,32 @@ import com.overkill.live.pony.engine.Pony.Direction;
 
 public class ToolSet {
 	
+	public static String formatFolderName(String value){
+		value = value.toLowerCase();
+		return value.replaceAll("[^A-Za-z0-9]", "");	
+	}
+	
 	public static FileFilter fileOnlyFilter = new FileFilter() {
 		@Override
 		public boolean accept(File pathname) {
 			String filename = pathname.getName().toLowerCase();
 			return pathname.isFile() && (filename.endsWith(".gif") || filename.endsWith(".png") || filename.endsWith(".ini"));
+		}
+	};
+	
+	public static FileFilter iniFileOnlyFilter = new FileFilter() {
+		@Override
+		public boolean accept(File pathname) {
+			String filename = pathname.getName().toLowerCase();
+			return pathname.isFile() && filename.equalsIgnoreCase("pony.ini");
+		}
+	};
+	
+	public static FileFilter folderContainingINIFileFilter = new FileFilter() {		
+		@Override
+		public boolean accept(File pathname) {
+			if(pathname.isDirectory() == false) return false;
+			return pathname.listFiles(iniFileOnlyFilter).length > 0;
 		}
 	};
 	

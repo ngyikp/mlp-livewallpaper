@@ -4,14 +4,14 @@
     <string name="description">My Little Pony</string>
     <string name="pony_manager">Pony Manager</string>    
     <plurals name="numberOfPoniesForAction">
-        <item quantity="one">1 Pony %1$s?</item>
-        <item quantity="other">%2$d Ponies %1$s?</item>
+        <item quantity="one">%1$s 1 Pony?</item>
+        <item quantity="other">%1$s %2$d Ponies?</item>
     </plurals> 
     <string name="manager_help">Help</string>
-    <string name="manager_update">updaten</string>
-    <string name="manager_update_all">Alle updaten</string>
-    <string name="manager_download">herunterladen</string>
-    <string name="manager_download_all">Alle herunterladen</string>
+    <string name="manager_update">Update</string>
+    <string name="manager_update_all">Update all</string>
+    <string name="manager_download">Download</string>
+    <string name="manager_download_all">Download all</string>
     <string name="background_settings">Background Settings</string>
     <string name="background_color_title">Select Background Color</string>
     <string name="background_global_title">Use custom Background</string>
