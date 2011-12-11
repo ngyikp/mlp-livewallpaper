@@ -73,7 +73,7 @@ public class Sprite {
 				this.spriteHeight = this.staticImage.getHeight();
 				this.isAnimated = false;
 			}
-//			if(MyLittleWallpaperService.DEBUG)
+			if(MyLittleWallpaperService.DEBUG)
 				Log.i("Sprite[" + reason + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*2));
 
 			this.initialized = true;

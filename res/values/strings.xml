@@ -65,5 +65,6 @@
     <string name="press_color_to_apply">Press on Color to apply</string>
     <string name="disable_swipe_title">Disable Swipe</string>
     <string name="disable_wallpaper_scrolling_title">Disable wallpaper scrolling</string>
-    <string name="disable_wallpaper_scrolling_summary">Turn off side scrolling</string>    
+    <string name="disable_wallpaper_scrolling_summary">Turn off side scrolling</string>
+    <string name="warning_too_much_pony">You are about to use a lot of ponies.\nIf the app gets laggy or crashes a lot, please use less ponies!</string>
 </resources>

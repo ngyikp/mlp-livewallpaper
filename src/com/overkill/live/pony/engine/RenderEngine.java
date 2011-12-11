@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
-import com.overkill.ponymanager.PonyManager;
+import com.overkill.ponymanager.pony.PonyManager;
 
 import android.content.Context;
 import android.graphics.Bitmap;

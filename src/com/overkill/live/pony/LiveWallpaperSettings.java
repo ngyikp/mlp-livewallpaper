@@ -1,17 +1,14 @@
 package com.overkill.live.pony;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
 import java.util.List;
 
-import com.overkill.live.pony.engine.Pony;
-import com.overkill.ponymanager.PonyManager;
+import com.overkill.ponymanager.pony.PonyManager;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -42,7 +39,6 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.provider.MediaStore;
 import android.text.method.DigitsKeyListener;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -66,15 +62,6 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		
 	@Override
 	protected void onDestroy() {
-//		if(poniesName != null){
-//			String query = "?";
-//			for(int i = 0; i < poniesName.length; i++){
-//				if(i!=0) query += "&";
-//				query += ToolSet.formatFolderName(poniesName[i]) + "=" + (poniesState[i] ? "1" : "0");
-//			}
-//			Toast.makeText(this, query, Toast.LENGTH_LONG);
-//			Log.i("tracking query", query);
-//		}
 		// Put saveTime to settings so the WallpaperEngine can pick up changes
 		editor.putLong("savedTime", SystemClock.elapsedRealtime());
 		editor.commit();
@@ -198,71 +185,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		((Preference)findPreference("pony_select")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				
-				// Get sub-dirs of folder
-				File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
-					@Override
-					public boolean accept(File pathname) {
-						return pathname.isDirectory();
-					}
-				});
-				
-				// we have no ponies, open PonyMananger				
-				if(ponyFolders.length == 0){
-					Toast.makeText(LiveWallpaperSettings.this, R.string.no_ponies_installed, Toast.LENGTH_LONG).show();
-					Intent i = new Intent(getBaseContext(), PonyManager.class);
-					startActivity(i);
-					return false;
-				}
-				
-				// Create Array to hold names
-				poniesName = new String[ponyFolders.length];
-				// Read Pony Names from ini files
-				for(int i = 0; i < ponyFolders.length; i++){
-					poniesName[i] = Pony.fromFile(ponyFolders[i], true).name;
-					if(poniesName[i] == null){
-						poniesName[i] = "ERROR";
-						Toast.makeText(LiveWallpaperSettings.this, "Error accessing file \"" + ponyFolders[i].getPath() + "\"", Toast.LENGTH_LONG).show();
-					}
-				}
-		                
-				// Sort names
-				Arrays.sort(poniesName);
-				
-				// Read current settings
-		        poniesState = new boolean[poniesName.length];		        
-		        for(int i = 0; i < poniesName.length; i++){
-		        	poniesState[i] = sharedPreferences.getBoolean("usepony_" + poniesName[i], false);
-		        }       
-				
-		        // Build Dialog
-				AlertDialog.Builder builder = new AlertDialog.Builder(LiveWallpaperSettings.this);
-		        builder.setTitle(R.string.pony_select_title);
-		        builder.setMultiChoiceItems(poniesName, poniesState, new DialogInterface.OnMultiChoiceClickListener() {			
-					@Override
-					public void onClick(DialogInterface dialog, int which, boolean isChecked) {						
-						poniesState[which] = isChecked;
-						if(isChecked){
-							// Tell Engine we added a pony so it reloads all of them
-							editor.putBoolean("added_pony", true);
-						}
-						// Tell Engine we changed a pony state
-						editor.putBoolean("changed_pony", true);					
-					}
-				});
-		        // Save from dialog
-		        builder.setPositiveButton(android.R.string.ok, new OnClickListener() {					
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						for(int i = 0; i < poniesName.length; i++){
-							editor.putBoolean("usepony_" + poniesName[i], poniesState[i]);
-						}	
-						editor.commit();
-						dialog.dismiss();
-					}
-				});
-		        builder.setNegativeButton(android.R.string.cancel, null);
-		        builder.show();
+				Intent i = new Intent(LiveWallpaperSettings.this, PickPonyActivity.class);
+				i.putExtra("localFolder", localFolder.getPath());
+				startActivity(i);
 				return true;
 			}
 		});
@@ -395,7 +320,6 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 							setNewBackgroundImage(image);
 							Toast.makeText(LiveWallpaperSettings.this, "Save current background image", Toast.LENGTH_LONG).show();
 						} catch (FileNotFoundException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}

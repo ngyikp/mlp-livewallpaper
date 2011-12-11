@@ -1,5 +1,7 @@
 package com.overkill.live.pony.engine;
 
+import com.overkill.live.pony.MyLittleWallpaperService;
+
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.util.Log;
@@ -63,7 +65,9 @@ public class Effect {
 	}
 	
 	public void destroy(){
-		Log.i("Effect[" + name + "]", "destroy");
+		if(MyLittleWallpaperService.DEBUG)
+			Log.i("Effect[" + name + "]", "destroy");
+		
 		this.already_played_for_currentbehavior = false;
 		this.last_used = 0;
 		//if(this.right_image != null) this.right_image.destroy();

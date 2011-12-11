@@ -3,7 +3,7 @@ package com.overkill.live.pony;
 import java.io.File;
 
 import com.overkill.live.pony.engine.RenderEngine;
-import com.overkill.ponymanager.PonyManager;
+import com.overkill.ponymanager.pony.PonyManager;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

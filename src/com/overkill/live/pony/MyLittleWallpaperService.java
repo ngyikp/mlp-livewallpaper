@@ -1,13 +1,12 @@
 package com.overkill.live.pony;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Random;
 
 import com.overkill.live.pony.engine.Pony;
 import com.overkill.live.pony.engine.RenderEngine;
-import com.overkill.ponymanager.PonyManager;
+import com.overkill.ponymanager.pony.PonyManager;
 
 import android.app.WallpaperManager;
 import android.content.BroadcastReceiver;
@@ -95,42 +94,66 @@ public class MyLittleWallpaperService extends WallpaperService {
         	this.previewMode = super.isPreview();
         }
         
-        private synchronized void loadSelectablePonies(){
-        	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
-			if(localFolder.exists()){
-				try {
-					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
-						@Override
-						public boolean accept(File pathname) {
-							return pathname.isDirectory();
-						}
-					});
-					selectablePonies.clear();
-				    for(File ponyFolder : ponyFolders){
-				    	Pony tmp = Pony.fromFile(ponyFolder, true);
-				    	if(tmp != null && selectablePonies.contains(tmp) == false)
-				    		selectablePonies.add(Pony.fromFile(ponyFolder));
-				    }
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-	        }
-			Log.i(TAG + ".loadSelectablePonies", "Got " + selectablePonies.size() + " Ponies");
-        }
+//        private synchronized void loadSelectablePonies(){
+//        	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
+//			if(localFolder.exists()){
+//				try {
+//					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
+//						@Override
+//						public boolean accept(File pathname) {
+//							return pathname.isDirectory();
+//						}
+//					});
+//					selectablePonies.clear();
+//				    for(File ponyFolder : ponyFolders){
+//				    	Pony tmp = Pony.fromFile(ponyFolder, true);
+//				    	if(tmp != null && selectablePonies.contains(tmp) == false)
+//				    		selectablePonies.add(Pony.fromFile(ponyFolder));
+//				    }
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//	        }
+//			Log.i(TAG + ".loadSelectablePonies", "Got " + selectablePonies.size() + " Ponies");
+//        }
+//        
+//        private synchronized void selectPonies(SharedPreferences sharedPreferences){
+//        	for(Pony p : this.engine.getPonies()){
+//	        	p.cleanUp();
+//	        }
+//	        
+//	        this.engine.clearPonies();
+//	        
+//	        for(Pony p : selectablePonies){
+//	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == true && this.engine.getPonies().contains(p) == false){
+//	        		this.engine.addPony(p);
+//	        		Log.i(TAG + ".selectPonies", "Added \"" + p.name + "\" to activePonies");
+//	        	}
+//	        }
+//        }
         
-        private synchronized void selectPonies(SharedPreferences sharedPreferences){
+        private synchronized void loadPoniesToEngine(SharedPreferences sharedPreferences){
+        	// Get local folder path
+        	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
+        	// check if folder exists
+        	if(localFolder.exists() == false) return;
+        	// get all subfolders containing a pony.ini file
+        	File[] ponyFolders = localFolder.listFiles(ToolSet.folderContainingINIFileFilter);
+        	// clean up memory of old ponies
         	for(Pony p : this.engine.getPonies()){
 	        	p.cleanUp();
 	        }
-	        
-	        this.engine.clearPonies();
-	        
-	        for(Pony p : selectablePonies){
-	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == true && this.engine.getPonies().contains(p) == false){
-	        		this.engine.addPony(p);
-	        		Log.i(TAG + ".selectPonies", "Added \"" + p.name + "\" to activePonies");
-	        	}
-	        }
+        	// remove old ponies
+        	this.engine.clearPonies();
+        	// check all the folders
+        	for(File folder : ponyFolders){
+        		int amount = sharedPreferences.getInt("pony_count_" + folder.getName(), 0);
+        		if(amount <= 0) continue;
+        		while(amount-- > 0){
+        			this.engine.addPony(Pony.fromFile(folder));
+        		}
+        	}
+        	
         }
         
 		@Override
@@ -144,25 +167,17 @@ public class MyLittleWallpaperService extends WallpaperService {
 					
 					if(key.equals("startup")){
 						Log.i("onSharedPreferenceChanged", "startup was true. calling loadSelectablePonies() and selectPonies()");
-						loadSelectablePonies();
-						selectPonies(sharedPreferences);
-					}
-					
-					if(sharedPreferences.getBoolean("added_pony", false) == true){
-						Log.i("onSharedPreferenceChanged", "added_pony was true. calling loadSelectablePonies()");
-						loadSelectablePonies();
-						editor.putBoolean("added_pony", false);
-					}					
+						loadPoniesToEngine(sharedPreferences);
+					}			
 					if(sharedPreferences.getBoolean("changed_pony", false) == true){
 						Log.i("onSharedPreferenceChanged", "changed_pony was true. calling selectPonies()");
-						selectPonies(sharedPreferences);
+						loadPoniesToEngine(sharedPreferences);
 						editor.putBoolean("changed_pony", false);
 					}
 					if(sharedPreferences.getBoolean("changed_folder", false) == true){
 						Log.i("onSharedPreferenceChanged", "changed_folder was true. calling loadSelectablePonies() and selectPonies()");
 						engine.reloadLocalFolder();
-						loadSelectablePonies();
-						selectPonies(sharedPreferences);
+						loadPoniesToEngine(sharedPreferences);
 						editor.putBoolean("changed_folder", false);
 					}
 					

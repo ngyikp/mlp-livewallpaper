@@ -1,7 +1,7 @@
 package com.overkill.live.pony;
 
-import com.overkill.ponymanager.DownloadPony;
-import com.overkill.ponymanager.SortablePonyAdapter;
+import com.overkill.ponymanager.pony.DownloadPony;
+import com.overkill.ponymanager.pony.SortablePonyAdapter;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;

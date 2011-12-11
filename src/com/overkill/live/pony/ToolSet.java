@@ -7,6 +7,7 @@ import android.graphics.Point;
 
 import com.overkill.live.pony.engine.EffectWindow;
 import com.overkill.live.pony.engine.Pony;
+import com.overkill.live.pony.engine.Pony.AllowedMoves;
 import com.overkill.live.pony.engine.PonyWindow;
 import com.overkill.live.pony.engine.Pony.Direction;
 
@@ -107,37 +108,62 @@ public class ToolSet {
     
     /**
      * Converts a String to a {@link Direction}
-     * @param setting The String to convert
+     * @param string The String to convert
      * @return The {@link Direction} indicated by the String
      * @throws Exception If no match was found
      */
-    public static Direction getDirection(String setting) throws Exception {
-		if (setting.trim().equalsIgnoreCase("top"))
+    public static Direction getDirectionByString(String string) throws Exception {
+		if (string.trim().equalsIgnoreCase("top"))
 			return Direction.top;
-		if (setting.trim().equalsIgnoreCase("bottom"))
+		if (string.trim().equalsIgnoreCase("bottom"))
 			return Direction.bottom;
-		if (setting.trim().equalsIgnoreCase("left"))
+		if (string.trim().equalsIgnoreCase("left"))
 			return Direction.left;
-		if (setting.trim().equalsIgnoreCase("right"))
+		if (string.trim().equalsIgnoreCase("right"))
 			return Direction.right;
-		if (setting.trim().equalsIgnoreCase("bottom_right"))
+		if (string.trim().equalsIgnoreCase("bottom_right"))
 			return Direction.bottom_right;
-		if (setting.trim().equalsIgnoreCase("bottom_left"))
+		if (string.trim().equalsIgnoreCase("bottom_left"))
 			return Direction.bottom_left;
-		if (setting.trim().equalsIgnoreCase("top_right"))
+		if (string.trim().equalsIgnoreCase("top_right"))
 			return Direction.top_right;
-		if (setting.trim().equalsIgnoreCase("top_left"))
+		if (string.trim().equalsIgnoreCase("top_left"))
 			return Direction.top_left;
-		if (setting.trim().equalsIgnoreCase("center"))
+		if (string.trim().equalsIgnoreCase("center"))
 			return Direction.center;
-		if (setting.trim().equalsIgnoreCase("any"))
+		if (string.trim().equalsIgnoreCase("any"))
 			return Direction.random;
-		if (setting.trim().equalsIgnoreCase("any_notcenter"))
+		if (string.trim().equalsIgnoreCase("any_notcenter") || string.trim().equalsIgnoreCase("any-not_center"))
 			return Direction.random_not_center;
 		
 		// If not a valid direction, throw excepion
 		throw new Exception("Invalid placement direction or centering for effect.");
 	}
+    
+    public static AllowedMoves getMovementByString(String string){
+    	if (string.trim().equalsIgnoreCase("none")) {
+			return AllowedMoves.None;
+		} else if (string.trim().equalsIgnoreCase("horizontal_only")) {
+			return AllowedMoves.Horizontal_Only;
+		} else if (string.trim().equalsIgnoreCase("vertical_only")) {
+			return AllowedMoves.Vertical_Only;
+		} else if (string.trim().equalsIgnoreCase("horizontal_vertical")) {
+			return AllowedMoves.Horizontal_Vertical;
+		} else if (string.trim().equalsIgnoreCase("diagonal_only")) {
+			return AllowedMoves.Diagonal_Only;
+		} else if (string.trim().equalsIgnoreCase("diagonal_horizontal")) {
+			return AllowedMoves.Diagonal_Horizontal;
+		} else if (string.trim().equalsIgnoreCase("diagonal_vertical")) {
+			return AllowedMoves.Diagonal_Vertical;
+		} else if (string.trim().equalsIgnoreCase("all")) {
+			return AllowedMoves.All;
+		} else if (string.trim().equalsIgnoreCase("mouseover")) {
+			return AllowedMoves.MouseOver;
+		} else if (string.trim().equalsIgnoreCase("sleep")) {
+			return AllowedMoves.Sleep;
+		}
+    	return AllowedMoves.None;
+    }
     
     /**
      * Format a byte value to a string ending with B, KB, MB, GB or TB

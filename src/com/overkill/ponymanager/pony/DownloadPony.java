@@ -1,4 +1,4 @@
-package com.overkill.ponymanager;
+package com.overkill.ponymanager.pony;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,7 +12,6 @@ import java.util.Locale;
 
 import com.overkill.live.pony.R;
 import com.overkill.live.pony.ToolSet;
-import com.overkill.live.pony.engine.Pony;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -28,6 +27,7 @@ public class DownloadPony implements Comparable<DownloadPony> {
 	private int totalFileCount;
 	private int doneFileCount;
 	private long lastUpdate = 0;
+	private int usageCount = 0;
 		
 	public DownloadPony(String name, String folder, int totalFileCount, long size, int state) {
 		this.name = name;
@@ -127,6 +127,14 @@ public class DownloadPony implements Comparable<DownloadPony> {
 	}
 
 
+	public void setUsageCount(int usageCount) {
+		this.usageCount = usageCount;
+	}
+
+	public int getUsageCount() {
+		return usageCount;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		return this.getFolder().equals(((DownloadPony) o).getFolder());
@@ -163,8 +171,11 @@ public class DownloadPony implements Comparable<DownloadPony> {
 		    }
 		    is.close();
 		    while ((line = br.readLine()) != null) {	
+		    	if(line.length() == 0) continue; //skip empty lines
+		    	if(line.charAt(0) == 0x0FEFF)
+		    		line = line.substring(1);
 		    	if(line.startsWith("'")) continue; //skip comments
-			    if(line.toLowerCase().startsWith("name,")){ name = line.substring("name,".length()); continue;}
+			    if(line.toLowerCase().startsWith("name,")){ name = line.substring("name,".length()).replace("\"", ""); continue;}
 			    if(line.toLowerCase().startsWith("categories,")){
 			    	String category = line.substring("categories,".length());
 			        categories = category.replace("\"", "").split(",");

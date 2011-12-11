@@ -1,4 +1,4 @@
-package com.overkill.ponymanager;
+package com.overkill.ponymanager.pony;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,13 +9,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Random;
 
 import com.overkill.live.pony.LiveWallpaperSettings;
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
 import com.overkill.live.pony.ToolSet;
+import com.overkill.ponymanager.AsynFolderDownloader;
+import com.overkill.ponymanager.AsynImageLoader;
 import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
 import com.overkill.ponymanager.AsynImageLoader.onImageListener;
 
@@ -396,7 +397,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			@Override
 			public void run() {
 				final ArrayList<DownloadPony> ponies = loadPonies();
-				adapter = new DownloadPonyAdapter(PonyManager.this, R.layout.item_pony, ponies);
+				adapter = new DownloadPonyAdapter(PonyManager.this, R.layout.manager_item_pony, ponies);
 				SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE);
 				for(int i = 0; i < adapter.getCount(); i++){
                     DownloadPony p = adapter.getItem(i);

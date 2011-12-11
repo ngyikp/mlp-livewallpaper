@@ -981,107 +981,114 @@ public class Pony{
 		    	Log.i("Pony", "opening " + iniFile.getPath() + " with UTF-8");
 		    }
 		    is.close();
-		    while ((line = br.readLine()) != null) {	
-			           if(line.startsWith("'")) continue; //skip comments
-			           if(line.toLowerCase().startsWith("name,")){ newPony = new Pony(line.substring("name,".length())); if(onlyName) { return newPony; } continue;}
-			           if(line.toLowerCase().startsWith("behavior")){
-				           	String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");
-				           	
-				           	AllowedMoves movement = AllowedMoves.None;
-				           	String linked_behavior = "";
-							int xcoord = 0;
-							int ycoord = 0;
-							String follow = "";
-							boolean skip = false;							
-				           	
-							if (columns[BO_movement_type].trim().equalsIgnoreCase("none")) {
-								movement = AllowedMoves.None;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("horizontal_only")) {
-								movement = AllowedMoves.Horizontal_Only;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("vertical_only")) {
-								movement = AllowedMoves.Vertical_Only;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("horizontal_vertical")) {
-								movement = AllowedMoves.Horizontal_Vertical;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_only")) {
-								movement = AllowedMoves.Diagonal_Only;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_horizontal")) {
-								movement = AllowedMoves.Diagonal_Horizontal;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("diagonal_vertical")) {
-								movement = AllowedMoves.Diagonal_Vertical;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("all")) {
-								movement = AllowedMoves.All;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("mouseover")) {
-								movement = AllowedMoves.MouseOver;
-							} else if (columns[BO_movement_type].trim().equalsIgnoreCase("sleep")) {
-								movement = AllowedMoves.Sleep;
-							}
-														
-							if (columns.length > BO_linked_behavior) {
-								linked_behavior = columns[BO_linked_behavior].trim();
-								skip = Boolean.parseBoolean(columns[BO_skip].trim());
-								xcoord = Integer.parseInt(columns[BO_xcoord].trim());
-								ycoord = Integer.parseInt(columns[BO_ycoord].trim());
-								follow = columns[BO_object_to_follow].trim();
-							}
-							
-				            newPony.addBehavior(
-				            		columns[BO_name], 
-				            		Double.parseDouble(columns[BO_probability]), 
-				            		Double.parseDouble(columns[BO_max_duration]), 
-				            		Double.parseDouble(columns[BO_min_duration]),
-				            		Double.parseDouble(columns[BO_speed]),
-				            		localFolder.getPath() + "/" + columns[BO_right_image_path].trim(), 
-				            		localFolder.getPath() + "/" + columns[BO_left_image_path].trim(), 
-				            		movement, 
-				            		linked_behavior, 
-				            		skip, 
-				            		xcoord, 
-				            		ycoord,
-				            		follow);
-				            newPony.linkBehaviors();
-				            continue;
-			           } // Behavior
-			           if(line.toLowerCase().startsWith("effect")){
-							String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");							
-							boolean found_behavior = false;
-							
-							// Try to find the behavior to associate with
-							for (Behavior behavior : newPony.behaviors) {
-								if (behavior.name.equalsIgnoreCase(columns[EF_behavior_name].replace('"', ' ').trim())) {
-									Direction direction_right = Direction.center;
-									Direction centering_right = Direction.center;
-									Direction direction_left = Direction.center;
-									Direction centering_left = Direction.center;
-									
-									try {
-										direction_right = ToolSet.getDirection(columns[EF_location_right]);
-										centering_right = ToolSet.getDirection(columns[EF_center_right]);
-										direction_left = ToolSet.getDirection(columns[EF_location_left]);
-										centering_left = ToolSet.getDirection(columns[EF_center_left]);
-									} catch (Exception ex) {
-										// Debug output
-										System.out.println("Invalid placement direction or centering for effect " + columns[EF_effect_name] + " for pony " + newPony.name + ":\n" + line);
-									}
-																		
-							        // This is where we load the animation image
-									String rightimage = localFolder.getPath() + "/" + columns[EF_right_image].trim();
-									String leftimage = localFolder.getPath() + "/" + columns[EF_left_image].trim();									
-									// Add the effect to the behavior if the image loaded correctly
-									behavior.addEffect(columns[EF_effect_name].replace('"', ' ').trim(), rightimage, leftimage, Double.parseDouble(columns[EF_duration].trim()), Double.parseDouble(columns[EF_delay_before_next].trim()), direction_right, centering_right, direction_left, centering_left, Boolean.parseBoolean(columns[EF_follow].trim()));
-									effectCount++;
-									found_behavior = true;
-									break;
-								}
-							}
-							if (!found_behavior) {
+			while ((line = br.readLine()) != null) {
+				if (line.length() == 0)
+					continue; // skip empty lines
+				if (line.charAt(0) == 0x0FEFF)
+					line = line.substring(1);
+				if (line.startsWith("'"))
+					continue; // skip comments
+				if (line.toLowerCase().startsWith("name,")) {
+					newPony = new Pony(line.substring("name,".length()));
+					if (onlyName) {
+						return newPony;
+					}
+					continue;
+				}
+				if (line.toLowerCase().startsWith("behavior")) {
+					String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");
+					AllowedMoves movement = ToolSet.getMovementByString(columns[BO_movement_type]);
+					String linked_behavior = "";
+					int xcoord = 0;
+					int ycoord = 0;
+					String follow = "";
+					boolean skip = false;
+
+					if (columns.length > BO_linked_behavior) {
+						linked_behavior = columns[BO_linked_behavior].trim();
+						skip = Boolean.parseBoolean(columns[BO_skip].trim());
+						xcoord = Integer.parseInt(columns[BO_xcoord].trim());
+						ycoord = Integer.parseInt(columns[BO_ycoord].trim());
+						follow = columns[BO_object_to_follow].trim();
+					}
+
+					newPony.addBehavior(columns[BO_name],
+							Double.parseDouble(columns[BO_probability]),
+							Double.parseDouble(columns[BO_max_duration]),
+							Double.parseDouble(columns[BO_min_duration]),
+							Double.parseDouble(columns[BO_speed]),
+							localFolder.getPath() + "/"	+ columns[BO_right_image_path].trim(),
+							localFolder.getPath() + "/"	+ columns[BO_left_image_path].trim(),
+							movement, 
+							linked_behavior, 
+							skip, 
+							xcoord, 
+							ycoord,
+							follow);
+					newPony.linkBehaviors();
+					continue;
+				} // END OF Behavior
+				if (line.toLowerCase().startsWith("effect")) {
+					String[] columns = ToolSet.splitWithQualifiers(line, ",", "\"");
+					boolean found_behavior = false;
+
+					// Try to find the behavior to associate with
+					for (Behavior behavior : newPony.behaviors) {
+						if (behavior.name.equalsIgnoreCase(columns[EF_behavior_name].replace('"', ' ').trim())) {
+							Direction direction_right = Direction.center;
+							Direction centering_right = Direction.center;
+							Direction direction_left = Direction.center;
+							Direction centering_left = Direction.center;
+
+							try {
+								direction_right = ToolSet.getDirectionByString(columns[EF_location_right]);
+								centering_right = ToolSet.getDirectionByString(columns[EF_center_right]);
+								direction_left = ToolSet.getDirectionByString(columns[EF_location_left]);
+								centering_left = ToolSet.getDirectionByString(columns[EF_center_left]);
+							} catch (Exception ex) {
 								// Debug output
-								System.out.println("Could not find behavior for effect " + columns[1] + " for pony " + newPony.name + ":\n" + line);
+								Log.e("pony effect", "Invalid placement direction or centering for effect "
+												+ columns[EF_effect_name]
+												+ " for pony "
+												+ newPony.name
+												+ ":\n" + line);
 							}
-			           } // Effect
-		    		
-		    	}
-	        br.close();
-	        Log.i("Pony[" + newPony.name + "]", "Loaded with " + newPony.behaviors.size() + " Behavior(s) and " + effectCount + " Effect(s)");
+
+							// This is where we load the animation image
+							String rightimage = localFolder.getPath() + "/"	+ columns[EF_right_image].trim();
+							String leftimage = localFolder.getPath() + "/" + columns[EF_left_image].trim();
+							// Add the effect to the behavior if the image
+							// loaded correctly
+							behavior.addEffect(
+									columns[EF_effect_name].replace('"', ' ').trim(),
+									rightimage,
+									leftimage,
+									Double.parseDouble(columns[EF_duration].trim()),
+									Double.parseDouble(columns[EF_delay_before_next].trim()), 
+									direction_right,
+									centering_right, 
+									direction_left,
+									centering_left, 
+									Boolean.parseBoolean(columns[EF_follow].trim()));
+							effectCount++;
+							found_behavior = true;
+							break;
+						}
+					}
+					if (!found_behavior) {
+						// Debug output
+						System.out
+								.println("Could not find behavior for effect "
+										+ columns[1] + " for pony "
+										+ newPony.name + ":\n" + line);
+					}
+				} // END OF Effect
+
+			}
+			br.close();
+			Log.i("Pony[" + newPony.name + "]", "Loaded with "
+					+ newPony.behaviors.size() + " Behavior(s) and "
+					+ effectCount + " Effect(s)");
 		  	
     	}catch (Exception e) {
 			e.printStackTrace();

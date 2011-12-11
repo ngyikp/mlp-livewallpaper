@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.overkill.live.pony"
-      android:versionCode="14" android:versionName="0.6">
+      android:versionCode="15" android:versionName="0.6.1">
     <uses-sdk android:minSdkVersion="7" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
@@ -25,7 +25,7 @@
 	      android:name="android.service.wallpaper" 
 	      android:resource="@xml/wallpaper" />
 	</service>
-    <activity android:name="com.overkill.ponymanager.PonyManager" android:label="@string/pony_manager" android:icon="@drawable/ic_launcher" android:theme="@style/Theme.Pony.Rainbowdash">
+    <activity android:name="com.overkill.ponymanager.pony.PonyManager" android:label="@string/pony_manager" android:icon="@drawable/ic_launcher" android:theme="@style/Theme.Pony.Rainbowdash">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"></action>
             <category android:name="android.intent.category.LAUNCHER"></category>
@@ -33,6 +33,7 @@
     </activity>
     <activity android:name="com.google.ads.AdActivity" android:configChanges="keyboard|keyboardHidden|orientation"/>
     <activity android:theme="@android:style/Theme.Wallpaper.NoTitleBar" android:name="SetPaddingActivity"></activity>
+    <activity android:theme="@android:style/Theme.Dialog" android:name="PickPonyActivity" android:label="@string/pony_select_title" android:screenOrientation="portrait"></activity>
 </application>
 
 </manifest>
