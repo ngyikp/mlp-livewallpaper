@@ -57,11 +57,19 @@ public class Sprite {
 	public boolean initialize(String reason){
 //		if(this.loading) return;
 //		this.loading = true;
+		if(MyLittleWallpaperService.DEBUG)
+			Log.i("Sprite[" + reason + "]", "loading " + fileName);
+
 		long t0 = System.currentTimeMillis();
 		try {
 			if(fileName.endsWith(".gif")){
 				GifDecoder decoder = new GifDecoder();
-				decoder.read(new FileInputStream(this.fileName));
+				int status = decoder.read(new FileInputStream(this.fileName));
+				if(status != GifDecoder.STATUS_OK){
+					Log.i("Sprite", fileName + " Decoder Error: " + status);
+					this.initialized = false;
+					return this.initialized;
+				}
 				this.spriteWidth = decoder.width;
 				this.spriteHeight = decoder.height;		
 				this.frameCount = decoder.getFrameCount();
@@ -73,14 +81,17 @@ public class Sprite {
 				this.spriteHeight = this.staticImage.getHeight();
 				this.isAnimated = false;
 			}
-			if(MyLittleWallpaperService.DEBUG)
-				Log.i("Sprite[" + reason + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*2));
-
 			this.initialized = true;
+			
+			if(MyLittleWallpaperService.DEBUG)
+				Log.i("Sprite[" + reason + "]", "took " + (System.currentTimeMillis() - t0) + " ms to load " + fileName + " (" + this.spriteWidth + "x" + this.spriteHeight + "@" + this.frameCount + ") needs " + ToolSet.formatBytes(this.spriteWidth*this.spriteHeight*this.frameCount*2));
 		} catch (OutOfMemoryError e) {
 			Log.i("Sprite", fileName + " Error: " + e.getMessage());
 			this.initialized = false;
 		} catch (FileNotFoundException e) {
+			Log.i("Sprite", fileName + " Error: " + e.getMessage());
+			this.initialized = false;
+		} catch (ArrayIndexOutOfBoundsException e) {
 			Log.i("Sprite", fileName + " Error: " + e.getMessage());
 			this.initialized = false;
 		}

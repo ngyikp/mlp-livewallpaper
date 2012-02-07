@@ -13,6 +13,8 @@ import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.ToolSet;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.SystemClock;
@@ -54,6 +56,8 @@ public class Pony{
 	public static final int BO_xcoord = 13;
 	public static final int BO_ycoord = 14;
 	public static final int BO_object_to_follow = 15;
+	public static final int BO_right_image_center = 19;
+	public static final int BO_left_image_center = 20;
 	
 	public String name;
 	
@@ -76,6 +80,9 @@ public class Pony{
 	public List<Interaction> interactions = new LinkedList<Interaction>();
 
 //	public boolean shouldBeSleeping = false;
+	
+	public int offsetX = 0;
+	public int offsetY = 0;
 	
 	public Interaction currentInteraction;
 	public boolean isInteracting = false;
@@ -157,9 +164,11 @@ public class Pony{
 		}   	        
 	    // Move the Pony
 		if(hasSpawned == false){
+			paint(globalTime);
 			this.teleport();
 			hasSpawned = true;
 		}
+		
 	    move(globalTime);	    
 	}
 	
@@ -173,15 +182,16 @@ public class Pony{
 	}
 	
 	public void teleport() {
+		Log.i("Pony[" + name + "]", "forced teleport");
 		Point teleport_location = new Point(0, 0);		
 		for (int i = 0; i < 300; i++) {
 			// Then select a random location to appear at		
-			if(RenderEngine.screenBounds != null && RenderEngine.screenBounds.width() > 0 && RenderEngine.screenBounds.height() > 0)
+			if(RenderEngine.wallpaperBounds != null && RenderEngine.wallpaperBounds.width() > 0 && RenderEngine.wallpaperBounds.height() > 0)
 				teleport_location = new Point(
-						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.width()) + (int)RenderEngine.screenBounds.left, 
-						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.screenBounds.height()) + (int)RenderEngine.screenBounds.top);
+						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.wallpaperBounds.width()) + (int)RenderEngine.wallpaperBounds.left, 
+						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.wallpaperBounds.height()) + (int)RenderEngine.wallpaperBounds.top);
 		
-		    if(isPonyOnWallpaper(teleport_location) == true) break;
+		    if(isPonyOnWallpaper(window.testFrame(teleport_location)) == true) break;
 		}	
 	    // Finally, go there
 	    this.window.setLocation(teleport_location);
@@ -216,7 +226,11 @@ public class Pony{
 	}
 	
 	public void move(long globalTime) {		
-		if(globalTime - lastTimeMoved < RenderEngine.MOVEMENT_DELAY_MS) // we want to move again to quickly
+		move(globalTime, false);
+	}
+	
+	public void move(long globalTime, boolean force) {		
+		if(globalTime - lastTimeMoved < RenderEngine.MOVEMENT_DELAY_MS && force == false) // we want to move again to quickly
 			return;
 		
 		lastTimeMoved = globalTime;
@@ -259,7 +273,7 @@ public class Pony{
             }
 	    	
 	    	// Determine if we are close enough to it
-	        if (distance <= (this.window.getSpriteWidth() / 2)) {
+	        if (distance <= (this.window.getWidth() / 2)) {
 	        	// If so, don't move anymore
 	            x_movement = 0;
 	            y_movement = 0;
@@ -308,7 +322,7 @@ public class Pony{
 		// Point to determine where we would end up at this speed
 		Point new_location = new Point(this.getLocation().x + x_movement, this.getLocation().y + y_movement);	
 	    
-	    if (isPonyOnWallpaper(new_location) && !isPonyInAvoidanceArea(new_location)) {
+	    if ((isPonyOnWallpaper(this.window.testFrame(new_location)) && !isPonyInAvoidanceArea(new_location)) || force) {
 	        this.window.setLocation(new_location);
 	        paint(globalTime);
 	        
@@ -322,20 +336,21 @@ public class Pony{
 	        }
 	        return;
 	    }else{
-	    	if(isPonyOnWallpaper(window.getLocation()) == false) {
+	    	if(isPonyPartlyOnWallpaper(window.getFrame()) == false) {
 	            //we are no where! Teleport!
 	            teleport();
 	            return;
 	        }
-	    }
+   		}
 	
-	    //Nothing to worry about, we are on screen, but our current behavior would take us 
+	    // Nothing to worry about, we are on screen, but our current behavior would take us 
 	    // off-screen in the next move.  Just do something else.
 	    // if we are moving to a destination, our path is blocked, and we need to abort the behavior
 	    // if we are just moving normally, just "bounce" off of the barrier.
 	
 	    if (destination.x == 0 && destination.y == 0) {
 	    	currentBehavior.bounce(this, this.getLocation(), new_location, x_movement, y_movement);
+	    	move(globalTime, true);
 	    } else {
 	    	if (currentBehavior.follow_object == null) {
 	    		currentBehavior = null;
@@ -343,11 +358,10 @@ public class Pony{
 	    		//do nothing but stare longenly in the direction of the object we want to follow...
 	    		currentBehavior.blocked = true;
 		        paint(globalTime);
+		        return;
 	    	}
-	    }
-	    
-	    
-	    
+	    }   
+	    Log.i("Pony[" + name + "]", "current " + currentBehavior.name + ": End of move. Paint will not be called");
 	}
 		
 	public void paint(final long globalTime){
@@ -364,7 +378,7 @@ public class Pony{
 	        double distance = Math.sqrt(Math.pow(this.getLocation().x - destination.x, 2) + Math.pow(this.getLocation().y - destination.y, 2));
 	
 	        // Determine if we want to move horizontally, diagonaly or vertically
-	        if (distance >= this.window.getSpriteWidth() * 2) {
+	        if (distance >= this.window.getWidth() * 2) {
 	            if (horizonal * 0.75 > vertical && allowed_movement == Pony.AllowedMoves.Horizontal_Only) {
 	            	
 	            } else {
@@ -399,12 +413,15 @@ public class Pony{
 			
 		// Set the correct image to the behavior (left or right)
 //	    this.currentBehavior.selectCurrentImage();
-		this.window.ponyDirection = currentBehavior.right;
+		this.window.setPonyDirection(currentBehavior.right);
+    	Log.i("Pony[" + name + "]", "current " + currentBehavior.name + " (window " + this.window.getBehaviorName() + ")");
 		// Change the pony animation if necessary
 	    if (this.window.getBehaviorName() == null || this.window.getBehaviorName().equals(currentBehavior.name) == false) {
+	    	Log.i("Pony[" + name + "]", "setting new window values for " + currentBehavior.name + " (old is " + this.window.getBehaviorName() + ")");
 	    	this.window.setVisible(false);
 	    	this.window.setBehaviorName(currentBehavior.name);
-	    	this.window.setImages(new Sprite(currentBehavior.image_left_path), new Sprite(currentBehavior.image_right_path));    	
+	    	this.window.setImages(new Sprite(currentBehavior.image_left_path), new Sprite(currentBehavior.image_right_path)); 
+    		this.window.setOffset(currentBehavior.getCurrentOffset());
 	    }
 		
 	    // Verify if we should create effects		
@@ -444,8 +461,8 @@ public class Pony{
 			for (Pony target : interact.interactsWith) {
 				// Use Pythagorean theorem to get the distance
 				double distance = 	Math.sqrt(
-								Math.pow(this.getLocation().x + this.window.getSpriteWidth()  - target.window.getLocation().x + target.window.getSpriteWidth(),  2) + 
-								Math.pow(this.getLocation().y + this.window.getSpriteHeight() - target.window.getLocation().y + target.window.getSpriteHeight(), 2)
+								Math.pow(this.getLocation().x + this.window.getWidth()  - target.window.getLocation().x + target.window.getWidth(),  2) + 
+								Math.pow(this.getLocation().y + this.window.getHeight() - target.window.getLocation().y + target.window.getHeight(), 2)
 									);
 					
 				if (distance <= interact.proximityActivationDistance) {
@@ -504,8 +521,10 @@ public class Pony{
 		for (EffectWindow effect : this.activeEffects) {
 			effect.draw(canvas);
 		}
-		if(isPonyOnScreen(this.window.getLocation())){
+		if(isPonyOnScreen(this.getLocation())){
 //			this.currentBehavior.draw(canvas, position);
+			Paint p = new Paint();
+			p.setColor(Color.RED);
 			this.window.draw(canvas);
 		}		
 		if(MyLittleWallpaperService.INTERACTIONLINES){
@@ -519,8 +538,8 @@ public class Pony{
 		x = x - RenderEngine.OFFSET;
 		Rect ponyBox = new Rect(this.getLocation().x, 
 								this.getLocation().y, 
-								this.getLocation().x + this.window.getSpriteWidth(), 
-								this.getLocation().y + this.window.getSpriteHeight());
+								this.getLocation().x + this.window.getWidth(), 
+								this.getLocation().y + this.window.getHeight());
 		return ponyBox.contains(x, y);
 	}
 	
@@ -529,19 +548,43 @@ public class Pony{
 	 * @param location
 	 * @return
 	 */
+	public boolean isPonyOnWallpaper(Rect frame) {
+		return RenderEngine.wallpaperBounds.contains(frame);
+//		Point temp = new Point(location);
+//		List<Point> points = new LinkedList<Point>();
+//		temp.offset(-currentBehavior.getCurrentOffset().x, -currentBehavior.getCurrentOffset().y);
+//		points.add(temp);
+//		points.add(new Point(temp.x + this.window.getWidth(), temp.y + this.window.getHeight()));
+//		points.add(new Point(temp.x + this.window.getWidth(), temp.y));
+//		points.add(new Point(temp.x, temp.y + this.window.getHeight()));
+//
+//		for (Point point : points) {				
+//			if (RenderEngine.wallpaperBounds.contains(point.x, point.y) == false) {
+//				return false;
+//			}
+//		}
+//		return true;
+	}
+	
 	public boolean isPonyOnWallpaper(Point location) {
+		Point temp = new Point(location);
 		List<Point> points = new LinkedList<Point>();
-		points.add(location);
-		points.add(new Point(location.x + this.window.getSpriteWidth(), location.y + this.window.getSpriteHeight()));
-		points.add(new Point(location.x + this.window.getSpriteWidth(), location.y));
-		points.add(new Point(location.x, location.y + this.window.getSpriteHeight()));
+		temp.offset(-currentBehavior.getCurrentOffset().x, -currentBehavior.getCurrentOffset().y);
+		points.add(temp);
+		points.add(new Point(temp.x + this.window.getWidth(), temp.y + this.window.getHeight()));
+		points.add(new Point(temp.x + this.window.getWidth(), temp.y));
+		points.add(new Point(temp.x, temp.y + this.window.getHeight()));
 
 		for (Point point : points) {				
-			if (RenderEngine.screenBounds.contains(point.x, point.y) == false) {
+			if (RenderEngine.wallpaperBounds.contains(point.x, point.y) == false) {
 				return false;
 			}
 		}
 		return true;
+	}
+	
+	public boolean isPonyPartlyOnWallpaper(Rect frame) {
+		return Rect.intersects(RenderEngine.wallpaperBounds, frame);
 	}
 	
 	/**
@@ -553,9 +596,9 @@ public class Pony{
 		try{
 			List<Point> points = new LinkedList<Point>();
 			points.add(new Point(location.x + RenderEngine.OFFSET, location.y));
-			points.add(new Point(location.x + this.window.getSpriteWidth() + RenderEngine.OFFSET, location.y + this.window.getSpriteHeight()));
-			points.add(new Point(location.x + this.window.getSpriteWidth() + RenderEngine.OFFSET, location.y));
-			points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.window.getSpriteHeight()));
+			points.add(new Point(location.x + this.window.getWidth() + RenderEngine.OFFSET, location.y + this.window.getHeight()));
+			points.add(new Point(location.x + this.window.getWidth() + RenderEngine.OFFSET, location.y));
+			points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.window.getHeight()));
 	
 			for (Point point : points) {
 				if (RenderEngine.visibleScreenArea.contains(point.x, point.y) == true) {
@@ -575,7 +618,7 @@ public class Pony{
 	public void addBehavior(String name, double chance_of_occurance, double max_duration,  double min_duration,  double speed,
             String right_image_path, String left_image_path, AllowedMoves Allowed_Moves,
             String _Linked_Behavior, boolean _skip,
-            int _xcoord, int _ycoord, String _object_to_follow) throws IOException {
+            int _xcoord, int _ycoord, String _object_to_follow, String offsetRight, String offsetLeft) throws IOException {
 		
 		// Create a new behavior structure
 		Behavior new_behavior = new Behavior();
@@ -601,7 +644,13 @@ public class Pony{
 		
        new_behavior.image_right_path = right_image_path;
        new_behavior.image_left_path = left_image_path;
-			
+       
+       String pointsRight[] = offsetRight.split(",");
+       new_behavior.offset_right = new Point(Integer.valueOf(pointsRight[0]), Integer.valueOf(pointsRight[1]));
+		
+       String pointsLeft[] = offsetRight.split(",");
+       new_behavior.offset_left = new Point(Integer.valueOf(pointsLeft[0]), Integer.valueOf(pointsLeft[1]));
+       
        // Add this new behavior to the list
        behaviors.add(new_behavior);			
 		       
@@ -637,7 +686,7 @@ public class Pony{
 				) {
 				if (behavior.Skip == false) {
 					if (behavior.speed == 0 && movement != AllowedMoves.All) {
-						if (this.window.ponyDirection == true)
+						if (this.window.getPonyDirection() == true)
 							behavior.right = true;
 						else
 							behavior.right = false;
@@ -654,7 +703,7 @@ public class Pony{
 								(movement == AllowedMoves.All)
 								) {
 								if (destination.x == 0 && destination.y == 0) {
-									if (this.window.ponyDirection == true)
+									if (this.window.getPonyDirection() == true)
 										specified_behavior.right = true;
 									else
 										specified_behavior.right = false;
@@ -734,7 +783,6 @@ public class Pony{
 			// Randomly select a non-skip behavior
 			while(loop_total <= 200) {
 				dice = MyLittleWallpaperService.rand.nextDouble();
-				
 				selection = MyLittleWallpaperService.rand.nextInt(behaviors.size());
 				if (dice <= behaviors.get(selection).chance_of_occurance && behaviors.get(selection).Skip == false) {
 					behaviors.get(selection).follow_object = null;
@@ -875,6 +923,12 @@ public class Pony{
 	    		t.start();
 	    	}
 		}else{
+			if(currentBehavior != null && newBehavior != null && (newBehavior.equals(currentBehavior) == false)){
+				if(MyLittleWallpaperService.DEBUG) 
+					Log.i("Pony[" + name + "]", "swaping from " + currentBehavior.name + " to " + newBehavior.name);
+				currentBehavior.destroy();
+				currentBehavior = null;
+			}
 			currentBehavior = newBehavior;	
 		}
 //			Log.i("Pony[" + name + "]", "Found next (effect) Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
@@ -913,12 +967,12 @@ public class Pony{
 //			}
 //		}
 	    
-		if(MyLittleWallpaperService.DEBUG){
+//		if(MyLittleWallpaperService.DEBUG){
 			if(nextBehavior == null)
-				Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
+				Log.i("Pony[" + name + "]", "Found new Behavior after " + timeNeeded + " ms. Using \"" + currentBehavior.name + "\" for " + Math.round((currentBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec (" + currentBehavior.image_left_path + "/" + currentBehavior.image_right_path + ")");
 			else
 				Log.i("Pony[" + name + "]", "Found next Behavior after " + timeNeeded + " ms. Will use \"" + nextBehavior.name + "\" for " + Math.round((nextBehavior.endTime - SystemClock.elapsedRealtime()) / 1000) + " sec");
-		}
+//		}
 	}
 
 	
@@ -1003,15 +1057,28 @@ public class Pony{
 					int ycoord = 0;
 					String follow = "";
 					boolean skip = false;
+					
+					String offset_right = "0,0";
+					String offset_left = "0,0";
 
-					if (columns.length > BO_linked_behavior) {
-						linked_behavior = columns[BO_linked_behavior].trim();
-						skip = Boolean.parseBoolean(columns[BO_skip].trim());
-						xcoord = Integer.parseInt(columns[BO_xcoord].trim());
-						ycoord = Integer.parseInt(columns[BO_ycoord].trim());
-						follow = columns[BO_object_to_follow].trim();
+					if (columns.length > BO_movement_type) {
+						try{
+							linked_behavior = columns[BO_linked_behavior].trim();
+							skip = Boolean.parseBoolean(columns[BO_skip].trim());
+							xcoord = Integer.parseInt(columns[BO_xcoord].trim());
+							ycoord = Integer.parseInt(columns[BO_ycoord].trim());
+							if(columns.length > BO_object_to_follow){
+								follow = columns[BO_object_to_follow].trim().toLowerCase();
+							}							
+							if(columns.length > BO_right_image_center){
+								offset_right = columns[BO_right_image_center].trim().toLowerCase();
+								offset_left = columns[BO_left_image_center].trim().toLowerCase();
+							}
+						} catch(Exception e){
+							e.printStackTrace();
+						}
 					}
-
+						
 					newPony.addBehavior(columns[BO_name],
 							Double.parseDouble(columns[BO_probability]),
 							Double.parseDouble(columns[BO_max_duration]),
@@ -1024,7 +1091,9 @@ public class Pony{
 							skip, 
 							xcoord, 
 							ycoord,
-							follow);
+							follow,
+							offset_right,
+							offset_left);
 					newPony.linkBehaviors();
 					continue;
 				} // END OF Behavior

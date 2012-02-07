@@ -21,9 +21,11 @@ public class Behavior {
 	
 	public String image_right_path;
 	private Sprite image_right = null;
+	public Point offset_right = new Point(0, 0);
 	
 	public String image_left_path;
 	private Sprite image_left = null;
+	public Point offset_left = new Point(0, 0);
 	
 	public AllowedMoves allowedMoves;
 	
@@ -123,6 +125,13 @@ public class Behavior {
 //    	return new Point();
 //    }
 	
+	public Point getCurrentOffset(){
+		if(right)
+			return offset_right;
+		else
+			return offset_left;
+	}
+	
 	public Point getDestination(Pony pony) {
     	// If we aren't following anything yet
     	if ((follow_object_name.length() > 0 && follow_object == null) || (follow_object != null && !follow_object.window.isVisible())) {
@@ -178,8 +187,8 @@ public class Behavior {
 	    // If we have a coordinate to go to
 	    if (destination_xcoord != 0 && destination_ycoord != 0) {
 	    	// Return its position on the screen
-	        return new Point((int)(((destination_xcoord * RenderEngine.screenBounds.width()) / 100) + RenderEngine.screenBounds.left),
-	                         (int)(((destination_ycoord * RenderEngine.screenBounds.height()) / 100) + RenderEngine.screenBounds.bottom));
+	        return new Point((int)(((destination_xcoord * RenderEngine.wallpaperBounds.width()) / 100) + RenderEngine.wallpaperBounds.left),
+	                         (int)(((destination_ycoord * RenderEngine.wallpaperBounds.height()) / 100) + RenderEngine.wallpaperBounds.bottom));
 	    }
 
 	    // Otherwise return a blank Point

@@ -2,10 +2,11 @@ package com.overkill.live.pony.engine;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
-import com.overkill.ponymanager.pony.PonyManager;
+import com.overkill.ponymanager.PonyManager;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -63,14 +64,16 @@ public class RenderEngine {
 	private Point screenCenter;
 	private Point wallpaperCenter;
 
-	public static Rect screenBounds;
+	public static Rect wallpaperBounds;
 	public static Rect visibleScreenArea;
 	
 	public static boolean ready = false;	
 	public static boolean loading = false;
 	
+    public static HashMap<Long, String> ERRORS = new HashMap<Long, String>();
+	
 	public RenderEngine(Context context, SurfaceHolder surfaceHolder){            	
-    	RenderEngine.screenBounds = new Rect(0, 0, 0, 0);
+    	RenderEngine.wallpaperBounds = new Rect(0, 0, 0, 0);
     	RenderEngine.visibleScreenArea = new Rect(0, 0, 0, 0);
     	this.surfaceHolder = surfaceHolder;
     	this.context = context;
@@ -161,21 +164,25 @@ public class RenderEngine {
     		c.drawBitmap(backgroundBitmap, this.wallpaperCenter.x - (backgroundWidth / 2) + OFFSET, 0, null);     
     	else   	
     		c.drawColor(backgroundColor);
+    	
     	if(CONFIG_DEBUG_TEXT){   		
-        	drawText(c, this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS)
+        	int y = drawText(c, this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS)
         				+ "\n©2011 ov3rk1ll - http://android.ov3rk1ll.com", new Point(5, visibleScreenArea.top), leftTextPaint);
         	c.drawLine(visibleScreenArea.left, visibleScreenArea.top, visibleScreenArea.right, visibleScreenArea.top, leftTextPaint);
         	c.drawLine(visibleScreenArea.left, visibleScreenArea.bottom, visibleScreenArea.right, visibleScreenArea.bottom, leftTextPaint);
+        	c.drawRect(wallpaperBounds, leftTextPaint);
+        	
     	}   	
     	
     }   
         
-    public void drawText(Canvas c, String text, Point start, Paint p){
+    public int drawText(Canvas c, String text, Point start, Paint p){
 		float textSize = leftTextPaint.getTextSize();    	
     	String lines[] = text.split("\n");
     	for(int i = 0; i < lines.length; i++){
     		c.drawText(lines[i], start.x, start.y + (i+1) * textSize, p);
     	}
+    	return (int) (start.y + (lines.length+1) * textSize);
     }
     
     private void renderLoadingText(Canvas c, String text){
@@ -202,16 +209,24 @@ public class RenderEngine {
         }
     }      
     
+    public void restart(){
+    	this.stop();
+    	this.start();
+    }
+    
     public void setFrameSize(int w, int h){
     	RenderEngine.visibleScreenArea = new Rect(0, PADDING_TOP, w, h - PADDING_BOTTOM);
-    	if(RenderEngine.screenBounds.width() <= 0 || RenderEngine.screenBounds.height() <= 0){
-        	this.setWallpaperSize(w, h - PADDING_BOTTOM);   		
+    	if(RenderEngine.wallpaperBounds.width() <= 0 || RenderEngine.wallpaperBounds.height() <= 0){
+        	this.setWallpaperSize(w, h);   		
     	}
     	this.screenCenter = new Point(w / 2, h / 2);
     }
     
     public void setWallpaperSize(int w, int h){
-        RenderEngine.screenBounds = new Rect(0, PADDING_TOP, w, h - PADDING_BOTTOM);
+    	if(w == -1 && h == -1)
+    		RenderEngine.wallpaperBounds = new Rect(0, 0, -1, -1);
+    	else
+    		RenderEngine.wallpaperBounds = new Rect(0, PADDING_TOP, w, h - PADDING_BOTTOM);
     	this.wallpaperCenter = new Point(w / 2, h / 2);
     	Log.i("setWallpaperSize", "w="+w+" h="+h);
     }

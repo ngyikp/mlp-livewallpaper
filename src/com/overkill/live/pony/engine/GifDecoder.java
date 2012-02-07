@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 
 public class GifDecoder {
-	private static final Config BITMAP_CONFIG = Config.ARGB_4444;
 	/**
 	 * File read status: No errors.
 	 */
@@ -194,7 +193,7 @@ public class GifDecoder {
 				}
 			}
 		}
-		image.setPixels(dest, 0, width, 0, 0, width, height); // = Bitmap.createBitmap(dest, width, height, BITMAP_CONFIG );
+		image = Bitmap.createBitmap(dest, width, height, Config.ARGB_4444);
 	}
 
 	/**
@@ -531,8 +530,7 @@ public class GifDecoder {
 		ih = readShort();
 		int packed = read();
 		lctFlag = (packed & 0x80) != 0; // 1 - local color table flag interlace
-		lctSize = (int) Math.pow(2, (packed & 0x03) + 1);
-		// = (packed & 0x40) != 0; // 2 - interlace flag
+		lctSize = (int) Math.pow(2, (packed & 0x07) + 1);
 		// 3 - sort flag
 		// 4-5 - reserved lctSize = 2 << (packed & 7); // 6-8 - local color
 		// table size
@@ -564,7 +562,7 @@ public class GifDecoder {
 		}
 		frameCount++;
 		// create new image to receive frame data
-		image = Bitmap.createBitmap(width, height, BITMAP_CONFIG);
+		image = Bitmap.createBitmap(width, height, Config.ARGB_4444);
 		setPixels(); // transfer pixel data to image
 		frames.addElement(new GifFrame(image, delay)); // add image to frame
 		// list
@@ -641,11 +639,10 @@ public class GifDecoder {
 	}
 	
 	public void destroy(){
-		if(image != null) image.recycle();
-		image = null;
-		if(lastBitmap != null) lastBitmap.recycle();
-		lastBitmap = null;
+		if(frames == null) return;
+		for (GifFrame frame : frames) {
+			frame.image.recycle();
+		}
 		frames = null;
 	}
 }
-

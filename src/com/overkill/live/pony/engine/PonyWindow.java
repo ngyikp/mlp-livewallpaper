@@ -1,8 +1,13 @@
 package com.overkill.live.pony.engine;
 
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.Point;
+import android.graphics.Rect;
 
 public class PonyWindow {
 	private String ponyName;
@@ -10,18 +15,24 @@ public class PonyWindow {
 	
 	//private Sprite currentImage;
 	
-	private Sprite oldImageLeft = null;
-	private Sprite oldImageRight = null;
+	// TODO replace old image with first frame (Bitmap object) of the gif
+//	private Sprite oldImageLeft = null;
+//	private Sprite oldImageRight = null;
 	
+	private Bitmap preloadImageLeft;
 	private Sprite currentImageLeft;
+	
+	private Bitmap preloadImageRight;
 	private Sprite currentImageRight;
 	
-	private int spriteWidth;
-	private int spriteHeight;
+	private int windowWidth;
+	private int windowHeight;
 	
 	private Point position = new Point(0, 0);
 	
-	public boolean ponyDirection;
+	private Point offset = new Point(0, 0);
+	
+	private boolean ponyDirection;
 	public boolean shouldBeSleeping = false;
 	
 	private Thread preloadImageThread;
@@ -36,34 +47,24 @@ public class PonyWindow {
 		this.setPonyName(ponyName);
 	}
 	
-	public void setImages(Sprite imageLeft, Sprite imageRight){
-		if(currentImageLeft != null){
-			oldImageLeft = currentImageLeft;
-		}
+	public synchronized void setImages(Sprite imageLeft, Sprite imageRight){
 		if(imageLeft.isInitialized()){
-			this.spriteWidth = imageLeft.getSpriteWidth();
-			this.spriteHeight = imageLeft.getSpriteHeight();
+			this.windowWidth = imageLeft.getSpriteWidth();
+			this.windowHeight = imageLeft.getSpriteHeight();
 		} else {
-			BitmapFactory.Options opts = new BitmapFactory.Options();
-			opts.inJustDecodeBounds = true;
-			BitmapFactory.decodeFile(imageLeft.fileName, opts);
-			this.spriteWidth = opts.outWidth;
-			this.spriteHeight = opts.outHeight;
+			preloadImageLeft = BitmapFactory.decodeFile(imageLeft.fileName);
+			this.windowWidth = preloadImageLeft.getWidth();
+			this.windowHeight = preloadImageLeft.getHeight();
 		}
 		this.currentImageLeft = imageLeft;
 		
-		if(currentImageRight != null){
-			oldImageRight = currentImageRight;
-		}
 		if(imageRight.isInitialized()){
-			this.spriteWidth = imageRight.getSpriteWidth();
-			this.spriteHeight = imageRight.getSpriteHeight();
+			this.windowWidth = imageRight.getSpriteWidth();
+			this.windowHeight = imageRight.getSpriteHeight();
 		} else {
-			BitmapFactory.Options opts = new BitmapFactory.Options();
-			opts.inJustDecodeBounds = true;
-			BitmapFactory.decodeFile(imageRight.fileName, opts);
-			this.spriteWidth = opts.outWidth;
-			this.spriteHeight = opts.outHeight;
+			preloadImageRight = BitmapFactory.decodeFile(imageRight.fileName);
+			this.windowWidth = preloadImageRight.getWidth();
+			this.windowHeight = preloadImageRight.getHeight();
 		}
 		this.currentImageRight = imageRight;
 		
@@ -74,14 +75,14 @@ public class PonyWindow {
 					if(currentImageRight.isInitialized() == false){			
 						currentImageRight.initialize("window");				
 					}
-					if(oldImageRight != null) oldImageRight.destroy();
-					oldImageRight = null;
+					if(preloadImageRight != null) preloadImageRight.recycle();
+					preloadImageRight = null;
 					setVisible(true);
 					if(currentImageLeft.isInitialized() == false){			
 						currentImageLeft.initialize("window");				
 					}
-					if(oldImageLeft != null) oldImageLeft.destroy();
-					oldImageLeft = null;
+					if(preloadImageLeft != null) preloadImageLeft.recycle();
+					preloadImageLeft = null;
 				}
 			});
 		}else{
@@ -91,14 +92,14 @@ public class PonyWindow {
 					if(currentImageLeft.isInitialized() == false){			
 						currentImageLeft.initialize("window");				
 					}
-					if(oldImageLeft != null) oldImageLeft.destroy();
-					oldImageLeft = null;
+					if(preloadImageLeft != null) preloadImageLeft.recycle();
+					preloadImageLeft = null;
 					setVisible(true);
 					if(currentImageRight.isInitialized() == false){			
 						currentImageRight.initialize("window");					
 					}
-					if(oldImageRight != null) oldImageRight.destroy();
-					oldImageRight = null;
+					if(preloadImageRight != null) preloadImageRight.recycle();
+					preloadImageRight = null;
 				}
 			});
 		}
@@ -112,43 +113,63 @@ public class PonyWindow {
 			return this.currentImageLeft;
 	}
 	
-	public Sprite getOldImage(){
+	public Bitmap getPreloadImage(){
 		if(ponyDirection)
-			return this.oldImageRight;
+			return this.preloadImageRight;
 		else
-			return this.oldImageLeft;
+			return this.preloadImageLeft;
 	}
-		
-	public int getSpriteWidth(){
-		return (int) (this.spriteWidth * RenderEngine.CONFIG_SCALE);
+			
+	public int getWidth(){
+		return (int) (this.windowWidth * RenderEngine.CONFIG_SCALE);
 	}
 	
-	public int getSpriteHeight(){
-		return (int) (this.spriteHeight * RenderEngine.CONFIG_SCALE);
+	public int getHeight(){
+		return (int) (this.windowHeight * RenderEngine.CONFIG_SCALE);
 	}
 	
 	public void update(long globalTime, String origin){
-		if(this.getOldImage() != null){
-			this.getOldImage().update(globalTime, "oldwindow-" + origin);
-		}else if(this.isVisible()){
+		if(this.getCurrentImage().isInitialized() == true){
 			this.getCurrentImage().update(globalTime, "window-" + origin);
 		}
 	}
 	
 	public void draw(Canvas canvas){
-		if(this.getOldImage() != null){
-			this.getOldImage().draw(canvas, position);
-		}else if(this.isVisible()){
-			this.getCurrentImage().draw(canvas, position);
+		if(this.getCurrentImage().isInitialized() == true){
+			this.getCurrentImage().draw(canvas, getOffsetLocation());
+		}else {
+			canvas.drawBitmap(getPreloadImage(), getX(), getY(), null);
 		}
+	}
+	
+	public void setOffset(Point offset){
+		this.offset = offset;
+	}
+	
+	public void setOffset(int x, int y){
+		this.offset.x = x;
+		this.offset.y = y;
+	}
+	
+	public int getX(){
+		return this.position.x - offset.x;
+	}
+	
+	public int getY(){
+		return this.position.y - offset.y;
 	}
 	
 	public Point getLocation(){
 		return this.position;
 	}
 	
+	public Point getOffsetLocation(){
+		return new Point(getX(), getY());
+	}
+	
 	public void setLocation(Point newPosition){
 		this.position = newPosition;
+//		this.position.offset(offset.x, offset.y);
 	}
 
 	public boolean isVisible() {
@@ -173,5 +194,22 @@ public class PonyWindow {
 
 	public String getPonyName() {
 		return ponyName;
+	}
+
+	public boolean getPonyDirection() {
+		return ponyDirection;
+	}
+
+	public void setPonyDirection(boolean ponyDirection) {
+		this.ponyDirection = ponyDirection;
+	}
+	
+	public Rect testFrame(Point location){
+		Point point = new Point(location.x - offset.x, location.y - offset.y);
+		return new Rect(point.x, point.y, point.x + this.getWidth(), point.y + this.getHeight());		
+	}
+	
+	public Rect getFrame(){
+		return new Rect(getX(), getY(), getX() + this.getWidth(), getY() + this.getHeight());
 	}
 }

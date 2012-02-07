@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Error description:" android:textColor="@android:color/primary_text_dark"/>
+
+    <EditText
+        android:id="@+id/editMessage"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine" android:lines="3" android:gravity="top|left" android:hint="Please describe the problem!">
+        <requestFocus />
+    </EditText>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Your email-address:" android:textColor="@android:color/primary_text_dark"/>
+
+    <EditText
+        android:id="@+id/editMail"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
+        android:hint="Enter your email-address"/>
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="*Your email address will only be used to contact you in case of a unclear report or if we have further questions!"
+        android:textAppearance="?android:attr/textAppearanceSmall" android:textColor="@android:color/primary_text_dark"/>
+
+</LinearLayout>

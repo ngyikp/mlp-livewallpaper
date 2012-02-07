@@ -6,7 +6,7 @@ import java.util.Random;
 
 import com.overkill.live.pony.engine.Pony;
 import com.overkill.live.pony.engine.RenderEngine;
-import com.overkill.ponymanager.pony.PonyManager;
+import com.overkill.ponymanager.PonyManager;
 
 import android.app.WallpaperManager;
 import android.content.BroadcastReceiver;
@@ -40,7 +40,8 @@ public class MyLittleWallpaperService extends WallpaperService {
     public static Random rand;
 
     public File localFolder;
-    
+        
+    private boolean loadPoniesToEngineRunning = false;
     
     private BroadcastReceiver mStorageReceiver = new BroadcastReceiver() {
         @Override
@@ -133,6 +134,11 @@ public class MyLittleWallpaperService extends WallpaperService {
 //        }
         
         private synchronized void loadPoniesToEngine(SharedPreferences sharedPreferences){
+        	if(loadPoniesToEngineRunning){
+        		Log.i("loadPoniesToEngine", "loadPoniesToEngineRunning is true!");
+        		return;
+        	}
+        	loadPoniesToEngineRunning = true;
         	// Get local folder path
         	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
         	// check if folder exists
@@ -150,10 +156,17 @@ public class MyLittleWallpaperService extends WallpaperService {
         		int amount = sharedPreferences.getInt("pony_count_" + folder.getName(), 0);
         		if(amount <= 0) continue;
         		while(amount-- > 0){
-        			this.engine.addPony(Pony.fromFile(folder));
+        			Pony p = Pony.fromFile(folder);
+        			// only add if we got a valid pony
+        			if(p.name == null){
+            			Log.e("loadPoniesToEngine", "error parsing file " + folder.getPath());
+        				continue;
+        			}
+        			Log.i("loadPoniesToEngine", "adding " + p.name + " (" + p.behaviors.size() + ")");
+        			this.engine.addPony(p);
         		}
         	}
-        	
+        	loadPoniesToEngineRunning = false;        	
         }
         
 		@Override
@@ -166,19 +179,23 @@ public class MyLittleWallpaperService extends WallpaperService {
 					Editor editor = sharedPreferences.edit();
 					
 					if(key.equals("startup")){
-						Log.i("onSharedPreferenceChanged", "startup was true. calling loadSelectablePonies() and selectPonies()");
+						Log.i("onSharedPreferenceChanged", "startup was true. calling loadSelectablePonies() and selectPonies(). key was " + key);
 						loadPoniesToEngine(sharedPreferences);
 					}			
-					if(sharedPreferences.getBoolean("changed_pony", false) == true){
-						Log.i("onSharedPreferenceChanged", "changed_pony was true. calling selectPonies()");
+					else if(sharedPreferences.getBoolean("changed_pony", false) == true){
+						Log.i("onSharedPreferenceChanged", "changed_pony was true. calling selectPonies(). key was " + key);
 						loadPoniesToEngine(sharedPreferences);
-						editor.putBoolean("changed_pony", false);
+						editor.remove("changed_pony");
+						editor.remove("savedTime");
+				        editor.commit();
 					}
-					if(sharedPreferences.getBoolean("changed_folder", false) == true){
+					else if(sharedPreferences.getBoolean("changed_folder", false) == true){
 						Log.i("onSharedPreferenceChanged", "changed_folder was true. calling loadSelectablePonies() and selectPonies()");
 						engine.reloadLocalFolder();
 						loadPoniesToEngine(sharedPreferences);
-						editor.putBoolean("changed_folder", false);
+						editor.remove("changed_folder");
+						editor.remove("savedTime");
+				        editor.commit();
 					}
 					
 					engine.setShowDebugText(sharedPreferences.getBoolean("debug_info", false));
@@ -207,7 +224,6 @@ public class MyLittleWallpaperService extends WallpaperService {
 					engine.setUseBackgroundImage(sharedPreferences.getBoolean("background_global", false));   
 					
 			        RenderEngine.loading = false;
-			        editor.commit();
 				}
 			});	
 			t.start();

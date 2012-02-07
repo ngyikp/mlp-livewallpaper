@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
-import com.overkill.ponymanager.pony.PonyManager;
+import com.overkill.ponymanager.PonyManager;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;

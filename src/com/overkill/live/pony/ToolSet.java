@@ -229,31 +229,31 @@ public class ToolSet {
 		Point point = new Point(0, 0);		
 		switch(direction) {
 			case bottom:
-				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getSpriteWidth() / 2), ponyWindow.getLocation().y + ponyWindow.getSpriteHeight());
+				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getWidth() / 2), ponyWindow.getLocation().y + ponyWindow.getHeight());
 				break;
 			case bottom_left:
-				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y + ponyWindow.getSpriteHeight());
+				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y + ponyWindow.getHeight());
 				break;
 			case bottom_right:
-				point = new Point(ponyWindow.getLocation().x + ponyWindow.getSpriteWidth(), ponyWindow.getLocation().y + ponyWindow.getSpriteHeight());
+				point = new Point(ponyWindow.getLocation().x + ponyWindow.getWidth(), ponyWindow.getLocation().y + ponyWindow.getHeight());
 				break;
 			case center:
-				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getSpriteWidth() / 2), ponyWindow.getLocation().y + (ponyWindow.getSpriteHeight() / 2));
+				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getWidth() / 2), ponyWindow.getLocation().y + (ponyWindow.getHeight() / 2));
 				break;
 			case left:
-				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y + (ponyWindow.getSpriteHeight() / 2));
+				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y + (ponyWindow.getHeight() / 2));
 				break;
 			case right:
-				point = new Point(ponyWindow.getLocation().x + ponyWindow.getSpriteWidth(), ponyWindow.getLocation().y + (ponyWindow.getSpriteHeight() / 2));
+				point = new Point(ponyWindow.getLocation().x + ponyWindow.getWidth(), ponyWindow.getLocation().y + (ponyWindow.getHeight() / 2));
 				break;
 			case top:
-				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getSpriteWidth() / 2), ponyWindow.getLocation().y);
+				point = new Point(ponyWindow.getLocation().x + (ponyWindow.getWidth() / 2), ponyWindow.getLocation().y);
 				break;
 			case top_left:
 				point = new Point(ponyWindow.getLocation().x, ponyWindow.getLocation().y);
 				break;
 			case top_right:
-				point = new Point(ponyWindow.getLocation().x + ponyWindow.getSpriteWidth(), ponyWindow.getLocation().y);
+				point = new Point(ponyWindow.getLocation().x + ponyWindow.getWidth(), ponyWindow.getLocation().y);
 				break;
 		}
 		

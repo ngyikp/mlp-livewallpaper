@@ -1,4 +1,4 @@
-package com.overkill.ponymanager.pony;
+package com.overkill.ponymanager;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,20 +9,32 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
+import java.util.regex.Pattern;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 
 import com.overkill.live.pony.LiveWallpaperSettings;
 import com.overkill.live.pony.MyLittleWallpaperService;
 import com.overkill.live.pony.R;
 import com.overkill.live.pony.ToolSet;
-import com.overkill.ponymanager.AsynFolderDownloader;
-import com.overkill.ponymanager.AsynImageLoader;
 import com.overkill.ponymanager.AsynFolderDownloader.onDownloadListener;
 import com.overkill.ponymanager.AsynImageLoader.onImageListener;
+import com.overkill.ponymanager.pony.DownloadPony;
+import com.overkill.ponymanager.pony.DownloadPonyAdapter;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.app.WallpaperInfo;
 import android.app.WallpaperManager;
 import android.content.DialogInterface;
@@ -39,17 +51,20 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.Html;
 import android.text.Html.ImageGetter;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -64,10 +79,21 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	public static final String REMOTE_BASE_URL = "http://mlp-livewallpaper.googlecode.com/svn/assets/";
 	public static final String REMOTE_LIST_URL = REMOTE_BASE_URL + "ponies2.lst";
 	
+	public final Pattern EMAIL_ADDRESS_PATTERN = Pattern.compile(
+	          "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
+	          "\\@" +
+	          "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+	          "(" +
+	          "\\." +
+	          "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+	          ")+"
+	      );
+	
 	public static final int ACTION_INSTALL = 1;
 	public static final int ACTION_DELETE = 2;
 	public static final int ACTION_STOP = 3;
 	public static final int ACTION_UPDATE = 4;
+	public static final int ACTION_REPORT = 5;
 	
 	public static final int THEMES[] = {R.style.Theme_Pony_Applejack, R.style.Theme_Pony_Rainbowdash, R.style.Theme_Pony_Fluttershy, R.style.Theme_Pony_PinkiePie, R.style.Theme_Pony_Rarity, R.style.Theme_Pony_TwilightSparkle};
 	
@@ -459,8 +485,14 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 				p.setLastUpdate(Long.valueOf(data[4]));
 				ponyList.add(p);
 				count++;
-			}
-			
+			}			
+		} catch (final Exception e) {
+			runOnUiThread(new Runnable() {			
+				@Override
+				public void run() {	Toast.makeText(PonyManager.this, "Error loading Ponies\nPlease make sure you are connected to the internet\n" + e.getMessage(), Toast.LENGTH_LONG).show(); }
+			});
+			e.printStackTrace();
+		} finally {
 			// read local folders
 			File[] subFolders = this.localFolder.listFiles(new FileFilter() {				
 				@Override
@@ -482,14 +514,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 					ponyList.add(p);
 				}
 			}
-			
-		} catch (final Exception e) {
-			runOnUiThread(new Runnable() {			
-				@Override
-				public void run() {	Toast.makeText(PonyManager.this, "Error loading Ponies\nPlease make sure you are connected to the internet\n" + e.getMessage(), Toast.LENGTH_LONG).show(); }
-			});
-			e.printStackTrace();
-		}	
+		}
 //		Collections.sort(ponyList);
 		return ponyList;
 	}
@@ -497,7 +522,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
-		DownloadPony p = adapter.getItem(info.position);
+		DownloadPony p = adapter.getItem((int) info.id);
+		Log.i("onCreateContextMenu", "info.id:"+ info.id + " info.postion:" + info.position);
 		menu.setHeaderTitle(p.getName());
 		//File preview = new File(localFolder, p.getFolder() + "/preview.gif");
 		menu.setHeaderIcon(new BitmapDrawable(p.getImage()));
@@ -510,6 +536,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 		if(p.getState() == R.string.pony_state_installed || p.getState() == R.string.pony_state_update || p.getState() == R.string.pony_state_local_only)
 			menu.add(0, ACTION_DELETE, 0, "Delete");
 		
+
+		menu.add(0, ACTION_REPORT, 0, "Report a problem");
 		/*if(p.getState().equals(DownloadPony.STATE_RUNNING))
 			menu.add(0, ACTION_STOP, 0, "Stop Download");*/
 	}
@@ -517,7 +545,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-		DownloadPony p = adapter.getItem(info.position);
+		DownloadPony p = adapter.getItem((int) info.id);
+		Log.i("onContextItemSelected", "info.id:"+ info.id + " info.postion:" + info.position);
 		switch (item.getItemId()) {
 		case ACTION_INSTALL:
 			actionDownload(p);
@@ -529,6 +558,9 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			break;
 		case ACTION_UPDATE:
 			actionUpdate(p);
+			break;
+		case ACTION_REPORT:
+			actionReport(p, null, null);
 			break;
 		default:
 			break;
@@ -559,6 +591,92 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	public void actionDownload(DownloadPony p){
 		new AsynFolderDownloader(REMOTE_BASE_URL + p.getFolder(), new File(localFolder, p.getFolder()), p.getFolder(), this).start();
 		updateTitle();
+	}
+	
+	public void actionReport(final DownloadPony p, String message, String mail){
+		LayoutInflater factory = LayoutInflater.from(this);
+        final View dialogView = factory.inflate(R.layout.pony_manager_report, null);
+        final SharedPreferences preferences = getSharedPreferences(TAG, Context.MODE_PRIVATE);
+    	final EditText editText = (EditText) dialogView.findViewById(R.id.editMessage);
+    	final EditText editMail = (EditText) dialogView.findViewById(R.id.editMail);                	
+    	editMail.setText(preferences.getString("report_mail", ""));
+    	if(mail != null && mail.length() > 0)            	
+        	editMail.setText(mail);
+    	editText.setText(message);
+        new AlertDialog.Builder(this)
+            .setIcon(android.R.drawable.ic_dialog_email)
+            .setTitle("Report a problem")
+            .setView(dialogView)
+            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {                	
+                	dialogView.invalidate();
+                	if(editText.getText().length() == 0){
+                		Toast.makeText(PonyManager.this, "Please enter a report text", Toast.LENGTH_LONG).show();
+                		actionReport(p, editText.getText().toString(), editMail.getText().toString());
+                	} else {
+                		if(editMail.getText().length() > 0 && checkEmail(editMail.getText().toString()) == true){
+                			Editor editor = preferences.edit();
+                			editor.putString("report_mail", editMail.getText().toString());
+                			editor.commit();
+                    		sendReport(editText.getText().toString(), editMail.getText().toString(), p);
+                		} else if(editMail.getText().length() > 0 && checkEmail(editMail.getText().toString()) == false){
+                    		Toast.makeText(PonyManager.this, "Please enter a valid email", Toast.LENGTH_LONG).show();  
+                    		actionReport(p, editText.getText().toString(), editMail.getText().toString());              			
+                		} else {
+                    		sendReport(editText.getText().toString(), editMail.getText().toString(), p);
+                		}
+                	}
+                }
+            })
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
+	}
+	
+	public void sendReport(final String message, final String mail, final DownloadPony p){
+		final ProgressDialog progressDialog;
+		progressDialog = new ProgressDialog(PonyManager.this);
+		progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		progressDialog.setMessage("Sending...");
+		progressDialog.setCancelable(false);
+		Thread t = new Thread(new Runnable() {			
+			@Override
+			public void run() {
+				HttpClient httpclient = new DefaultHttpClient();
+			    HttpPost httppost = new HttpPost("http://android.ov3rk1ll.com/mlp/report.php");
+
+			    try {
+			        // Add your data
+			        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+			        nameValuePairs.add(new BasicNameValuePair("pony", p.getName()));
+			        nameValuePairs.add(new BasicNameValuePair("lastupdate", String.valueOf(p.getLastUpdate())));
+			        nameValuePairs.add(new BasicNameValuePair("message", message));
+			        nameValuePairs.add(new BasicNameValuePair("mail", mail));
+			        nameValuePairs.add(new BasicNameValuePair("phone_manufacturer", Build.MANUFACTURER));
+			        nameValuePairs.add(new BasicNameValuePair("phone_model", Build.MODEL));
+			        nameValuePairs.add(new BasicNameValuePair("phone_sdk", String.valueOf(Build.VERSION.SDK_INT)));
+			        for (NameValuePair nameValuePair : nameValuePairs) {
+						Log.i("nameValuePair", nameValuePair.getName() + ":" + nameValuePair.getValue());
+					}
+			        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			        
+			        // Execute HTTP Post Request
+			        httpclient.execute(httppost);
+			        runOnUiThread(new Runnable() {						
+						@Override
+						public void run() {
+					        progressDialog.hide();			
+					        Toast.makeText(PonyManager.this, "Thank you for your report", Toast.LENGTH_SHORT).show();
+						}
+					});			        
+			    } catch (ClientProtocolException e) {
+			        // TODO Auto-generated catch block
+			    } catch (IOException e) {
+			        // TODO Auto-generated catch block
+			    }
+			}
+		});
+		progressDialog.show();
+		t.start();		
 	}
 	
 	public void actionDelete(DownloadPony p){
@@ -675,4 +793,8 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 			e.printStackTrace();
 		}
     }
+    
+    private boolean checkEmail(String email) {
+        return EMAIL_ADDRESS_PATTERN.matcher(email).matches();
+}
 }
