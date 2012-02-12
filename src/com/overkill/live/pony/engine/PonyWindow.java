@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.util.Log;
 
 public class PonyWindow {
 	private String ponyName;
@@ -137,6 +138,10 @@ public class PonyWindow {
 	public void draw(Canvas canvas){
 		if(this.getCurrentImage().isInitialized() == true){
 			this.getCurrentImage().draw(canvas, getOffsetLocation());
+			Log.i("PonyWindow[" + ponyName + "]", this.offset.toString());
+			Paint p = new Paint();
+			p.setColor(Color.RED);
+			canvas.drawCircle(this.position.x + RenderEngine.OFFSET, this.position.y, 10, p);
 		}else {
 			canvas.drawBitmap(getPreloadImage(), getX(), getY(), null);
 		}

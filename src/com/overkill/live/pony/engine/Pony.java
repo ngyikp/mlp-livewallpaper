@@ -523,10 +523,8 @@ public class Pony{
 		for (EffectWindow effect : this.activeEffects) {
 			effect.draw(canvas);
 		}
-		if(isPonyOnScreen(this.getLocation())){
+		if(isPonyOnScreen(this.window.getFrame())){
 //			this.currentBehavior.draw(canvas, position);
-			Paint p = new Paint();
-			p.setColor(Color.RED);
 			this.window.draw(canvas);
 		}		
 		if(MyLittleWallpaperService.INTERACTIONLINES){
@@ -594,13 +592,13 @@ public class Pony{
 	 * @param location Location to check
 	 * @return True if visible
 	 */
-	public boolean isPonyOnScreen(Point location){
+	public boolean isPonyOnScreen(Rect frame){
 		try{
 			List<Point> points = new LinkedList<Point>();
-			points.add(new Point(location.x + RenderEngine.OFFSET, location.y));
-			points.add(new Point(location.x + this.window.getWidth() + RenderEngine.OFFSET, location.y + this.window.getHeight()));
-			points.add(new Point(location.x + this.window.getWidth() + RenderEngine.OFFSET, location.y));
-			points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.window.getHeight()));
+			points.add(new Point(frame.left + RenderEngine.OFFSET, frame.top));
+			points.add(new Point(frame.left + this.window.getWidth() + RenderEngine.OFFSET, frame.top + this.window.getHeight()));
+			points.add(new Point(frame.left + this.window.getWidth() + RenderEngine.OFFSET, frame.top));
+			points.add(new Point(frame.left + RenderEngine.OFFSET, frame.top + this.window.getHeight()));
 	
 			for (Point point : points) {
 				if (RenderEngine.visibleScreenArea.contains(point.x, point.y) == true) {
@@ -612,7 +610,7 @@ public class Pony{
 			return true;
 		}
 	}
-	
+		
 	public boolean isPonyInAvoidanceArea(Point location){
 		return false;
 	}
