@@ -42,11 +42,24 @@ public class MyLittleWallpaperService extends WallpaperService {
     public File localFolder;
         
     private boolean loadPoniesToEngineRunning = false;
+    private boolean onSharedPreferenceChangedRunning = false;
     
-    private BroadcastReceiver mStorageReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mSDMountedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            
+        	Log.i("MyLittleWallpaperService", "SD-Card was mounted");
+        	SharedPreferences preferences = getSharedPreferences(TAG, MODE_PRIVATE); 
+        	Editor editor = preferences.edit();
+        	editor.putBoolean("changed_folder", true);
+        	editor.putLong("savedTime", SystemClock.elapsedRealtime());
+    		editor.commit();
+        }
+    };
+    
+    private BroadcastReceiver mSDUnmountedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+        	Log.i("MyLittleWallpaperService", "SD-Card was un mounted");
         }
     };
     
@@ -59,14 +72,21 @@ public class MyLittleWallpaperService extends WallpaperService {
 		} catch (NameNotFoundException e) {;}        
         rand = new Random();
         localFolder = PonyManager.selectFolder(this);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
-        registerReceiver(mStorageReceiver, filter);
+        
+        IntentFilter mfilter = new IntentFilter();
+        mfilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+        mfilter.addDataScheme("file");
+        registerReceiver(mSDMountedReceiver, mfilter);
+        
+        IntentFilter ufilter = new IntentFilter();
+        ufilter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
+        ufilter.addDataScheme("file");
+        registerReceiver(mSDUnmountedReceiver, ufilter);
     }
     
     @Override
     public void onDestroy() {
-    	unregisterReceiver(mStorageReceiver);
+    	unregisterReceiver(mSDMountedReceiver);
         super.onDestroy();
     }
 
@@ -94,51 +114,13 @@ public class MyLittleWallpaperService extends WallpaperService {
         	super.onCreate(surfaceHolder);
         	this.previewMode = super.isPreview();
         }
-        
-//        private synchronized void loadSelectablePonies(){
-//        	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
-//			if(localFolder.exists()){
-//				try {
-//					File[] ponyFolders  = localFolder.listFiles(new FileFilter() {				
-//						@Override
-//						public boolean accept(File pathname) {
-//							return pathname.isDirectory();
-//						}
-//					});
-//					selectablePonies.clear();
-//				    for(File ponyFolder : ponyFolders){
-//				    	Pony tmp = Pony.fromFile(ponyFolder, true);
-//				    	if(tmp != null && selectablePonies.contains(tmp) == false)
-//				    		selectablePonies.add(Pony.fromFile(ponyFolder));
-//				    }
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//	        }
-//			Log.i(TAG + ".loadSelectablePonies", "Got " + selectablePonies.size() + " Ponies");
-//        }
-//        
-//        private synchronized void selectPonies(SharedPreferences sharedPreferences){
-//        	for(Pony p : this.engine.getPonies()){
-//	        	p.cleanUp();
-//	        }
-//	        
-//	        this.engine.clearPonies();
-//	        
-//	        for(Pony p : selectablePonies){
-//	        	if(sharedPreferences.getBoolean("usepony_" + p.name, false) == true && this.engine.getPonies().contains(p) == false){
-//	        		this.engine.addPony(p);
-//	        		Log.i(TAG + ".selectPonies", "Added \"" + p.name + "\" to activePonies");
-//	        	}
-//	        }
-//        }
-        
+                
         private synchronized void loadPoniesToEngine(SharedPreferences sharedPreferences){
-        	if(loadPoniesToEngineRunning){
-        		Log.i("loadPoniesToEngine", "loadPoniesToEngineRunning is true!");
-        		return;
-        	}
-        	loadPoniesToEngineRunning = true;
+//        	if(loadPoniesToEngineRunning){
+//        		Log.i("loadPoniesToEngine", "loadPoniesToEngineRunning is true!");
+//        		return;
+//        	}
+//        	loadPoniesToEngineRunning = true;
         	// Get local folder path
         	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
         	// check if folder exists
@@ -166,13 +148,14 @@ public class MyLittleWallpaperService extends WallpaperService {
         			this.engine.addPony(p);
         		}
         	}
-        	loadPoniesToEngineRunning = false;        	
+//        	loadPoniesToEngineRunning = false;        	
         }
         
 		@Override
 		public synchronized void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-			if(key.equals("savedTime") == false && key.equals("startup") == false){ return; }
+			if((key.equals("savedTime") == false && key.equals("startup") == false) || onSharedPreferenceChangedRunning == true){ return; }
 			RenderEngine.loading = true;
+			onSharedPreferenceChangedRunning = true;
 			Thread t = new Thread(new Runnable() {				
 				@Override
 				public void run() {
@@ -181,6 +164,8 @@ public class MyLittleWallpaperService extends WallpaperService {
 					if(key.equals("startup")){
 						Log.i("onSharedPreferenceChanged", "startup was true. calling loadSelectablePonies() and selectPonies(). key was " + key);
 						loadPoniesToEngine(sharedPreferences);
+						editor.remove("startup");
+				        editor.commit();
 					}			
 					else if(sharedPreferences.getBoolean("changed_pony", false) == true){
 						Log.i("onSharedPreferenceChanged", "changed_pony was true. calling selectPonies(). key was " + key);
@@ -224,6 +209,7 @@ public class MyLittleWallpaperService extends WallpaperService {
 					engine.setUseBackgroundImage(sharedPreferences.getBoolean("background_global", false));   
 					
 			        RenderEngine.loading = false;
+			        onSharedPreferenceChangedRunning = false;
 				}
 			});	
 			t.start();

@@ -778,6 +778,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 
     	// create folder and place .nomedia file if needed
 		PonyManager.createNoMedia(folder);
+		Log.i("selectFolder", folder.getPath());
     	return folder;
     }
     

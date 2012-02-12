@@ -165,7 +165,7 @@ public class Pony{
 	    // Move the Pony
 		if(hasSpawned == false){
 			paint(globalTime);
-			this.teleport();
+			this.teleport("spawn");
 			hasSpawned = true;
 		}
 		
@@ -181,8 +181,8 @@ public class Pony{
 		}
 	}
 	
-	public void teleport() {
-		Log.i("Pony[" + name + "]", "forced teleport");
+	public void teleport(String cause) {
+		Log.i("Pony[" + name + "]", "forced teleport by " + cause);
 		Point teleport_location = new Point(0, 0);		
 		for (int i = 0; i < 300; i++) {
 			// Then select a random location to appear at		
@@ -338,7 +338,7 @@ public class Pony{
 	    }else{
 	    	if(isPonyPartlyOnWallpaper(window.getFrame()) == false) {
 	            //we are no where! Teleport!
-	            teleport();
+	            teleport("out of frame (" + window.getFrame().toString() + ")");
 	            return;
 	        }
    		}
@@ -361,7 +361,11 @@ public class Pony{
 		        return;
 	    	}
 	    }   
-	    Log.i("Pony[" + name + "]", "current " + currentBehavior.name + ": End of move. Paint will not be called");
+	    Log.i("Pony[" + name + "]", "current " + currentBehavior.name + ": End of move. Paint will not be called (" +
+	    		"destination:" + destination.toString() +
+	    		" isPonyPartlyOnWallpaper(window.getFrame()):" + isPonyPartlyOnWallpaper(window.getFrame()) +
+	    		" isPonyOnWallpaper(this.window.testFrame(new_location)):" + isPonyOnWallpaper(this.window.testFrame(new_location)) + 
+	    		" force:" + force);
 	}
 		
 	public void paint(final long globalTime){
@@ -414,10 +418,8 @@ public class Pony{
 		// Set the correct image to the behavior (left or right)
 //	    this.currentBehavior.selectCurrentImage();
 		this.window.setPonyDirection(currentBehavior.right);
-    	Log.i("Pony[" + name + "]", "current " + currentBehavior.name + " (window " + this.window.getBehaviorName() + ")");
 		// Change the pony animation if necessary
 	    if (this.window.getBehaviorName() == null || this.window.getBehaviorName().equals(currentBehavior.name) == false) {
-	    	Log.i("Pony[" + name + "]", "setting new window values for " + currentBehavior.name + " (old is " + this.window.getBehaviorName() + ")");
 	    	this.window.setVisible(false);
 	    	this.window.setBehaviorName(currentBehavior.name);
 	    	this.window.setImages(new Sprite(currentBehavior.image_left_path), new Sprite(currentBehavior.image_right_path)); 
