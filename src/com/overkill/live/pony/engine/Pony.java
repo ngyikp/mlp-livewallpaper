@@ -191,7 +191,7 @@ public class Pony{
 						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.wallpaperBounds.width()) + (int)RenderEngine.wallpaperBounds.left, 
 						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.wallpaperBounds.height()) + (int)RenderEngine.wallpaperBounds.top);
 		
-		    if(isPonyOnWallpaper(window.testFrame(teleport_location)) == true) break;
+		    if(isPonyOnWallpaper(teleport_location) == true) break;
 		}	
 	    // Finally, go there
 	    this.window.setLocation(teleport_location);
@@ -322,7 +322,7 @@ public class Pony{
 		// Point to determine where we would end up at this speed
 		Point new_location = new Point(this.getLocation().x + x_movement, this.getLocation().y + y_movement);	
 	    
-	    if ((isPonyOnWallpaper(this.window.testFrame(new_location)) && !isPonyInAvoidanceArea(new_location)) || force) {
+	    if ((isPonyOnWallpaper(new_location) && !isPonyInAvoidanceArea(new_location)) || force) {
 	        this.window.setLocation(new_location);
 	        paint(globalTime);
 	        
@@ -336,9 +336,9 @@ public class Pony{
 	        }
 	        return;
 	    }else{
-	    	if(isPonyPartlyOnWallpaper(window.getFrame()) == false) {
+	    	if(isPonyOnWallpaper(window.getLocation()) == false) {
 	            //we are no where! Teleport!
-	            teleport("out of frame (" + window.getFrame().toString() + ")");
+	            teleport("out of frame (" + window.getLocation().toString() + ")");
 	            return;
 	        }
    		}
@@ -350,7 +350,7 @@ public class Pony{
 	
 	    if (destination.x == 0 && destination.y == 0) {
 	    	currentBehavior.bounce(this, this.getLocation(), new_location, x_movement, y_movement);
-	    	move(globalTime, true);
+//	    	move(globalTime, true);
 	    } else {
 	    	if (currentBehavior.follow_object == null) {
 	    		currentBehavior = null;
@@ -361,11 +361,11 @@ public class Pony{
 		        return;
 	    	}
 	    }   
-	    Log.i("Pony[" + name + "]", "current " + currentBehavior.name + ": End of move. Paint will not be called (" +
-	    		"destination:" + destination.toString() +
-	    		" isPonyPartlyOnWallpaper(window.getFrame()):" + isPonyPartlyOnWallpaper(window.getFrame()) +
-	    		" isPonyOnWallpaper(this.window.testFrame(new_location)):" + isPonyOnWallpaper(this.window.testFrame(new_location)) + 
-	    		" force:" + force);
+//	    Log.i("Pony[" + name + "]", "current " + currentBehavior.name + ": End of move. Paint will not be called (" +
+//	    		"destination:" + destination.toString() +
+//	    		" isPonyPartlyOnWallpaper(window.getFrame()):" + isPonyPartlyOnWallpaper(window.getFrame()) +
+//	    		" isPonyOnWallpaper(this.window.testFrame(new_location)):" + isPonyOnWallpaper(this.window.testFrame(new_location)) + 
+//	    		" force:" + force);
 	}
 		
 	public void paint(final long globalTime){
@@ -423,7 +423,7 @@ public class Pony{
 	    	this.window.setVisible(false);
 	    	this.window.setBehaviorName(currentBehavior.name);
 	    	this.window.setImages(new Sprite(currentBehavior.image_left_path), new Sprite(currentBehavior.image_right_path)); 
-    		this.window.setOffset(currentBehavior.getCurrentOffset());
+//    		this.window.setOffset(currentBehavior.getCurrentOffset());
 	    }
 		
 	    // Verify if we should create effects		
@@ -523,7 +523,7 @@ public class Pony{
 		for (EffectWindow effect : this.activeEffects) {
 			effect.draw(canvas);
 		}
-		if(isPonyOnScreen(this.window.getFrame())){
+		if(isPonyOnScreen(this.window.getLocation())){
 //			this.currentBehavior.draw(canvas, position);
 			this.window.draw(canvas);
 		}		
@@ -548,8 +548,22 @@ public class Pony{
 	 * @param location
 	 * @return
 	 */
-	public boolean isPonyOnWallpaper(Rect frame) {
-		return RenderEngine.wallpaperBounds.contains(frame);
+	public boolean isPonyOnWallpaper(Point location) {
+		List<Point> points = new LinkedList<Point>();
+		points.add(location);
+		points.add(new Point(location.x + this.window.getWidth(), location.y + this.window.getHeight()));
+		points.add(new Point(location.x + this.window.getWidth(), location.y));
+		points.add(new Point(location.x, location.y + this.window.getHeight()));
+
+		for (Point point : points) {				
+			if (RenderEngine.wallpaperBounds.contains(point.x, point.y) == false) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+//	public boolean isPonyOnWallpaper(Point location) {
 //		Point temp = new Point(location);
 //		List<Point> points = new LinkedList<Point>();
 //		temp.offset(-currentBehavior.getCurrentOffset().x, -currentBehavior.getCurrentOffset().y);
@@ -564,24 +578,7 @@ public class Pony{
 //			}
 //		}
 //		return true;
-	}
-	
-	public boolean isPonyOnWallpaper(Point location) {
-		Point temp = new Point(location);
-		List<Point> points = new LinkedList<Point>();
-		temp.offset(-currentBehavior.getCurrentOffset().x, -currentBehavior.getCurrentOffset().y);
-		points.add(temp);
-		points.add(new Point(temp.x + this.window.getWidth(), temp.y + this.window.getHeight()));
-		points.add(new Point(temp.x + this.window.getWidth(), temp.y));
-		points.add(new Point(temp.x, temp.y + this.window.getHeight()));
-
-		for (Point point : points) {				
-			if (RenderEngine.wallpaperBounds.contains(point.x, point.y) == false) {
-				return false;
-			}
-		}
-		return true;
-	}
+//	}
 	
 	public boolean isPonyPartlyOnWallpaper(Rect frame) {
 		return Rect.intersects(RenderEngine.wallpaperBounds, frame);
@@ -592,13 +589,13 @@ public class Pony{
 	 * @param location Location to check
 	 * @return True if visible
 	 */
-	public boolean isPonyOnScreen(Rect frame){
+	public boolean isPonyOnScreen(Point location){
 		try{
 			List<Point> points = new LinkedList<Point>();
-			points.add(new Point(frame.left + RenderEngine.OFFSET, frame.top));
-			points.add(new Point(frame.left + this.window.getWidth() + RenderEngine.OFFSET, frame.top + this.window.getHeight()));
-			points.add(new Point(frame.left + this.window.getWidth() + RenderEngine.OFFSET, frame.top));
-			points.add(new Point(frame.left + RenderEngine.OFFSET, frame.top + this.window.getHeight()));
+			points.add(new Point(location.x + RenderEngine.OFFSET, location.y));
+			points.add(new Point(location.x + this.window.getWidth() + RenderEngine.OFFSET, location.y + this.window.getHeight()));
+			points.add(new Point(location.x + this.window.getWidth() + RenderEngine.OFFSET, location.y));
+			points.add(new Point(location.x + RenderEngine.OFFSET, location.y + this.window.getHeight()));
 	
 			for (Point point : points) {
 				if (RenderEngine.visibleScreenArea.contains(point.x, point.y) == true) {

@@ -31,7 +31,7 @@ public class PonyWindow {
 	
 	private Point position = new Point(0, 0);
 	
-	private Point offset = new Point(0, 0);
+//	private Point offset = new Point(0, 0);
 	
 	private boolean ponyDirection;
 	public boolean shouldBeSleeping = false;
@@ -137,40 +137,40 @@ public class PonyWindow {
 	
 	public void draw(Canvas canvas){
 		if(this.getCurrentImage().isInitialized() == true){
-			this.getCurrentImage().draw(canvas, getOffsetLocation());
-			Log.i("PonyWindow[" + ponyName + "]", this.offset.toString());
-			Paint p = new Paint();
-			p.setColor(Color.RED);
-			canvas.drawCircle(this.position.x + RenderEngine.OFFSET, this.position.y, 10, p);
+			this.getCurrentImage().draw(canvas, getLocation());
+//			Log.i("PonyWindow[" + ponyName + "]", this.offset.toString());
+//			Paint p = new Paint();
+//			p.setColor(Color.RED);
+//			canvas.drawCircle(this.position.x + RenderEngine.OFFSET, this.position.y, 10, p);
 		}else {
-			canvas.drawBitmap(getPreloadImage(), getX(), getY(), null);
+			canvas.drawBitmap(getPreloadImage(), getLocation().x, getLocation().y, null);
 		}
 	}
 	
-	public void setOffset(Point offset){
-		this.offset = offset;
-	}
-	
-	public void setOffset(int x, int y){
-		this.offset.x = x;
-		this.offset.y = y;
-	}
-	
-	public int getX(){
-		return this.position.x - offset.x;
-	}
-	
-	public int getY(){
-		return this.position.y - offset.y;
-	}
+//	public void setOffset(Point offset){
+//		this.offset = offset;
+//	}
+//	
+//	public void setOffset(int x, int y){
+//		this.offset.x = x;
+//		this.offset.y = y;
+//	}
+//	
+//	public int getX(){
+//		return this.position.x - offset.x;
+//	}
+//	
+//	public int getY(){
+//		return this.position.y - offset.y;
+//	}
 	
 	public Point getLocation(){
 		return this.position;
 	}
 	
-	public Point getOffsetLocation(){
-		return new Point(getX(), getY());
-	}
+//	public Point getOffsetLocation(){
+//		return new Point(getX(), getY());
+//	}
 	
 	public void setLocation(Point newPosition){
 		this.position = newPosition;
@@ -209,12 +209,12 @@ public class PonyWindow {
 		this.ponyDirection = ponyDirection;
 	}
 	
-	public Rect testFrame(Point location){
-		Point point = new Point(location.x - offset.x, location.y - offset.y);
-		return new Rect(point.x, point.y, point.x + this.getWidth(), point.y + this.getHeight());		
-	}
-	
-	public Rect getFrame(){
-		return new Rect(getX(), getY(), getX() + this.getWidth(), getY() + this.getHeight());
-	}
+//	public Rect testFrame(Point location){
+//		Point point = new Point(location.x - offset.x, location.y - offset.y);
+//		return new Rect(point.x, point.y, point.x + this.getWidth(), point.y + this.getHeight());		
+//	}
+//	
+//	public Rect getFrame(){
+//		return new Rect(getX(), getY(), getX() + this.getWidth(), getY() + this.getHeight());
+//	}
 }

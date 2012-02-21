@@ -116,11 +116,11 @@ public class MyLittleWallpaperService extends WallpaperService {
         }
                 
         private synchronized void loadPoniesToEngine(SharedPreferences sharedPreferences){
-//        	if(loadPoniesToEngineRunning){
-//        		Log.i("loadPoniesToEngine", "loadPoniesToEngineRunning is true!");
-//        		return;
-//        	}
-//        	loadPoniesToEngineRunning = true;
+        	if(loadPoniesToEngineRunning){
+        		Log.i("loadPoniesToEngine", "loadPoniesToEngineRunning is true!");
+        		return;
+        	}
+        	loadPoniesToEngineRunning = true;
         	// Get local folder path
         	localFolder = PonyManager.selectFolder(MyLittleWallpaperService.this);
         	// check if folder exists
@@ -148,7 +148,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         			this.engine.addPony(p);
         		}
         	}
-//        	loadPoniesToEngineRunning = false;        	
+        	loadPoniesToEngineRunning = false;        	
         }
         
 		@Override
