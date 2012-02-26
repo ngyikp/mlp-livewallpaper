@@ -226,11 +226,11 @@ public class Pony{
 	}
 	
 	public void move(long globalTime) {		
-		move(globalTime, false);
-	}
-	
-	public void move(long globalTime, boolean force) {		
-		if(globalTime - lastTimeMoved < RenderEngine.MOVEMENT_DELAY_MS && force == false) // we want to move again to quickly
+//		move(globalTime, false);
+//	}
+//	
+//	public void move(long globalTime, boolean force) {		
+		if(globalTime - lastTimeMoved < RenderEngine.MOVEMENT_DELAY_MS) // we want to move again to quickly
 			return;
 		
 		lastTimeMoved = globalTime;
@@ -322,7 +322,7 @@ public class Pony{
 		// Point to determine where we would end up at this speed
 		Point new_location = new Point(this.getLocation().x + x_movement, this.getLocation().y + y_movement);	
 	    
-	    if ((isPonyOnWallpaper(new_location) && !isPonyInAvoidanceArea(new_location)) || force) {
+	    if ((isPonyOnWallpaper(new_location) && !isPonyInAvoidanceArea(new_location))) {
 	        this.window.setLocation(new_location);
 	        paint(globalTime);
 	        
