@@ -619,7 +619,6 @@ public class Pony{
 		
 		// Create a new behavior structure
 		Behavior new_behavior = new Behavior();
-		
 		// Set its values
        new_behavior.name = name.trim();
        new_behavior.pony_name = this.name;
