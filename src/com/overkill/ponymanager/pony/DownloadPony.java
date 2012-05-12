@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -183,7 +184,10 @@ public class DownloadPony implements Comparable<DownloadPony> {
 			    }
 		    }
 			DownloadPony p = new DownloadPony(name, folder.getName(), ToolSet.getFolderItemCount(folder), ToolSet.getFolderSize(folder), R.string.pony_state_local_only);
-			p.setCategories(Arrays.asList(categories));
+			if(categories == null)
+				p.setCategories(new ArrayList<String>());
+			else
+				p.setCategories(Arrays.asList(categories));
 			p.setLastUpdate(0);
 			return p;
     	}catch (Exception e) {
