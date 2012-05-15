@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.overkill.live.pony"
       android:versionCode="21" android:versionName="0.7.5">
-    <uses-sdk android:minSdkVersion="7" />
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="15"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
@@ -31,7 +31,7 @@
             <category android:name="android.intent.category.LAUNCHER"></category>
         </intent-filter>
     </activity>
-    <activity android:name="com.google.ads.AdActivity" android:configChanges="keyboard|keyboardHidden|orientation"/>
+    <activity android:name="com.google.ads.AdActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
     <activity android:theme="@android:style/Theme.Wallpaper.NoTitleBar" android:name="SetPaddingActivity"></activity>
     <activity android:theme="@android:style/Theme.Dialog" android:name="PickPonyActivity" android:label="@string/pony_select_title"></activity>
 </application>
