@@ -1,5 +1,4 @@
-<img src="https://github.com/ngyikp/my-little-software/raw/master/src/docs/screenshot.png" align="right" width="400">
-
+<img src="https://github.com/ngyikp/mlp-livewallpaper/raw/master/docs/screenshot.png" align="right" width="400">
 This is a fork of the [My Little Pony: Friendship is Magic Android Live Wallpaper](https://code.google.com/archive/p/mlp-livewallpaper/) by [@OV3RK1LL](https://twitter.com/OV3RK1LL), cleaned up and usable once again!
 
 Only tested on a Nexus 5X on Android 7.0, your mileage may vary!
