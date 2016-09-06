@@ -76,7 +76,7 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	public static final String TAG = "PonyManager";
 	public static final String ACTION_REMOVE_PONY = "com.overkill.live.pony.action.removed";
 	
-	public static final String REMOTE_BASE_URL = "http://mlp-livewallpaper.googlecode.com/svn/assets/";
+	public static final String REMOTE_BASE_URL = "https://ngyikp.github.io/mlp-livewallpaper/assets/";
 	public static final String REMOTE_LIST_URL = REMOTE_BASE_URL + "ponies2.lst";
 	
 	public final Pattern EMAIL_ADDRESS_PATTERN = Pattern.compile(
