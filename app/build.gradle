@@ -19,7 +19,3 @@ android {
 
     useLibrary 'org.apache.http.legacy'
 }
-
-dependencies {
-    compile files('libs/GoogleAdMobAdsSdk-6.0.1.jar')
-}
