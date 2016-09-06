@@ -167,7 +167,7 @@ public class RenderEngine {
     	
     	if(CONFIG_DEBUG_TEXT){   		
         	int y = drawText(c, this.context.getString(R.string.debug_text, MyLittleWallpaperService.VERSION, activePonies.size(), CONFIG_SCALE, realFPS, CONFIG_FPS)
-        				+ "\n©2011 ov3rk1ll - http://android.ov3rk1ll.com", new Point(5, visibleScreenArea.top), leftTextPaint);
+        				+ "\nÂ©2011 ov3rk1ll - http://android.ov3rk1ll.com", new Point(5, visibleScreenArea.top), leftTextPaint);
         	c.drawLine(visibleScreenArea.left, visibleScreenArea.top, visibleScreenArea.right, visibleScreenArea.top, leftTextPaint);
         	c.drawLine(visibleScreenArea.left, visibleScreenArea.bottom, visibleScreenArea.right, visibleScreenArea.bottom, leftTextPaint);
         	c.drawRect(wallpaperBounds, leftTextPaint);
