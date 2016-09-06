@@ -57,7 +57,7 @@
     <string name="set_wallpaper">Choose &quot;MyLittleWallpaper&quot; from the list to set the wallpaper</string>
     <string name="show_effects_warning_message">Effects can cause the wallpaper to become unstable!\nThey also need more cpu power and can drain the battery faster.</string>
     <string name="show_effects_warning_title">Warning</string>
-   	<string name="dialog_color_picker">Color Picker</string>
+    <string name="dialog_color_picker">Color Picker</string>
     <string name="press_color_to_apply">Press on Color to apply</string>
     <string name="warning_too_much_pony">You are about to use a lot of ponies.\nIf the app gets laggy or crashes a lot, please use less ponies!</string>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent">
 
     <ImageView
         android:id="@+id/imagePony"
@@ -20,9 +20,10 @@
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/buttonLayout"
         android:layout_toRightOf="@+id/imagePony"
+        android:ellipsize="end"
         android:lines="1"
         android:text="@string/app_name"
-        android:textAppearance="?android:attr/textAppearanceMedium" android:ellipsize="end"/>
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/textUsageCount"
@@ -34,14 +35,14 @@
         android:lines="1"
         android:text="..."
         android:textAppearance="?android:attr/textAppearanceSmall" />
-    
+
     <LinearLayout
         android:id="@+id/buttonLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/textUsageCount"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true" >
+        android:layout_alignParentTop="true">
 
         <Button
             android:id="@+id/btnPlus"
@@ -65,5 +66,5 @@
             android:layout_weight="1"
             android:text="-" />
     </LinearLayout>
-    
+
 </RelativeLayout>

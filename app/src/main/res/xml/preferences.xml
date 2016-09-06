@@ -1,43 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    
-    <Preference android:key="info_hint_text" android:summary="@string/info_hint_text_summary" android:title="@string/info_hint_title"></Preference>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-<PreferenceCategory android:key="pony_settings" android:title="@string/pony_settings_title">
-    <Preference android:key="pony_select" android:title="@string/pony_select_title" android:summary="@string/pony_select_summary"></Preference><CheckBoxPreference android:key="interact_user" android:enabled="true" android:summary="@string/interact_user_summary" android:title="@string/interact_user_title"></CheckBoxPreference><CheckBoxPreference android:key="interact_pony" android:summary="@string/interact_pony_summary" android:title="@string/interact_pony_title" android:enabled="false" android:defaultValue="true"></CheckBoxPreference><CheckBoxPreference android:key="show_effects" android:title="@string/show_effects_title" android:defaultValue="false" android:summary="@string/show_effects_summary" android:enabled="true"></CheckBoxPreference>
-    
-    
-    
-    
-    
-    
-</PreferenceCategory><PreferenceCategory android:key="background_settings" android:title="@string/background_settings">
-    <!-- <Preference android:key="background_color" android:title=""></Preference>  -->
-    <com.att.preference.colorpicker.ColorPickerPreference 
-			android:key="background_color"
-			android:title="@string/background_color_title" 
-			android:defaultValue="0xff000000" 
-		/>
-    <CheckBoxPreference android:key="background_global" android:title="@string/background_global_title"></CheckBoxPreference>
-    <Preference android:key="background_image" android:dependency="background_global" android:title="@string/background_image_title"></Preference>
-    
-    
-</PreferenceCategory><PreferenceCategory android:key="display_settings" android:title="@string/display_settings_title"><ListPreference android:key="framerate_cap" android:entryValues="@array/frameRateValues" android:entries="@array/frameRateValues" android:summary="@string/framerate_cap_summary" android:title="@string/framerate_cap_title"></ListPreference><EditTextPreference android:key="pony_scale" android:defaultValue="1" android:title="@string/pony_scale_title" android:summary="@string/pony_scale_summary" android:inputType="numberDecimal"></EditTextPreference>
-<EditTextPreference android:title="Movement Delay" android:summary="The delay to wait before moving the pony (in ms)" android:key="movement_delay_ms" android:defaultValue="100"></EditTextPreference>
-<!-- <CheckBoxPreference android:key="disable_wallpaper_scrolling" android:defaultValue="false" android:title="@string/disable_wallpaper_scrolling_title" android:summary="@string/disable_wallpaper_scrolling_summary"/> -->
-    
-    
-</PreferenceCategory><PreferenceCategory android:key="more_settings" android:title="@string/more_settings_title"><CheckBoxPreference android:defaultValue="false" android:title="@string/force_local_storage_title" android:summary="@string/force_local_storage_summary" android:enabled="true" android:key="force_internal_storage"></CheckBoxPreference>
-    <Preference android:key="more_about" android:title="@string/app_name" android:summary="© 2011 ov3rk1ll"></Preference>
-    <Preference android:title="Version" android:key="more_version" android:summary="1.0"></Preference>
-    <!-- <Preference android:key="more_link_web" android:title="Visit http://android.ov3rk1ll.com"></Preference>  -->
-    <Preference android:key="more_link_twitter" android:title="Follow on Twitter"></Preference>
-    <Preference android:key="more_link_facebook" android:title="Like on Facebook"></Preference>
-    <Preference android:title="@string/more_donate_paypal_title" android:key="more_donate_paypal" android:summary="@string/more_donate_paypal_summary"></Preference>
-    
-    <CheckBoxPreference android:key="debug_info" android:summary="@string/debug_info_summary" android:title="@string/debug_info_title"></CheckBoxPreference>
-</PreferenceCategory>
+    <Preference
+        android:key="info_hint_text"
+        android:summary="@string/info_hint_text_summary"
+        android:title="@string/info_hint_title" />
 
-    
+    <PreferenceCategory
+        android:key="pony_settings"
+        android:title="@string/pony_settings_title">
+        <Preference
+            android:key="pony_select"
+            android:summary="@string/pony_select_summary"
+            android:title="@string/pony_select_title" />
+        <CheckBoxPreference
+            android:enabled="true"
+            android:key="interact_user"
+            android:summary="@string/interact_user_summary"
+            android:title="@string/interact_user_title" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:enabled="false"
+            android:key="interact_pony"
+            android:summary="@string/interact_pony_summary"
+            android:title="@string/interact_pony_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:enabled="true"
+            android:key="show_effects"
+            android:summary="@string/show_effects_summary"
+            android:title="@string/show_effects_title" />
+
+
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="background_settings"
+        android:title="@string/background_settings">
+        <!-- <Preference android:key="background_color" android:title=""></Preference>  -->
+        <com.att.preference.colorpicker.ColorPickerPreference
+            android:defaultValue="0xff000000"
+            android:key="background_color"
+            android:title="@string/background_color_title" />
+        <CheckBoxPreference
+            android:key="background_global"
+            android:title="@string/background_global_title" />
+        <Preference
+            android:dependency="background_global"
+            android:key="background_image"
+            android:title="@string/background_image_title" />
+
+
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="display_settings"
+        android:title="@string/display_settings_title">
+        <ListPreference
+            android:entries="@array/frameRateValues"
+            android:entryValues="@array/frameRateValues"
+            android:key="framerate_cap"
+            android:summary="@string/framerate_cap_summary"
+            android:title="@string/framerate_cap_title" />
+        <EditTextPreference
+            android:defaultValue="1"
+            android:inputType="numberDecimal"
+            android:key="pony_scale"
+            android:summary="@string/pony_scale_summary"
+            android:title="@string/pony_scale_title" />
+        <EditTextPreference
+            android:defaultValue="100"
+            android:key="movement_delay_ms"
+            android:summary="The delay to wait before moving the pony (in ms)"
+            android:title="Movement Delay" />
+        <!-- <CheckBoxPreference android:key="disable_wallpaper_scrolling" android:defaultValue="false" android:title="@string/disable_wallpaper_scrolling_title" android:summary="@string/disable_wallpaper_scrolling_summary"/> -->
+
+
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="more_settings"
+        android:title="@string/more_settings_title">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:enabled="true"
+            android:key="force_internal_storage"
+            android:summary="@string/force_local_storage_summary"
+            android:title="@string/force_local_storage_title" />
+        <Preference
+            android:key="more_about"
+            android:summary="© 2011 ov3rk1ll"
+            android:title="@string/app_name" />
+        <Preference
+            android:key="more_version"
+            android:summary="1.0"
+            android:title="Version" />
+        <!-- <Preference android:key="more_link_web" android:title="Visit http://android.ov3rk1ll.com"></Preference>  -->
+        <Preference
+            android:key="more_link_twitter"
+            android:title="Follow on Twitter" />
+        <Preference
+            android:key="more_link_facebook"
+            android:title="Like on Facebook" />
+        <Preference
+            android:key="more_donate_paypal"
+            android:summary="@string/more_donate_paypal_summary"
+            android:title="@string/more_donate_paypal_title" />
+
+        <CheckBoxPreference
+            android:key="debug_info"
+            android:summary="@string/debug_info_summary"
+            android:title="@string/debug_info_title" />
+    </PreferenceCategory>
+
+
 </PreferenceScreen>

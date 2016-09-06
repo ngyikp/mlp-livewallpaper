@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent">
 
     <ImageView
         android:id="@+id/imagePony"
@@ -13,8 +13,7 @@
         android:scaleType="fitCenter"
         android:src="@drawable/ponytemp" />
 
-  
-	<TextView
+    <TextView
         android:id="@+id/textName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -45,7 +44,7 @@
         android:gravity="center_vertical"
         android:text="|"
         android:textAppearance="?android:attr/textAppearanceSmall" />
-    
+
     <TextView
         android:id="@+id/textInfo"
         android:layout_width="wrap_content"

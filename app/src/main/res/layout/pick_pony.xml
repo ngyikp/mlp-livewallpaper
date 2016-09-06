@@ -3,56 +3,56 @@
     android:id="@+id/RelativeLayout1"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
-
+    android:orientation="vertical">
+    
     <ListView
         android:id="@+android:id/list"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/linearLayout1"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" >
+        android:layout_alignParentTop="true">
 
-    </ListView>  
-        
+    </ListView>
+
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true" >
+        android:layout_alignParentLeft="true">
 
         <Button
             android:id="@+id/btnOk"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@android:string/ok"
-            android:onClick="onOkButtonClick" />
-        
+            android:onClick="onOkButtonClick"
+            android:text="@android:string/ok" />
+
         <Button
             android:id="@+id/btnOne"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="All to 1"
-            android:onClick="onAllOneButtonClick" />
-        
-       <Button
+            android:onClick="onAllOneButtonClick"
+            android:text="All to 1" />
+
+        <Button
             android:id="@+id/btnZero"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="All to 0"
-            android:onClick="onAllZeroButtonClick" />
+            android:onClick="onAllZeroButtonClick"
+            android:text="All to 0" />
 
         <Button
             android:id="@+id/btnCancel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@android:string/cancel"
-            android:onClick="onCancelButtonClick" />
+            android:onClick="onCancelButtonClick"
+            android:text="@android:string/cancel" />
     </LinearLayout>
 
 </RelativeLayout>

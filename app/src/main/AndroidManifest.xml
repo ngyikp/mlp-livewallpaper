@@ -1,38 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.overkill.live.pony"
-      android:versionCode="21" android:versionName="0.7.5">
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="15"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
-    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
-    
-    <uses-feature android:name="android.software.live_wallpaper" android:required="true"></uses-feature>
-    
-<application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:theme="@android:style/Theme.Light">
-    <activity android:label="@string/app_name" android:name=".LiveWallpaperSettings" android:exported="true" android:theme="@android:style/Theme.Light.NoTitleBar" android:icon="@drawable/ic_launcher">
-    </activity>
-    <service 
-		    android:name="MyLittleWallpaperService"
-		    android:enabled="true"
-		    android:icon="@drawable/ic_launcher"
-		    android:label="@string/app_name"
-		    android:permission="android.permission.BIND_WALLPAPER">
-	    <intent-filter android:priority="1" >
-	        <action android:name="android.service.wallpaper.WallpaperService" />
-	    </intent-filter>
-	    <meta-data 
-	      android:name="android.service.wallpaper" 
-	      android:resource="@xml/wallpaper" />
-	</service>
-    <activity android:name="com.overkill.ponymanager.PonyManager" android:label="@string/pony_manager" android:icon="@drawable/ic_launcher" android:theme="@style/Theme.Pony.Rainbowdash">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN"></action>
-            <category android:name="android.intent.category.LAUNCHER"></category>
-        </intent-filter>
-    </activity>
-    <activity android:theme="@android:style/Theme.Wallpaper.NoTitleBar" android:name="SetPaddingActivity"></activity>
-    <activity android:theme="@android:style/Theme.Dialog" android:name="PickPonyActivity" android:label="@string/pony_select_title"></activity>
-</application>
+    package="com.overkill.live.pony"
+    android:versionCode="21"
+    android:versionName="0.7.5">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-feature
+        android:name="android.software.live_wallpaper"
+        android:required="true" />
+
+    <application
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.Light">
+        <activity
+            android:name=".LiveWallpaperSettings"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Light.NoTitleBar" />
+        <service
+            android:name="MyLittleWallpaperService"
+            android:enabled="true"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter android:priority="1">
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/wallpaper" />
+        </service>
+
+        <activity
+            android:name="com.overkill.ponymanager.PonyManager"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/pony_manager"
+            android:theme="@style/Theme.Pony.Rainbowdash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="SetPaddingActivity"
+            android:theme="@android:style/Theme.Wallpaper.NoTitleBar" />
+        <activity
+            android:name="PickPonyActivity"
+            android:label="@string/pony_select_title"
+            android:theme="@android:style/Theme.Dialog" />
+    </application>
 
 </manifest>
