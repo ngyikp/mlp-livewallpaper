@@ -99,7 +99,7 @@ public class SortablePonyAdapter extends ArrayAdapter<DownloadPony>{
 	}
 	
 	public String[] getCategoryNames(){
-		return (String[])this.categories.keySet().toArray(new String[this.categories.keySet().size()]);
+		return this.categories.keySet().toArray(new String[this.categories.keySet().size()]);
 	}
 	
 	public String[] getCategoryNamesWithCount(){

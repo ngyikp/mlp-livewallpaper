@@ -16,7 +16,7 @@ import com.overkill.live.pony.R;
 
 public class SettingsPonyAdapter extends SortablePonyAdapter{
 	public interface ValueChangedListener{
-		public void onValueChanged();
+		void onValueChanged();
 	}
 	
 	ValueChangedListener valueChangedListener;
@@ -46,7 +46,7 @@ public class SettingsPonyAdapter extends SortablePonyAdapter{
         	((ImageView)v.findViewById(R.id.imagePony)).setImageBitmap(p.getImage());
         	((TextView)v.findViewById(R.id.textName)).setText(p.getName());
         	((TextView)v.findViewById(R.id.textUsageCount)).setText(String.valueOf(p.getUsageCount()));
-        	((Button)v.findViewById(R.id.btnPlus)).setOnClickListener(new OnClickListener() {				
+        	v.findViewById(R.id.btnPlus).setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					p.setUsageCount(p.getUsageCount() + 1);
@@ -54,7 +54,7 @@ public class SettingsPonyAdapter extends SortablePonyAdapter{
 					notifyDataSetChanged();
 				}
 			});
-        	((Button)v.findViewById(R.id.btnMinus)).setOnClickListener(new OnClickListener() {				
+        	v.findViewById(R.id.btnMinus).setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					int value = p.getUsageCount();
@@ -66,7 +66,7 @@ public class SettingsPonyAdapter extends SortablePonyAdapter{
 					notifyDataSetChanged();
 				}
 			});
-        	((Button)v.findViewById(R.id.btnZero)).setOnClickListener(new OnClickListener() {				
+        	v.findViewById(R.id.btnZero).setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					p.setUsageCount(0);

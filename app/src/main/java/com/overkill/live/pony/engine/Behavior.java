@@ -187,8 +187,8 @@ public class Behavior {
 	    // If we have a coordinate to go to
 	    if (destination_xcoord != 0 && destination_ycoord != 0) {
 	    	// Return its position on the screen
-	        return new Point((int)(((destination_xcoord * RenderEngine.wallpaperBounds.width()) / 100) + RenderEngine.wallpaperBounds.left),
-	                         (int)(((destination_ycoord * RenderEngine.wallpaperBounds.height()) / 100) + RenderEngine.wallpaperBounds.bottom));
+	        return new Point(((destination_xcoord * RenderEngine.wallpaperBounds.width()) / 100) + RenderEngine.wallpaperBounds.left,
+					((destination_ycoord * RenderEngine.wallpaperBounds.height()) / 100) + RenderEngine.wallpaperBounds.bottom);
 	    }
 
 	    // Otherwise return a blank Point

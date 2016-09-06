@@ -188,8 +188,8 @@ public class Pony{
 			// Then select a random location to appear at		
 			if(RenderEngine.wallpaperBounds != null && RenderEngine.wallpaperBounds.width() > 0 && RenderEngine.wallpaperBounds.height() > 0)
 				teleport_location = new Point(
-						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.wallpaperBounds.width()) + (int)RenderEngine.wallpaperBounds.left, 
-						MyLittleWallpaperService.rand.nextInt((int)RenderEngine.wallpaperBounds.height()) + (int)RenderEngine.wallpaperBounds.top);
+						MyLittleWallpaperService.rand.nextInt(RenderEngine.wallpaperBounds.width()) + RenderEngine.wallpaperBounds.left,
+						MyLittleWallpaperService.rand.nextInt(RenderEngine.wallpaperBounds.height()) + RenderEngine.wallpaperBounds.top);
 		
 		    if(isPonyOnWallpaper(teleport_location) == true) break;
 		}	
@@ -682,10 +682,7 @@ public class Pony{
 				) {
 				if (behavior.Skip == false) {
 					if (behavior.speed == 0 && movement != AllowedMoves.All) {
-						if (this.window.getPonyDirection() == true)
-							behavior.right = true;
-						else
-							behavior.right = false;
+						behavior.right = this.window.getPonyDirection() == true;
 						
 						return behavior;
 					} else {
@@ -699,15 +696,9 @@ public class Pony{
 								(movement == AllowedMoves.All)
 								) {
 								if (destination.x == 0 && destination.y == 0) {
-									if (this.window.getPonyDirection() == true)
-										specified_behavior.right = true;
-									else
-										specified_behavior.right = false;
+									specified_behavior.right = this.window.getPonyDirection() == true;
 								} else {
-									if (getDestinationDirection(destination).get(0) == Direction.right)
-										specified_behavior.right = true;
-									else
-										specified_behavior.right = false;
+									specified_behavior.right = getDestinationDirection(destination).get(0) == Direction.right;
 								}
 								
 								return specified_behavior;
@@ -818,10 +809,7 @@ public class Pony{
 	    
 		// Select facing (left or right)
 		dice = MyLittleWallpaperService.rand.nextDouble();
-		if (dice >= 0.5)
-			newBehavior.right = true;
-		else
-			newBehavior.right = false;
+		newBehavior.right = dice >= 0.5;
 			
 	    // If we aren't moving anywhere, stop here
 	    if (newBehavior.Allowed_Movement == AllowedMoves.None || 
@@ -874,11 +862,8 @@ public class Pony{
 		    }
 		    
 		    dice = MyLittleWallpaperService.rand.nextDouble();
-		    
-		    if (dice >= 0.5)
-		    	newBehavior.up = true;
-		    else
-		    	newBehavior.up = false;
+
+			newBehavior.up = dice >= 0.5;
 	    } // End if moving
 
 		newBehavior.keep = false;

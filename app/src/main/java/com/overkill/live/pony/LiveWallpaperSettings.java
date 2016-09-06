@@ -81,12 +81,12 @@ public class LiveWallpaperSettings extends PreferenceActivity {
         
 		try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(), 0);
-	        ((Preference)findPreference("more_version")).setSummary(pinfo.versionName);
+	        findPreference("more_version").setSummary(pinfo.versionName);
 		} catch (NameNotFoundException e) {
 		}
 		
 		// Open twitter link
-		((Preference)findPreference("more_link_twitter")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+		findPreference("more_link_twitter").setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
 				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(URL_TWITTER));
@@ -96,7 +96,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		});
 		
 		// Open facebook link
-		((Preference)findPreference("more_link_facebook")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+		findPreference("more_link_facebook").setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
 				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(URL_FACEBOOK));
@@ -106,7 +106,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		});
 		
 		// Set Background image (on/off)
-		((CheckBoxPreference)findPreference("background_global")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+		findPreference("background_global").setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				boolean value = (Boolean) newValue;
@@ -172,7 +172,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		});
 		
 		// Open PayPal Link
-		((Preference)findPreference("more_donate_paypal")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+		findPreference("more_donate_paypal").setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
 				Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(PAYPAL));
@@ -182,7 +182,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 		});
 				
 		// 
-		((Preference)findPreference("pony_select")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+		findPreference("pony_select").setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
 				Intent i = new Intent(LiveWallpaperSettings.this, PickPonyActivity.class);
@@ -192,9 +192,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
-		EditText editTextPonyScale = (EditText)((EditTextPreference)findPreference("pony_scale")).getEditText();
+		EditText editTextPonyScale = ((EditTextPreference)findPreference("pony_scale")).getEditText();
         editTextPonyScale.setKeyListener(DigitsKeyListener.getInstance(false, true));
-        ((EditTextPreference)findPreference("pony_scale")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+        findPreference("pony_scale").setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				String value = (String)newValue;
@@ -207,9 +207,9 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
         
-        EditText editTextMovementDelay = (EditText)((EditTextPreference)findPreference("movement_delay_ms")).getEditText();
+        EditText editTextMovementDelay = ((EditTextPreference)findPreference("movement_delay_ms")).getEditText();
         editTextMovementDelay.setKeyListener(DigitsKeyListener.getInstance(false, false));
-        ((EditTextPreference)findPreference("movement_delay_ms")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+        findPreference("movement_delay_ms").setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				String value = (String)newValue;
@@ -222,7 +222,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 		
-		((Preference)findPreference("background_image")).setOnPreferenceClickListener(new OnPreferenceClickListener() {			
+		findPreference("background_image").setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
 				showPickImageDialog();
@@ -230,7 +230,7 @@ public class LiveWallpaperSettings extends PreferenceActivity {
 			}
 		});
 										
-		((CheckBoxPreference)findPreference("show_effects")).setOnPreferenceChangeListener(new OnPreferenceChangeListener() {			
+		findPreference("show_effects").setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				boolean value = (Boolean) newValue;

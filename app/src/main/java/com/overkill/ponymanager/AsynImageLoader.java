@@ -17,8 +17,8 @@ import android.graphics.Bitmap.CompressFormat;
 public class AsynImageLoader extends Thread{
 	
 	public interface onImageListener{
-		public void imageComplete(String ID, Bitmap image);
-		public void imageError(String ID, String error);
+		void imageComplete(String ID, Bitmap image);
+		void imageError(String ID, String error);
 	}
 
 	private static final long MAX_CACHE_AGE = 5 * 24 * 3600 * 1000; // 5 days

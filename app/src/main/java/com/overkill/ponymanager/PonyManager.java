@@ -135,31 +135,31 @@ public class PonyManager extends ListActivity implements onDownloadListener, onI
 	
 	public void setProgressbarVisibility(boolean visible){
 		 int v = (visible) ? View.VISIBLE : View.GONE;
-		 ((ProgressBar)findViewById(R.id.progress_circular)).setVisibility(v);
+		 findViewById(R.id.progress_circular).setVisibility(v);
 	 }
 	
 	public void setDownloadAllVisibility(boolean visible){
 		 int v = (visible) ? View.VISIBLE : View.GONE;
-		 ((ImageButton)findViewById(R.id.btn_title_download_all)).setVisibility(v);
-		 ((ImageView)findViewById(R.id.sep_title_download_all)).setVisibility(v);
+		 findViewById(R.id.btn_title_download_all).setVisibility(v);
+		 findViewById(R.id.sep_title_download_all).setVisibility(v);
 	}
 	
 	public void setUpdateAllVisibility(boolean visible){
 		 int v = (visible) ? View.VISIBLE : View.GONE;
-		 ((ImageButton)findViewById(R.id.btn_title_update_all)).setVisibility(v);
-		 ((ImageView)findViewById(R.id.sep_title_update_all)).setVisibility(v);
+		 findViewById(R.id.btn_title_update_all).setVisibility(v);
+		 findViewById(R.id.sep_title_update_all).setVisibility(v);
 	}
 	
 	public void setSetButtonVisibility(boolean visible){
 		 int v = (visible) ? View.VISIBLE : View.GONE;
-		 ((ImageButton)findViewById(R.id.btn_title_set)).setVisibility(v);
-		 ((ImageView)findViewById(R.id.sep_title_set)).setVisibility(v);
+		 findViewById(R.id.btn_title_set).setVisibility(v);
+		 findViewById(R.id.sep_title_set).setVisibility(v);
 	}
 	
 	public void setPreferencesVisibility(boolean visible){
 		 int v = (visible) ? View.VISIBLE : View.GONE;
-		 ((ImageButton)findViewById(R.id.btn_title_preferences)).setVisibility(v);
-		 ((ImageView)findViewById(R.id.sep_title_preferences)).setVisibility(v);
+		 findViewById(R.id.btn_title_preferences).setVisibility(v);
+		 findViewById(R.id.sep_title_preferences).setVisibility(v);
 	}
 	 
 	public void updateTitle(){

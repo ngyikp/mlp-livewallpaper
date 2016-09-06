@@ -69,7 +69,7 @@ public class MyLittleWallpaperService extends WallpaperService {
         try {
 			PackageInfo pinfo = getPackageManager().getPackageInfo(this.getClass().getPackage().getName(), 0);
 	        VERSION = pinfo.versionName;
-		} catch (NameNotFoundException e) {;}        
+		} catch (NameNotFoundException e) {}
         rand = new Random();
         localFolder = PonyManager.selectFolder(this);
         
