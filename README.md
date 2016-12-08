@@ -1,12 +1,12 @@
 <img src="https://github.com/ngyikp/mlp-livewallpaper/raw/master/docs/screenshot.png" align="right" width="300">
 This is a fork of the [My Little Pony: Friendship is Magic Android Live Wallpaper](https://code.google.com/archive/p/mlp-livewallpaper/) by [@OV3RK1LL](https://twitter.com/OV3RK1LL), cleaned up and usable once again!
 
-Only tested on a Nexus 5X on Android 7.0, your mileage may vary!
+Only tested on a Nexus 5X on Android 7.1, your mileage may vary!
 
 Differences from the original source:
 
 * Converted to Android Studio project structure
-* Set the compile SDK version to 24 (Nougat)
+* Set the compile SDK version to 25 (Android 7.1 Nougat)
 * Changed the assets download link to GitHub Pages so the ponies actually work!
 * Removed AdMob
 * Removed "Report a problem" functionality
